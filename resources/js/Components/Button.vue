@@ -5,7 +5,7 @@
     :type="href ? undefined : type"
     :disabled="disabled || loading"
     :class="[
-      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 transform hover:scale-105 active:scale-95',
+      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ease-in-out ring-brand transform hover:-translate-y-0.5 active:translate-y-0',
       sizeClasses,
       variantClasses,
       disabled || loading ? 'opacity-50 cursor-not-allowed transform-none' : 'shadow-sm hover:shadow-md'
@@ -45,13 +45,13 @@ const sizeClasses = computed(() => {
 
 const variantClasses = computed(() => {
   const variants = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500',
-    secondary: 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500',
-    success: 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-    warning: 'bg-yellow-600 hover:bg-yellow-700 text-white focus:ring-yellow-500',
-    outline: 'border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 focus:ring-blue-500',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 focus:ring-gray-500'
+    primary: 'bg-[--brand-600] hover:bg-[--brand-700] text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)]',
+    secondary: 'bg-gray-700 hover:bg-gray-800 text-white',
+    success: 'bg-green-600 hover:bg-green-700 text-white',
+    danger: 'bg-red-600 hover:bg-red-700 text-white',
+    warning: 'bg-yellow-500 hover:bg-yellow-600 text-white',
+    outline: 'border border-[color:rgba(148,163,184,0.35)] text-gray-200 bg-gray-900/60 hover:bg-gray-900/80',
+    ghost: 'bg-gray-800/60 hover:bg-gray-800 border border-gray-700 text-gray-200'
   }
   return variants[props.variant] || variants.primary
 })

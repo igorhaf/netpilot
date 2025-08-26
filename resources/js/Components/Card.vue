@@ -1,16 +1,16 @@
 <template>
   <div :class="[
-    'bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300 ease-in-out',
+    'rounded-xl transition-all duration-300 ease-in-out bg-gray-950/70 border border-gray-900 shadow-[0_12px_48px_rgba(0,0,0,0.45)]',
     hover ? 'hover:shadow-lg hover:-translate-y-1' : '',
     clickable ? 'cursor-pointer' : ''
   ]" @click="clickable ? $emit('click') : null">
-    <div v-if="$slots.header" class="px-6 py-4 border-b border-gray-200">
+    <div v-if="$slots.header" class="px-6 py-4 border-b border-gray-900 bg-gray-950/60">
       <slot name="header" />
     </div>
     <div :class="padding">
       <slot />
     </div>
-    <div v-if="$slots.footer" class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+    <div v-if="$slots.footer" class="px-6 py-4 border-t border-gray-900 bg-gray-950/60 rounded-b-xl">
       <slot name="footer" />
     </div>
   </div>

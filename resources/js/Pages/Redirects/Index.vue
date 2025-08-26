@@ -1,169 +1,322 @@
 <template>
-  <AppLayout>
-    <div class="px-4 py-6 sm:px-0">
-      <div class="sm:flex sm:items-center mb-8">
-        <div class="sm:flex-auto">
-          <h1 class="text-3xl font-bold text-gray-900">Redirects</h1>
-          <p class="mt-2 text-sm text-gray-600">Manage URL redirects and traffic forwarding rules.</p>
+  <AppLayout title="Redirects">
+    <div class="space-y-6">
+      <!-- Header com ações -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-semibold">Redirects</h1>
+          <p class="text-text-muted mt-1">Gerencie os redirecionamentos de URL do proxy</p>
         </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <Button href="/redirects/create" variant="primary">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        <Button @click="openCreateModal" variant="default" class="sm:self-end">
+          <template #icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
-            Add Redirect
+          </template>
+          Adicionar Redirect
           </Button>
-        </div>
       </div>
 
-      <Card no-padding>
-        <div class="overflow-hidden">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source Pattern</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target URL</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <transition-group
-                name="list"
-                enter-active-class="transition duration-300 ease-out"
-                enter-from-class="opacity-0 transform translate-y-4"
-                enter-to-class="opacity-100 transform translate-y-0"
-                leave-active-class="transition duration-200 ease-in"
-                leave-from-class="opacity-100 transform translate-y-0"
-                leave-to-class="opacity-0 transform translate-y-4"
-                tag="tbody"
+      <!-- Filtros -->
+      <Card>
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <label for="search" class="sr-only">Buscar</label>
+            <div class="relative rounded-lg">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <input
+                id="search"
+                v-model="filters.search"
+                type="search"
+                class="block w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                placeholder="Buscar redirects..."
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="w-full sm:w-40">
+              <label for="type" class="sr-only">Tipo</label>
+              <select
+                id="type"
+                v-model="filters.type"
+                class="block w-full border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
               >
-                <tr v-for="redirect in redirects.data" :key="redirect.id" class="hover:bg-gray-50 transition-colors duration-200">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                      <div class="flex-shrink-0 h-12 w-12">
-                        <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-sm">
-                          <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div class="ml-4">
-                        <div class="text-sm font-semibold text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded">
-                          {{ redirect.source_pattern }}
-                        </div>
-                        <div class="text-sm text-gray-500">{{ redirect.description || 'No description' }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                      <div class="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
-                      <span class="text-sm font-medium text-gray-900">{{ redirect.domain?.name || 'N/A' }}</span>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded max-w-xs truncate">
-                      {{ redirect.target_url }}
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span :class="getRedirectTypeColor(redirect.redirect_type)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
-                      {{ redirect.redirect_type }}
-                      <span class="ml-1 text-xs opacity-75">{{ getRedirectTypeName(redirect.redirect_type) }}</span>
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                      <div class="w-full bg-gray-200 rounded-full h-2 mr-2" style="width: 60px;">
-                        <div class="bg-orange-600 h-2 rounded-full" :style="`width: ${Math.min(redirect.priority / 10, 100)}%`"></div>
-                      </div>
-                      <span class="text-sm text-gray-600">{{ redirect.priority }}</span>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span :class="redirect.is_active ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
-                      <div :class="redirect.is_active ? 'bg-green-400' : 'bg-red-400'" class="w-1.5 h-1.5 rounded-full mr-1.5"></div>
-                      {{ redirect.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div class="flex justify-end space-x-2">
-                      <Button :href="`/redirects/${redirect.id}/edit`" variant="ghost" size="sm">
-                        Edit
-                      </Button>
-                      <Button @click="deleteRedirect(redirect)" variant="ghost" size="sm" class="text-red-600 hover:text-red-700">
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              </transition-group>
-            </tbody>
-          </table>
+                <option value="">Todos os tipos</option>
+                <option value="301">301 - Permanente</option>
+                <option value="302">302 - Temporário</option>
+              </select>
+            </div>
+
+            <div class="w-full sm:w-40">
+              <label for="status" class="sr-only">Status</label>
+              <select
+                id="status"
+                v-model="filters.status"
+                class="block w-full border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+              >
+                <option value="">Todos os status</option>
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
+
+            <Button variant="outline" @click="resetFilters">
+              Limpar
+            </Button>
+          </div>
         </div>
       </Card>
 
-      <!-- Pagination -->
-      <div v-if="redirects.links" class="mt-6">
-        <nav class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
-          <div class="-mt-px flex w-0 flex-1">
-            <Link v-if="redirects.prev_page_url" :href="redirects.prev_page_url" class="inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
-              Previous
-            </Link>
-          </div>
-          <div class="hidden md:-mt-px md:flex">
-            <Link v-for="link in redirects.links.slice(1, -1)" :key="link.label" :href="link.url" :class="[link.active ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300', 'inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium']" v-html="link.label"></Link>
-          </div>
-          <div class="-mt-px flex w-0 flex-1 justify-end">
-            <Link v-if="redirects.next_page_url" :href="redirects.next_page_url" class="inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
-              Next
-            </Link>
-          </div>
-        </nav>
-      </div>
+      <!-- Tabela de Redirects -->
+      <Card>
+        <div v-if="loading" class="py-12 flex justify-center">
+          <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-accent mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+            <p class="text-text-muted">Carregando redirects...</p>
+                        </div>
+                      </div>
+
+        <div v-else-if="filteredRedirects.length === 0" class="py-12 flex justify-center">
+          <div class="flex flex-col items-center text-center">
+            <svg class="h-12 w-12 text-text-muted mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18" />
+            </svg>
+            <p class="text-text font-medium mb-2">Nenhum redirect encontrado</p>
+            <p class="text-text-muted max-w-md">
+              {{ hasFilters ? 'Nenhum redirect corresponde aos filtros aplicados.' : 'Você ainda não tem nenhum redirect cadastrado.' }}
+            </p>
+            <div class="mt-4 flex space-x-3">
+              <Button v-if="hasFilters" @click="resetFilters" variant="outline">
+                Limpar filtros
+              </Button>
+              <Button @click="openCreateModal" variant="default">
+                Adicionar Redirect
+              </Button>
+                        </div>
+                      </div>
+                    </div>
+
+        <div v-else>
+          <Table :sticky-header="true" :col-span="7">
+            <template #header>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Domínio
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Padrão Origem
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                URL Destino
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Tipo
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Prioridade
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Status
+              </th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">
+                Ações
+              </th>
+            </template>
+
+            <tr v-for="redirect in filteredRedirects" :key="redirect.id" class="hover:bg-elevated">
+              <td class="px-4 py-4">
+                    <div class="flex items-center">
+                  <div class="flex-shrink-0 h-8 w-8 bg-surface rounded-lg flex items-center justify-center mr-3">
+                    <svg class="h-4 w-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18" />
+                    </svg>
+                  </div>
+                  <span class="font-medium">{{ redirect.domain }}</span>
+                    </div>
+                  </td>
+              <td class="px-4 py-4">
+                <code class="bg-surface px-2 py-1 rounded text-sm">{{ redirect.source_pattern }}</code>
+              </td>
+              <td class="px-4 py-4">
+                <a :href="redirect.target_url" target="_blank" class="text-accent hover:underline">
+                      {{ redirect.target_url }}
+                </a>
+                  </td>
+              <td class="px-4 py-4">
+                <Badge :variant="redirect.redirect_type === 301 ? 'warning' : 'info'">
+                  {{ redirect.redirect_type }} {{ redirect.redirect_type === 301 ? 'Permanente' : 'Temporário' }}
+                </Badge>
+                  </td>
+              <td class="px-4 py-4">
+                <span class="text-sm">{{ redirect.priority }}</span>
+                  </td>
+              <td class="px-4 py-4">
+                <Badge :variant="redirect.is_active ? 'success' : 'danger'">
+                  {{ redirect.is_active ? 'Ativo' : 'Inativo' }}
+                </Badge>
+                  </td>
+              <td class="px-4 py-4 text-right space-x-2 whitespace-nowrap">
+                <Button variant="ghost" size="sm" @click="editRedirect(redirect)">
+                  Editar
+                      </Button>
+                <Button variant="ghost" size="sm" class="text-danger" @click="confirmDelete(redirect)">
+                  Excluir
+                      </Button>
+                  </td>
+                </tr>
+          </Table>
+        </div>
+      </Card>
     </div>
   </AppLayout>
 </template>
 
-<script setup>
-import { Link, router } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import Card from '@/Components/Card.vue'
-import Button from '@/Components/Button.vue'
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import { route } from '@/ziggy';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import Button from '@/Components/ui/Button.vue';
+import Card from '@/Components/ui/Card.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import Table from '@/Components/ui/Table.vue';
+import { toast } from '@/Composables/useToast';
 
-const props = defineProps({
-  redirects: { type: Object, required: true }
-})
-
-const getRedirectTypeColor = (type) => {
-  const colors = {
-    301: 'bg-green-100 text-green-800 border-green-200',
-    302: 'bg-blue-100 text-blue-800 border-blue-200',
-    303: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    307: 'bg-purple-100 text-purple-800 border-purple-200',
-    308: 'bg-red-100 text-red-800 border-red-200'
-  }
-  return colors[type] || 'bg-gray-100 text-gray-800 border-gray-200'
+// Tipos
+interface Redirect {
+  id: number;
+  domain: string;
+  source_pattern: string;
+  target_url: string;
+  redirect_type: number;
+  priority: number;
+  is_active: boolean;
 }
 
-const getRedirectTypeName = (type) => {
-  const names = {
-    301: 'Permanent',
-    302: 'Temporary',
-    303: 'See Other',
-    307: 'Temp Redirect',
-    308: 'Perm Redirect'
-  }
-  return names[type] || 'Unknown'
+interface Filters {
+  search: string;
+  type: '' | '301' | '302';
+  status: '' | 'active' | 'inactive';
 }
 
-const deleteRedirect = (redirect) => {
-  if (confirm(`Are you sure you want to delete the redirect from ${redirect.source_pattern}?`)) {
-    router.delete(`/redirects/${redirect.id}`)
+// Estado
+const redirects = ref<Redirect[]>([]);
+const loading = ref(true);
+const filters = ref<Filters>({
+  search: '',
+  type: '',
+  status: ''
+});
+
+// Computed
+const filteredRedirects = computed(() => {
+  return redirects.value.filter(redirect => {
+    // Filtro de busca
+    if (filters.value.search && 
+        !redirect.domain.toLowerCase().includes(filters.value.search.toLowerCase()) &&
+        !redirect.source_pattern.toLowerCase().includes(filters.value.search.toLowerCase()) &&
+        !redirect.target_url.toLowerCase().includes(filters.value.search.toLowerCase())) {
+      return false;
+    }
+    
+    // Filtro de tipo
+    if (filters.value.type && redirect.redirect_type.toString() !== filters.value.type) {
+      return false;
+    }
+    
+    // Filtro de status
+    if (filters.value.status === 'active' && !redirect.is_active) {
+      return false;
+    }
+    if (filters.value.status === 'inactive' && redirect.is_active) {
+      return false;
+    }
+    
+    return true;
+  });
+});
+
+const hasFilters = computed(() => {
+  return filters.value.search !== '' || filters.value.type !== '' || filters.value.status !== '';
+});
+
+// Métodos
+const loadRedirects = async () => {
+  loading.value = true;
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    redirects.value = [
+      {
+        id: 1,
+        domain: 'example.com',
+        source_pattern: '/old-page',
+        target_url: 'https://example.com/new-page',
+        redirect_type: 301,
+        priority: 100,
+        is_active: true
+      },
+      {
+        id: 2,
+        domain: 'example.com',
+        source_pattern: '/temp/*',
+        target_url: 'https://temp.example.com/$1',
+        redirect_type: 302,
+        priority: 90,
+        is_active: true
+      },
+      {
+        id: 3,
+        domain: 'old.example.com',
+        source_pattern: '/*',
+        target_url: 'https://example.com/$1',
+        redirect_type: 301,
+        priority: 80,
+        is_active: false
+      }
+    ];
+  } finally {
+    loading.value = false;
   }
-}
+};
+
+const resetFilters = () => {
+  filters.value = {
+    search: '',
+    type: '',
+    status: ''
+  };
+};
+
+const openCreateModal = () => {
+  router.visit(route('redirects.create'));
+};
+
+const editRedirect = (redirect: Redirect) => {
+  toast.info('Editar redirect', `Editando redirect ${redirect.source_pattern}`);
+};
+
+const confirmDelete = (redirect: Redirect) => {
+  if (confirm(`Tem certeza que deseja excluir o redirect ${redirect.source_pattern}?`)) {
+    deleteRedirect(redirect.id);
+  }
+};
+
+const deleteRedirect = (id: number) => {
+  redirects.value = redirects.value.filter(redirect => redirect.id !== id);
+  toast.success('Redirect excluído', 'O redirect foi excluído com sucesso.');
+};
+
+// Lifecycle
+onMounted(() => {
+  loadRedirects();
+});
 </script>

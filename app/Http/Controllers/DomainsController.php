@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Domain;
-use App\Models\Upstream;
-use App\Models\CertificateEvent;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Requests\DomainRequest;
@@ -13,7 +11,7 @@ class DomainsController extends Controller
 {
     public function index()
     {
-        $domains = Domain::withCount('routeRules')
+        $domains = Domain::withCount(['proxyRules', 'sslCertificates', 'redirectRules'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -29,10 +27,17 @@ class DomainsController extends Controller
 
     public function store(DomainRequest $request)
     {
-        Domain::create($request->validated());
+        $data = $request->validated();
+        
+        // Handle DNS records
+        if (isset($data['dns_records']) && is_array($data['dns_records'])) {
+            $data['dns_records'] = $data['dns_records'];
+        }
+
+        Domain::create($data);
 
         return redirect()->route('domains.index')
-            ->with('success', 'Domain created successfully.');
+            ->with('success', 'Domínio criado com sucesso!');
     }
 
     public function edit(Domain $domain)
@@ -47,7 +52,7 @@ class DomainsController extends Controller
         $domain->update($request->validated());
 
         return redirect()->route('domains.index')
-            ->with('success', 'Domain updated successfully.');
+            ->with('success', 'Domínio atualizado com sucesso!');
     }
 
     public function destroy(Domain $domain)
@@ -55,6 +60,6 @@ class DomainsController extends Controller
         $domain->delete();
 
         return redirect()->route('domains.index')
-            ->with('success', 'Domain deleted successfully.');
+            ->with('success', 'Domínio removido com sucesso!');
     }
 }

@@ -13,27 +13,23 @@ class DomainRequest extends FormRequest
 
     public function rules(): array
     {
-        $domainId = $this->route('domain')?->id;
-
         return [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                'regex:/^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/',
-                'unique:domains,name' . ($domainId ? ",$domainId" : '')
-            ],
-            'description' => 'nullable|string|max:500',
-            'auto_tls' => 'boolean',
-            'is_active' => 'boolean'
+            'name' => 'required|string|max:255|unique:domains,name,' . ($this->domain?->id ?? ''),
+            'description' => 'nullable|string|max:1000',
+            'is_active' => 'boolean',
+            'auto_ssl' => 'boolean',
+            'dns_records' => 'nullable|array',
+            'dns_records.*' => 'string|max:255',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.regex' => 'The domain name must be a valid domain format.',
-            'name.unique' => 'This domain name is already registered.'
+            'name.required' => 'O nome do domínio é obrigatório',
+            'name.unique' => 'Este domínio já existe no sistema',
+            'name.max' => 'O nome do domínio não pode ter mais de 255 caracteres',
+            'description.max' => 'A descrição não pode ter mais de 1000 caracteres',
         ];
     }
 }

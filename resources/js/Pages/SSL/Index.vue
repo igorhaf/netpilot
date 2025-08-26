@@ -1,0 +1,451 @@
+<template>
+  <AppLayout title="Certificados SSL">
+    <div class="p-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-text">Certificados SSL</h1>
+          <p class="text-sm text-text-muted mt-1">
+            Gerencie certificados Let's Encrypt para seus domínios
+          </p>
+        </div>
+        <div class="flex items-center gap-3 mt-4 sm:mt-0">
+          <Button 
+            @click="renewAll" 
+            :disabled="isRenewing"
+            variant="ghost"
+          >
+            <template #icon>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </template>
+            {{ isRenewing ? 'Renovando...' : 'Renovar Expirados' }}
+          </Button>
+          <Button @click="createSSL" class="bg-accent hover:bg-accent-light">
+            <template #icon>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+            </template>
+            Novo Certificado
+          </Button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-text-muted">Total</p>
+              <p class="text-2xl font-bold text-text">{{ stats.total }}</p>
+            </div>
+            <div class="p-3 bg-muted/20 rounded-lg">
+              <svg class="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+          </div>
+        </Card>
+        
+        <Card class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-text-muted">Válidos</p>
+              <p class="text-2xl font-bold text-success">{{ stats.valid }}</p>
+            </div>
+            <div class="p-3 bg-success/20 rounded-lg">
+              <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
+              </svg>
+            </div>
+          </div>
+        </Card>
+
+        <Card class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-text-muted">Expirando</p>
+              <p class="text-2xl font-bold text-warning">{{ stats.expiring }}</p>
+            </div>
+            <div class="p-3 bg-warning/20 rounded-lg">
+              <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+            </div>
+          </div>
+        </Card>
+
+        <Card class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-text-muted">Expirados</p>
+              <p class="text-2xl font-bold text-danger">{{ stats.expired }}</p>
+            </div>
+            <div class="p-3 bg-danger/20 rounded-lg">
+              <svg class="w-6 h-6 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <!-- Filters -->
+      <Card class="p-4 mb-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <input
+              v-model="filters.search"
+              type="text"
+              placeholder="Buscar por domínio..."
+              class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            />
+          </div>
+          <div class="flex gap-3">
+            <select
+              v-model="filters.status"
+              class="px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+            >
+              <option value="">Todos os status</option>
+              <option value="valid">Válido</option>
+              <option value="expiring">Expirando</option>
+              <option value="expired">Expirado</option>
+              <option value="pending">Pendente</option>
+              <option value="failed">Falha</option>
+            </select>
+            <Button @click="clearFilters" variant="ghost">Limpar</Button>
+          </div>
+        </div>
+      </Card>
+
+      <!-- Table -->
+      <Card>
+        <Table
+          :columns="columns"
+          :data="certificates.data"
+          :loading="loading"
+          :empty-message="'Nenhum certificado SSL encontrado'"
+          zebra
+        >
+          <template #domain_name="{ row }">
+            <div class="font-medium text-text">{{ row.domain_name }}</div>
+            <div class="text-sm text-text-muted">{{ row.domain?.name || 'N/A' }}</div>
+          </template>
+
+          <template #san_domains="{ row }">
+            <div v-if="row.san_domains && row.san_domains.length" class="space-y-1">
+              <div 
+                v-for="domain in row.san_domains.slice(0, 2)" 
+                :key="domain"
+                class="text-sm text-text-muted"
+              >
+                {{ domain }}
+              </div>
+              <div v-if="row.san_domains.length > 2" class="text-xs text-text-muted">
+                +{{ row.san_domains.length - 2 }} mais
+              </div>
+            </div>
+            <span v-else class="text-sm text-text-muted">Nenhum</span>
+          </template>
+
+          <template #status="{ row }">
+            <Badge 
+              :variant="getStatusVariant(row.status)"
+            >
+              {{ getStatusLabel(row.status) }}
+            </Badge>
+          </template>
+
+          <template #expires_at="{ row }">
+            <div v-if="row.expires_at">
+              <div class="font-medium text-text">{{ formatDate(row.expires_at) }}</div>
+              <div class="text-sm" :class="getExpiryClass(row.expires_at)">
+                {{ getExpiryText(row.expires_at) }}
+              </div>
+            </div>
+            <span v-else class="text-sm text-text-muted">N/A</span>
+          </template>
+
+          <template #auto_renew="{ row }">
+            <Badge 
+              :variant="row.auto_renew ? 'positive' : 'neutral'"
+            >
+              {{ row.auto_renew ? 'Sim' : 'Não' }}
+            </Badge>
+          </template>
+
+          <template #actions="{ row }">
+            <div class="flex items-center gap-2">
+              <Button
+                v-if="row.status === 'expiring' || row.status === 'expired'"
+                @click="renewCertificate(row)"
+                variant="default"
+                size="sm"
+              >
+                Renovar
+              </Button>
+              <Button
+                @click="toggleAutoRenew(row)"
+                :variant="row.auto_renew ? 'outline' : 'default'"
+                size="sm"
+              >
+                {{ row.auto_renew ? 'Desativar Auto' : 'Ativar Auto' }}
+              </Button>
+              <Button @click="viewCertificate(row)" variant="ghost" size="sm">
+                <template #icon>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </template>
+              </Button>
+              <Button @click="deleteCertificate(row)" variant="danger" size="sm">
+                <template #icon>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </template>
+              </Button>
+            </div>
+          </template>
+        </Table>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-border">
+          <Pagination
+            :current-page="certificates.current_page"
+            :total-pages="certificates.last_page"
+            :total-items="certificates.total"
+            :per-page="certificates.per_page"
+            @navigate="handlePageChange"
+          />
+        </div>
+      </Card>
+    </div>
+  </AppLayout>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive } from 'vue';
+import { router } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import Button from '@/Components/ui/Button.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import Card from '@/Components/ui/Card.vue';
+import Table from '@/Components/ui/Table.vue';
+import Pagination from '@/Components/ui/Pagination.vue';
+import { useToast } from '@/Composables/useToast';
+import { route } from '@/ziggy';
+
+interface SslCertificate {
+  id: number;
+  domain_id: number;
+  domain_name: string;
+  san_domains: string[] | null;
+  status: 'pending' | 'valid' | 'expiring' | 'expired' | 'failed';
+  issuer: string;
+  issued_at: string | null;
+  expires_at: string | null;
+  auto_renew: boolean;
+  domain?: {
+    name: string;
+    description: string;
+  };
+  created_at: string;
+}
+
+interface Props {
+  certificates: {
+    data: SslCertificate[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+  };
+  stats: {
+    total: number;
+    valid: number;
+    expiring: number;
+    expired: number;
+  };
+}
+
+const props = defineProps<Props>();
+const { success, error } = useToast();
+
+// State
+const loading = ref(false);
+const isRenewing = ref(false);
+const filters = reactive({
+  search: '',
+  status: '',
+});
+
+// Table columns
+const columns = [
+  { key: 'domain_name', label: 'Domínio Principal', sortable: true },
+  { key: 'san_domains', label: 'SAN Domains' },
+  { key: 'status', label: 'Status' },
+  { key: 'expires_at', label: 'Expira em', sortable: true },
+  { key: 'auto_renew', label: 'Auto Renovação' },
+  { key: 'actions', label: 'Ações', align: 'center' },
+];
+
+// Methods
+const createSSL = () => {
+  router.visit(route('ssl.create'));
+};
+
+const viewCertificate = (certificate: SslCertificate) => {
+  router.visit(route('ssl.show', certificate.id));
+};
+
+const renewCertificate = async (certificate: SslCertificate) => {
+  try {
+    await router.post(route('ssl.renew', certificate.id), {}, {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        success('Certificado renovado com sucesso!');
+      },
+      onError: () => {
+        showToast('Erro ao renovar certificado', 'error');
+      }
+    });
+  } catch (error) {
+    showToast('Erro ao renovar certificado', 'error');
+  }
+};
+
+const toggleAutoRenew = async (certificate: SslCertificate) => {
+  try {
+    await router.post(route('ssl.toggle', certificate.id), {}, {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        const action = certificate.auto_renew ? 'desativada' : 'ativada';
+        showToast(`Auto renovação ${action} com sucesso!`, 'success');
+      },
+      onError: () => {
+        showToast('Erro ao alterar auto renovação', 'error');
+      }
+    });
+  } catch (error) {
+    showToast('Erro ao alterar auto renovação', 'error');
+  }
+};
+
+const deleteCertificate = (certificate: SslCertificate) => {
+  if (confirm(`Tem certeza que deseja excluir o certificado para "${certificate.domain_name}"?`)) {
+    router.delete(route('ssl.destroy', certificate.id), {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        showToast('Certificado excluído com sucesso!', 'success');
+      },
+      onError: () => {
+        showToast('Erro ao excluir certificado', 'error');
+      }
+    });
+  }
+};
+
+const renewAll = async () => {
+  isRenewing.value = true;
+  try {
+    await router.post(route('ssl.renewAll'), {}, {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        showToast('Renovação em lote iniciada!', 'success');
+      },
+      onError: () => {
+        showToast('Erro ao iniciar renovação em lote', 'error');
+      },
+      onFinish: () => {
+        isRenewing.value = false;
+      }
+    });
+  } catch (error) {
+    showToast('Erro ao iniciar renovação em lote', 'error');
+    isRenewing.value = false;
+  }
+};
+
+// Helper methods
+const getStatusVariant = (status: string) => {
+  switch (status) {
+    case 'valid': return 'positive';
+    case 'expiring': return 'warning';
+    case 'expired': return 'negative';
+    case 'failed': return 'negative';
+    case 'pending': return 'info';
+    default: return 'neutral';
+  }
+};
+
+const getStatusLabel = (status: string) => {
+  const labels = {
+    valid: 'Válido',
+    expiring: 'Expirando',
+    expired: 'Expirado',
+    failed: 'Falha',
+    pending: 'Pendente',
+  };
+  return labels[status] || status;
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('pt-BR');
+};
+
+const getExpiryText = (expiresAt: string) => {
+  const now = new Date();
+  const expiry = new Date(expiresAt);
+  const diffTime = expiry.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return `Expirou há ${Math.abs(diffDays)} dias`;
+  if (diffDays === 0) return 'Expira hoje';
+  if (diffDays === 1) return 'Expira amanhã';
+  return `Expira em ${diffDays} dias`;
+};
+
+const getExpiryClass = (expiresAt: string) => {
+  const now = new Date();
+  const expiry = new Date(expiresAt);
+  const diffTime = expiry.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return 'text-danger';
+  if (diffDays <= 30) return 'text-warning';
+  return 'text-text-muted';
+};
+
+const clearFilters = () => {
+  filters.search = '';
+  filters.status = '';
+  applyFilters();
+};
+
+const applyFilters = () => {
+  const params = {
+    search: filters.search || undefined,
+    status: filters.status || undefined,
+  };
+  
+  router.get(route('ssl.index'), params, {
+    preserveState: true,
+    preserveScroll: true,
+  });
+};
+
+const handlePageChange = (page: number) => {
+  router.get(route('ssl.index'), { page }, {
+    preserveState: true,
+    preserveScroll: true,
+  });
+};
+</script>

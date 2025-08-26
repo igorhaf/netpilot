@@ -12,8 +12,22 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // You can schedule certificate renewals here later
-        // $schedule->command('proxy:renew')->daily();
+        // Renovar certificados SSL diariamente às 2:00 AM
+        $schedule->command('ssl:renew')
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Deploy do Nginx a cada 5 minutos se houver mudanças
+        $schedule->command('nginx:deploy')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        // Limpar logs antigos semanalmente
+        $schedule->command('logs:cleanup')
+            ->weekly()
+            ->withoutOverlapping();
     }
 
     /**

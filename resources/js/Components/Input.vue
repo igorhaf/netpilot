@@ -15,10 +15,10 @@
         :disabled="disabled"
         :rows="type === 'textarea' ? rows : undefined"
         :class="[
-          'block w-full rounded-lg border transition-all duration-200 ease-in-out focus:ring-2 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed',
+          'block w-full rounded-lg border transition-all duration-200 ease-in-out ring-brand disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100',
           error 
             ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' 
-            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500 hover:border-gray-400',
+            : 'border-gray-300 dark:border-gray-700 focus:border-[--brand-500] focus:ring-[--brand-500] hover:border-gray-400 dark:hover:border-gray-600',
           type === 'textarea' ? 'resize-none' : '',
           sizeClasses
         ]"

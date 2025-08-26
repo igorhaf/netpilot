@@ -1,134 +1,182 @@
 <template>
-  <AppLayout>
-    <div class="px-4 py-6 sm:px-0">
+  <AppLayout title="Nova Regra de Redirect">
+    <div class="p-6">
+      <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Add Redirect</h1>
-        <p class="mt-2 text-sm text-gray-600">Create a new URL redirect rule for traffic forwarding and SEO management.</p>
+        <div class="flex items-center gap-3 mb-4">
+          <Button @click="goBack" variant="ghost" size="sm">
+            <template #icon>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </template>
+            Voltar
+          </Button>
+          <h1 class="text-2xl font-bold text-text">Nova Regra de Redirect</h1>
+        </div>
+        <p class="text-sm text-text-muted">
+          Configure uma nova regra de redirecionamento HTTP
+        </p>
       </div>
 
-      <Card class="max-w-2xl">
-        <form @submit.prevent="submit" class="space-y-6">
+      <!-- Form -->
+      <Card class="max-w-4xl">
+        <form @submit.prevent="submitForm" class="p-6 space-y-6">
+          <!-- Domain Selection -->
           <div>
-            <label for="domain_id" class="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+            <label for="domain_id" class="block text-sm font-medium text-text mb-2">
+              Domínio <span class="text-danger">*</span>
+            </label>
             <select
               id="domain_id"
               v-model="form.domain_id"
               required
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-colors duration-200"
-              :class="{ 'border-red-300': errors.domain_id }"
+              class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+              :class="{ 'border-danger': errors.domain_id }"
             >
-              <option value="">Select a domain</option>
-              <option v-for="domain in domains" :key="domain.id" :value="domain.id">
-                {{ domain.name }}
+              <option value="">Selecione um domínio</option>
+              <option 
+                v-for="domain in domains" 
+                :key="domain.id" 
+                :value="domain.id"
+              >
+                {{ domain.name }} - {{ domain.description }}
               </option>
             </select>
-            <p v-if="errors.domain_id" class="mt-2 text-sm text-red-600">{{ errors.domain_id }}</p>
-            <p class="mt-1 text-sm text-gray-500">Choose the domain this redirect applies to</p>
+            <p v-if="errors.domain_id" class="mt-2 text-sm text-danger">{{ errors.domain_id }}</p>
           </div>
 
-          <Input
-            id="source_pattern"
-            v-model="form.source_pattern"
-            label="Source Pattern"
-            type="text"
-            placeholder="/old-path/*"
-            required
-            :error="errors.source_pattern"
-            help="URL pattern to match for redirection (supports wildcards like /old/*, /users/{id})"
-          />
-
-          <Input
-            id="target_url"
-            v-model="form.target_url"
-            label="Target URL"
-            type="url"
-            placeholder="https://example.com/new-path"
-            required
-            :error="errors.target_url"
-            help="The destination URL to redirect to (must include protocol)"
-          />
-
+          <!-- Source and Target Configuration -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="redirect_type" class="block text-sm font-medium text-gray-700 mb-2">Redirect Type</label>
+              <label for="source_pattern" class="block text-sm font-medium text-text mb-2">
+                Caminho de Origem <span class="text-danger">*</span>
+              </label>
+              <input
+                id="source_pattern"
+                v-model="form.source_pattern"
+                type="text"
+                required
+                placeholder="/old-path"
+                class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                :class="{ 'border-danger': errors.source_pattern }"
+              />
+              <p class="mt-1 text-xs text-text-muted">Ex: /old-path, /api/v1/*, /blog/*</p>
+              <p v-if="errors.source_pattern" class="mt-2 text-sm text-danger">{{ errors.source_pattern }}</p>
+            </div>
+
+            <div>
+              <label for="target_url" class="block text-sm font-medium text-text mb-2">
+                URL de Destino <span class="text-danger">*</span>
+              </label>
+              <input
+                id="target_url"
+                v-model="form.target_url"
+                type="url"
+                required
+                placeholder="https://exemplo.com/new-path"
+                class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                :class="{ 'border-danger': errors.target_url }"
+              />
+              <p class="mt-1 text-xs text-text-muted">URL completa para onde redirecionar</p>
+              <p v-if="errors.target_url" class="mt-2 text-sm text-danger">{{ errors.target_url }}</p>
+            </div>
+          </div>
+
+          <!-- Redirect Configuration -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label for="redirect_type" class="block text-sm font-medium text-text mb-2">
+                Tipo de Redirect <span class="text-danger">*</span>
+              </label>
               <select
                 id="redirect_type"
                 v-model="form.redirect_type"
                 required
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-colors duration-200"
-                :class="{ 'border-red-300': errors.redirect_type }"
+                class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                :class="{ 'border-danger': errors.redirect_type }"
               >
-                <option value="301">301 - Permanent Redirect</option>
-                <option value="302">302 - Temporary Redirect</option>
-                <option value="303">303 - See Other</option>
-                <option value="307">307 - Temporary Redirect (Preserve Method)</option>
-                <option value="308">308 - Permanent Redirect (Preserve Method)</option>
+                <option value="301">301 - Permanente</option>
+                <option value="302">302 - Temporário</option>
+                <option value="307">307 - Temporário (mantém método)</option>
+                <option value="308">308 - Permanente (mantém método)</option>
               </select>
-              <p v-if="errors.redirect_type" class="mt-2 text-sm text-red-600">{{ errors.redirect_type }}</p>
-              <p class="mt-1 text-sm text-gray-500">Choose the appropriate HTTP redirect status code</p>
+              <p v-if="errors.redirect_type" class="mt-2 text-sm text-danger">{{ errors.redirect_type }}</p>
             </div>
 
-            <Input
-              id="priority"
-              v-model="form.priority"
-              label="Priority"
-              type="number"
-              min="1"
-              max="1000"
-              :error="errors.priority"
-              help="Higher numbers = higher priority (1-1000)"
-            />
-          </div>
-
-          <Input
-            id="description"
-            v-model="form.description"
-            label="Description"
-            type="textarea"
-            placeholder="Optional description for this redirect"
-            :error="errors.description"
-            help="Add a description to help identify this redirect's purpose"
-            :rows="3"
-          />
-
-          <div class="space-y-4">
-            <div class="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
-              <div class="flex items-center h-5">
-                <input
-                  id="is_active"
-                  v-model="form.is_active"
-                  type="checkbox"
-                  class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300 rounded transition-colors duration-200"
-                />
-              </div>
-              <div class="text-sm">
-                <label for="is_active" class="font-medium text-green-900">Active</label>
-                <p class="text-green-700">Enable this redirect in the proxy configuration</p>
-              </div>
+            <div>
+              <label for="priority" class="block text-sm font-medium text-text mb-2">
+                Prioridade
+              </label>
+              <input
+                id="priority"
+                v-model="form.priority"
+                type="number"
+                min="1"
+                max="1000"
+                placeholder="100"
+                class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                :class="{ 'border-danger': errors.priority }"
+              />
+              <p class="mt-1 text-xs text-text-muted">Menor número = maior prioridade</p>
+              <p v-if="errors.priority" class="mt-2 text-sm text-danger">{{ errors.priority }}</p>
             </div>
 
-            <div class="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div class="flex items-center h-5">
+            <div class="flex flex-col justify-end">
+              <label class="flex items-center gap-2">
                 <input
-                  id="preserve_query"
                   v-model="form.preserve_query"
                   type="checkbox"
-                  class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded transition-colors duration-200"
+                  class="w-4 h-4 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2"
                 />
-              </div>
-              <div class="text-sm">
-                <label for="preserve_query" class="font-medium text-blue-900">Preserve Query Parameters</label>
-                <p class="text-blue-700">Keep query string parameters when redirecting</p>
-              </div>
+                <span class="text-sm font-medium text-text">Manter Query Strings</span>
+              </label>
+              <p class="mt-1 text-xs text-text-muted">Preservar parâmetros ?param=value</p>
             </div>
           </div>
 
-          <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button href="/redirects" variant="outline">
-              Cancel
+          <!-- Status -->
+          <div>
+            <label class="flex items-center gap-2">
+              <input
+                v-model="form.is_active"
+                type="checkbox"
+                class="w-4 h-4 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2"
+              />
+              <span class="text-sm font-medium text-text">Ativar regra imediatamente</span>
+            </label>
+            <p class="mt-1 text-xs text-text-muted">A regra será aplicada ao Nginx se marcada</p>
+          </div>
+
+          <!-- Preview -->
+          <div v-if="form.source_pattern && form.target_url" class="p-4 bg-elevated/50 rounded-lg border border-border">
+            <h3 class="text-sm font-medium text-text mb-2">Preview da Regra:</h3>
+            <div class="text-sm text-text-muted space-y-1">
+              <p><strong>Origem:</strong> {{ form.source_pattern }}</p>
+              <p><strong>Destino:</strong> {{ form.target_url }}</p>
+              <p><strong>Tipo:</strong> {{ getRedirectTypeName(form.redirect_type) }}</p>
+              <p><strong>Prioridade:</strong> {{ form.priority }}</p>
+              <p><strong>Query Strings:</strong> {{ form.preserve_query ? 'Preservar' : 'Ignorar' }}</p>
+              <p><strong>Status:</strong> {{ form.is_active ? 'Ativa' : 'Inativa' }}</p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-end gap-3 pt-6 border-t border-border">
+            <Button @click="goBack" type="button" variant="ghost">
+              Cancelar
             </Button>
-            <Button type="submit" :loading="processing" variant="primary">
-              Create Redirect
+            <Button 
+              type="submit" 
+              :disabled="isSubmitting"
+              class="bg-accent hover:bg-accent-light"
+            >
+              <template #icon v-if="isSubmitting">
+                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+              </template>
+              {{ isSubmitting ? 'Criando...' : 'Criar Regra de Redirect' }}
             </Button>
           </div>
         </form>
@@ -137,36 +185,81 @@
   </AppLayout>
 </template>
 
-<script setup>
-import { reactive, ref } from 'vue'
-import { router } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import Card from '@/Components/Card.vue'
-import Button from '@/Components/Button.vue'
-import Input from '@/Components/Input.vue'
+<script setup lang="ts">
+import { ref, reactive } from 'vue';
+import { router } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import Button from '@/Components/ui/Button.vue';
+import Card from '@/Components/ui/Card.vue';
+import { useToast } from '@/Composables/useToast';
+import { route } from '@/ziggy';
 
-const props = defineProps({
-  domains: { type: Array, required: true },
-  errors: { type: Object, default: () => ({}) }
-})
+interface Domain {
+  id: number;
+  name: string;
+  description: string;
+  is_active: boolean;
+}
 
+interface Props {
+  domains: Domain[];
+}
+
+const props = defineProps<Props>();
+const { success, error } = useToast();
+
+// State
+const isSubmitting = ref(false);
+const errors = reactive<Record<string, string>>({});
+
+// Form
 const form = reactive({
   domain_id: '',
   source_pattern: '',
   target_url: '',
   redirect_type: 301,
   priority: 100,
-  description: '',
   is_active: true,
-  preserve_query: true
-})
+  preserve_query: true,
+});
 
-const processing = ref(false)
+// Methods
+const goBack = () => {
+  router.visit(route('redirects.index'));
+};
 
-const submit = () => {
-  processing.value = true
-  router.post('/redirects', form, {
-    onFinish: () => (processing.value = false)
-  })
-}
+const getRedirectTypeName = (type: number): string => {
+  const types = {
+    301: '301 - Permanente',
+    302: '302 - Temporário',
+    307: '307 - Temporário (mantém método)',
+    308: '308 - Permanente (mantém método)',
+  };
+  return types[type as keyof typeof types] || 'Desconhecido';
+};
+
+const submitForm = async () => {
+  isSubmitting.value = true;
+  errors.value = {};
+
+  try {
+    await router.post(route('redirects.store'), form, {
+      onSuccess: () => {
+        success('Regra de redirect criada com sucesso!');
+      },
+      onError: (validationErrors) => {
+        Object.keys(validationErrors).forEach(key => {
+          errors[key] = validationErrors[key];
+        });
+        error('Erro ao criar regra de redirect');
+      },
+      onFinish: () => {
+        isSubmitting.value = false;
+      }
+    });
+  } catch (error) {
+    error('Erro ao criar regra de redirect');
+    isSubmitting.value = false;
+  }
+};
 </script>

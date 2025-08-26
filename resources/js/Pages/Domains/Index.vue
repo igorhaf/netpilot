@@ -1,211 +1,494 @@
 <template>
-  <AppLayout>
-    <div class="px-4 py-6 sm:px-0">
-      <div class="sm:flex sm:items-center mb-8">
-        <div class="sm:flex-auto">
-          <h1 class="text-3xl font-bold text-gray-900">Domains</h1>
-          <p class="mt-2 text-sm text-gray-600">Manage your proxy domains and SSL certificates with automatic HTTPS.</p>
+  <AppLayout title="Domínios">
+    <div class="space-y-6">
+      <!-- Header com ações -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-semibold">Domínios</h1>
+          <p class="text-text-muted mt-1">Gerencie os domínios do seu proxy reverso</p>
         </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <Button href="/domains/create" variant="primary">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        <Button @click="openCreateModal" variant="default" class="sm:self-end">
+          <template #icon>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
-            Add Domain
+          </template>
+          Adicionar Domínio
           </Button>
-        </div>
       </div>
 
-      <!-- Desktop Table -->
-      <div class="hidden lg:block">
+      <!-- Filtros -->
         <Card>
-          <div class="overflow-hidden">
-            <table class="w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auto TLS</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Routes</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <transition-group
-                name="list"
-                enter-active-class="transition duration-300 ease-out"
-                enter-from-class="opacity-0 transform translate-y-4"
-                enter-to-class="opacity-100 transform translate-y-0"
-                leave-active-class="transition duration-200 ease-in"
-                leave-from-class="opacity-100 transform translate-y-0"
-                leave-to-class="opacity-0 transform translate-y-4"
-                tag="tbody"
-                class="bg-white divide-y divide-gray-200"
-              >
-                  <tr v-for="domain in domains.data" :key="domain.id" class="hover:bg-gray-50 transition-colors duration-200">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                      <div class="flex-shrink-0 h-12 w-12">
-                        <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
-                          <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <label for="search" class="sr-only">Buscar</label>
+            <div class="relative rounded-lg">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                           </svg>
                         </div>
+              <input
+                id="search"
+                v-model="filters.search"
+                type="search"
+                class="block w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                placeholder="Buscar domínios..."
+              />
                       </div>
-                      <div class="ml-4">
-                        <div class="text-sm font-semibold text-gray-900">{{ domain.name }}</div>
-                        <div class="text-sm text-gray-500">{{ domain.description || 'No description' }}</div>
-                      </div>
                     </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span :class="domain.auto_tls ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
-                      <svg v-if="domain.auto_tls" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                      </svg>
-                      {{ domain.auto_tls ? 'Enabled' : 'Disabled' }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span :class="domain.is_active ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
-                      <div :class="domain.is_active ? 'bg-green-400' : 'bg-red-400'" class="w-1.5 h-1.5 rounded-full mr-1.5"></div>
-                      {{ domain.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div class="flex items-center">
-                      <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                      </svg>
-                      {{ domain.routes_count || 0 }} routes
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="w-full sm:w-40">
+              <label for="status" class="sr-only">Status</label>
+              <select
+                id="status"
+                v-model="filters.status"
+                class="block w-full border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+              >
+                <option value="">Todos os status</option>
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
+
+            <div class="w-full sm:w-40">
+              <label for="autoTLS" class="sr-only">Auto TLS</label>
+              <select
+                id="autoTLS"
+                v-model="filters.autoTLS"
+                class="block w-full border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+              >
+                <option value="">Todos Auto TLS</option>
+                <option value="enabled">Habilitado</option>
+                <option value="disabled">Desabilitado</option>
+              </select>
                     </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ formatDate(domain.created_at) }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div class="flex justify-end space-x-2">
-                      <Button :href="`/domains/${domain.id}/edit`" variant="ghost" size="sm">
-                        Edit
-                      </Button>
-                      <Button @click="deleteDomain(domain)" variant="ghost" size="sm" class="text-red-600 hover:text-red-700">
-                        Delete
+
+            <Button variant="outline" @click="resetFilters">
+              Limpar
                       </Button>
                     </div>
-                  </td>
-                </tr>
-                </transition-group>
-            </table>
+        </div>
+      </Card>
+
+      <!-- Tabela de Domínios -->
+      <Card>
+        <div v-if="loading" class="py-12 flex justify-center">
+          <div class="flex flex-col items-center">
+            <svg class="animate-spin h-10 w-10 text-accent mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-text-muted">Carregando domínios...</p>
           </div>
-        </Card>
       </div>
 
-      <!-- Mobile Cards -->
-      <div class="lg:hidden space-y-4">
-        <transition-group
-          name="list"
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 transform translate-y-4"
-          enter-to-class="opacity-100 transform translate-y-0"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 transform translate-y-0"
-          leave-to-class="opacity-0 transform translate-y-4"
-        >
-          <Card v-for="domain in domains.data" :key="domain.id" class="hover:shadow-md transition-shadow duration-200">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center flex-1">
-                <div class="flex-shrink-0 h-12 w-12">
-                  <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+        <div v-else-if="error" class="py-12 flex justify-center">
+          <div class="flex flex-col items-center text-center">
+            <svg class="h-12 w-12 text-danger mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
+            <p class="text-danger font-medium mb-2">Erro ao carregar domínios</p>
+            <p class="text-text-muted max-w-md">Ocorreu um erro ao carregar os dados. Por favor, tente novamente ou contate o suporte.</p>
+            <Button @click="loadDomains" variant="outline" class="mt-4">
+              Tentar novamente
+            </Button>
                   </div>
                 </div>
-                <div class="ml-4 flex-1">
-                  <div class="text-lg font-semibold text-gray-900">{{ domain.name }}</div>
-                  <div class="text-sm text-gray-500 mt-1">{{ domain.description || 'No description' }}</div>
-                  
-                  <div class="flex flex-wrap gap-2 mt-3">
-                    <span :class="domain.auto_tls ? 'bg-green-100 text-green-800 border-green-200' : 'bg-gray-100 text-gray-800 border-gray-200'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
-                      <svg v-if="domain.auto_tls" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+
+        <div v-else-if="filteredDomains.length === 0" class="py-12 flex justify-center">
+          <div class="flex flex-col items-center text-center">
+            <svg class="h-12 w-12 text-text-muted mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                       </svg>
-                      {{ domain.auto_tls ? 'Auto TLS' : 'No TLS' }}
-                    </span>
-                    
-                    <span :class="domain.is_active ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
-                      <div :class="domain.is_active ? 'bg-green-400' : 'bg-red-400'" class="w-1.5 h-1.5 rounded-full mr-1.5"></div>
-                      {{ domain.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                    
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                      <svg class="w-3 h-3 mr-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                      </svg>
-                      {{ domain.routes_count || 0 }} routes
-                    </span>
-                  </div>
-                  
-                  <div class="text-xs text-gray-500 mt-2">
-                    Created {{ formatDate(domain.created_at) }}
+            <p class="text-text font-medium mb-2">Nenhum domínio encontrado</p>
+            <p class="text-text-muted max-w-md">
+              {{ hasFilters ? 'Nenhum domínio corresponde aos filtros aplicados.' : 'Você ainda não tem nenhum domínio cadastrado.' }}
+            </p>
+            <div class="mt-4 flex space-x-3">
+              <Button v-if="hasFilters" @click="resetFilters" variant="outline">
+                Limpar filtros
+              </Button>
+              <Button @click="openCreateModal" variant="default">
+                Adicionar Domínio
+              </Button>
                   </div>
                 </div>
               </div>
               
-              <div class="flex flex-col space-y-2 ml-4">
-                <Button :href="`/domains/${domain.id}/edit`" variant="ghost" size="sm">
-                  Edit
+        <div v-else>
+          <!-- Ações em lote -->
+          <div v-if="selectedDomains.length > 0" class="bg-elevated p-4 rounded-lg mb-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm">
+              <span class="font-medium">{{ selectedDomains.length }}</span> 
+              {{ selectedDomains.length === 1 ? 'domínio selecionado' : 'domínios selecionados' }}
+            </p>
+            <div class="flex gap-2">
+              <Button variant="outline" size="sm" @click="toggleSelectedStatus">
+                {{ allSelectedActive ? 'Desativar' : 'Ativar' }}
+              </Button>
+              <Button variant="danger" size="sm" @click="confirmDeleteSelected">
+                Excluir
                 </Button>
-                <Button @click="deleteDomain(domain)" variant="ghost" size="sm" class="text-red-600 hover:text-red-700">
-                  Delete
+              <Button variant="ghost" size="sm" @click="clearSelection">
+                Cancelar
                 </Button>
-              </div>
             </div>
-          </Card>
-        </transition-group>
-      </div>
+          </div>
 
-      <!-- Pagination -->
-      <div v-if="domains.links" class="mt-6">
-        <nav class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
-          <div class="-mt-px flex w-0 flex-1">
-            <Link v-if="domains.prev_page_url" :href="domains.prev_page_url" class="inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
-              Previous
-            </Link>
+          <Table :sticky-header="true" :col-span="7">
+            <template #header>
+              <th class="w-10 px-4 py-3">
+                <input
+                  type="checkbox"
+                  :checked="selectAll"
+                  @change="toggleSelectAll"
+                  class="rounded border-border text-accent focus:ring-accent"
+                />
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Domínio
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Descrição
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Auto TLS
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Status
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Rotas
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
+                Criado em
+              </th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">
+                Ações
+              </th>
+            </template>
+
+            <tr v-for="domain in filteredDomains" :key="domain.id" class="hover:bg-elevated">
+              <td class="px-4 py-4">
+                <input
+                  type="checkbox"
+                  :checked="isSelected(domain.id)"
+                  @change="toggleSelection(domain.id)"
+                  class="rounded border-border text-accent focus:ring-accent"
+                />
+              </td>
+              <td class="px-4 py-4 font-medium">
+                {{ domain.domain }}
+              </td>
+              <td class="px-4 py-4 text-text-muted">
+                {{ domain.description || '—' }}
+              </td>
+              <td class="px-4 py-4">
+                <Badge :variant="domain.autoTLS ? 'info' : 'neutral'">
+                  {{ domain.autoTLS ? 'Habilitado' : 'Desabilitado' }}
+                </Badge>
+              </td>
+              <td class="px-4 py-4">
+                <Badge :variant="domain.active ? 'success' : 'danger'">
+                  {{ domain.active ? 'Ativo' : 'Inativo' }}
+                </Badge>
+              </td>
+              <td class="px-4 py-4">
+                {{ domain.routesCount }}
+              </td>
+              <td class="px-4 py-4 text-text-muted">
+                {{ formatDate(domain.createdAt) }}
+              </td>
+              <td class="px-4 py-4 text-right space-x-2 whitespace-nowrap">
+                <Button variant="ghost" size="sm" @click="editDomain(domain)">
+                  Editar
+                </Button>
+                <Button variant="ghost" size="sm" class="text-danger" @click="confirmDelete(domain)">
+                  Excluir
+                </Button>
+              </td>
+            </tr>
+          </Table>
+
+          <!-- Paginação -->
+          <div class="mt-6">
+            <Pagination :links="domains.links" @navigate="goToPage" />
           </div>
-          <div class="hidden md:-mt-px md:flex">
-            <Link v-for="link in domains.links.slice(1, -1)" :key="link.label" :href="link.url" :class="link.active ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium">
-              {{ link.label }}
-            </Link>
           </div>
-          <div class="-mt-px flex w-0 flex-1 justify-end">
-            <Link v-if="domains.next_page_url" :href="domains.next_page_url" class="inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
-              Next
-            </Link>
-          </div>
-        </nav>
-      </div>
+      </Card>
     </div>
   </AppLayout>
 </template>
 
-<script setup>
-import { Link, router } from '@inertiajs/vue3'
-import AppLayout from '@/Layouts/AppLayout.vue'
-import Card from '@/Components/Card.vue'
-import Button from '@/Components/Button.vue'
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import Button from '@/Components/ui/Button.vue';
+import Card from '@/Components/ui/Card.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import Table from '@/Components/ui/Table.vue';
+import Pagination from '@/Components/ui/Pagination.vue';
+import { toast } from '@/Composables/useToast';
+import { route } from '@/ziggy';
 
-const props = defineProps({
-  domains: { type: Object, required: true }
-})
-
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString()
+// Tipos
+interface Domain {
+  id: number;
+  domain: string;
+  description: string | null;
+  autoTLS: boolean;
+  active: boolean;
+  routesCount: number;
+  createdAt: string;
 }
 
-const deleteDomain = (domain) => {
-  if (confirm(`Are you sure you want to delete ${domain.name}?`)) {
-    router.delete(`/domains/${domain.id}`)
+interface Filters {
+  search: string;
+  status: '' | 'active' | 'inactive';
+  autoTLS: '' | 'enabled' | 'disabled';
+}
+
+// Estado
+const domains = ref<{
+  data: Domain[];
+  links: any[];
+}>({
+  data: [],
+  links: []
+});
+const loading = ref(true);
+const error = ref(false);
+const selectedDomains = ref<number[]>([]);
+const filters = ref<Filters>({
+  search: '',
+  status: '',
+  autoTLS: ''
+});
+
+// Computed
+const filteredDomains = computed(() => {
+  return domains.value.data.filter(domain => {
+    // Filtro de busca
+    if (filters.value.search && !domain.domain.toLowerCase().includes(filters.value.search.toLowerCase())) {
+      return false;
+    }
+    
+    // Filtro de status
+    if (filters.value.status === 'active' && !domain.active) {
+      return false;
+    }
+    if (filters.value.status === 'inactive' && domain.active) {
+      return false;
+    }
+    
+    // Filtro de autoTLS
+    if (filters.value.autoTLS === 'enabled' && !domain.autoTLS) {
+      return false;
+    }
+    if (filters.value.autoTLS === 'disabled' && domain.autoTLS) {
+      return false;
+    }
+    
+    return true;
+  });
+});
+
+const selectAll = computed(() => {
+  return domains.value.data.length > 0 && selectedDomains.value.length === domains.value.data.length;
+});
+
+const hasFilters = computed(() => {
+  return filters.value.search !== '' || filters.value.status !== '' || filters.value.autoTLS !== '';
+});
+
+const allSelectedActive = computed(() => {
+  if (selectedDomains.value.length === 0) return false;
+  
+  return selectedDomains.value.every(id => {
+    const domain = domains.value.data.find(d => d.id === id);
+    return domain && domain.active;
+  });
+});
+
+// Métodos
+const loadDomains = async () => {
+  loading.value = true;
+  error.value = false;
+  
+  try {
+    // Simulação de carregamento de dados (em produção, use Inertia.get ou fetch)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Dados de exemplo
+    domains.value = {
+      data: [
+        {
+          id: 1,
+          domain: 'example.com',
+          description: 'Site principal',
+          autoTLS: true,
+          active: true,
+          routesCount: 3,
+          createdAt: '2023-08-15T14:30:00Z'
+        },
+        {
+          id: 2,
+          domain: 'api.example.com',
+          description: 'API pública',
+          autoTLS: true,
+          active: true,
+          routesCount: 5,
+          createdAt: '2023-08-16T10:15:00Z'
+        },
+        {
+          id: 3,
+          domain: 'staging.example.com',
+          description: 'Ambiente de homologação',
+          autoTLS: false,
+          active: false,
+          routesCount: 2,
+          createdAt: '2023-08-17T09:45:00Z'
+        },
+        {
+          id: 4,
+          domain: 'blog.example.com',
+          description: null,
+          autoTLS: true,
+          active: true,
+          routesCount: 1,
+          createdAt: '2023-08-18T16:20:00Z'
+        },
+        {
+          id: 5,
+          domain: 'admin.example.com',
+          description: 'Painel administrativo',
+          autoTLS: true,
+          active: true,
+          routesCount: 4,
+          createdAt: '2023-08-19T11:05:00Z'
+        }
+      ],
+      links: [
+        { url: null, label: '&laquo; Previous', active: false },
+        { url: '#', label: '1', active: true },
+        { url: '#', label: '2', active: false },
+        { url: '#', label: '3', active: false },
+        { url: '#', label: 'Next &raquo;', active: false }
+      ]
+    };
+  } catch (e) {
+    error.value = true;
+    console.error('Erro ao carregar domínios:', e);
+  } finally {
+    loading.value = false;
   }
-}
+};
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
+};
+
+const resetFilters = () => {
+  filters.value = {
+    search: '',
+    status: '',
+    autoTLS: ''
+  };
+};
+
+const isSelected = (id: number) => {
+  return selectedDomains.value.includes(id);
+};
+
+const toggleSelection = (id: number) => {
+  const index = selectedDomains.value.indexOf(id);
+  if (index === -1) {
+    selectedDomains.value.push(id);
+  } else {
+    selectedDomains.value.splice(index, 1);
+  }
+};
+
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedDomains.value = [];
+  } else {
+    selectedDomains.value = domains.value.data.map(domain => domain.id);
+  }
+};
+
+const clearSelection = () => {
+  selectedDomains.value = [];
+};
+
+const openCreateModal = () => {
+  router.visit(route('domains.create'));
+};
+
+const editDomain = (domain: Domain) => {
+  // Em produção, abra um modal ou navegue para uma página de edição
+  toast.info('Editar domínio', `Editando ${domain.domain}`);
+};
+
+const confirmDelete = (domain: Domain) => {
+  // Em produção, exiba um modal de confirmação
+  if (confirm(`Tem certeza que deseja excluir o domínio ${domain.domain}?`)) {
+    deleteDomain(domain.id);
+  }
+};
+
+const deleteDomain = (id: number) => {
+  // Em produção, envie uma requisição para excluir o domínio
+  domains.value.data = domains.value.data.filter(domain => domain.id !== id);
+  toast.success('Domínio excluído', 'O domínio foi excluído com sucesso.');
+};
+
+const confirmDeleteSelected = () => {
+  // Em produção, exiba um modal de confirmação
+  if (confirm(`Tem certeza que deseja excluir ${selectedDomains.value.length} domínios?`)) {
+    deleteSelected();
+  }
+};
+
+const deleteSelected = () => {
+  // Em produção, envie uma requisição para excluir os domínios selecionados
+  domains.value.data = domains.value.data.filter(domain => !selectedDomains.value.includes(domain.id));
+  toast.success('Domínios excluídos', `${selectedDomains.value.length} domínios foram excluídos com sucesso.`);
+  selectedDomains.value = [];
+};
+
+const toggleSelectedStatus = () => {
+  // Em produção, envie uma requisição para ativar/desativar os domínios selecionados
+  const newStatus = !allSelectedActive.value;
+  
+  domains.value.data = domains.value.data.map(domain => {
+    if (selectedDomains.value.includes(domain.id)) {
+      return { ...domain, active: newStatus };
+    }
+    return domain;
+  });
+  
+  toast.success(
+    newStatus ? 'Domínios ativados' : 'Domínios desativados',
+    `${selectedDomains.value.length} domínios foram ${newStatus ? 'ativados' : 'desativados'} com sucesso.`
+  );
+};
+
+const goToPage = (url: string) => {
+  // Em produção, use router.get para navegar para a página
+  console.log('Navegando para:', url);
+};
+
+// Lifecycle
+onMounted(() => {
+  loadDomains();
+});
 </script>

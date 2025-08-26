@@ -1,132 +1,281 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-    <!-- Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-40">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex">
-            <div class="flex-shrink-0 flex items-center">
-              <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                  </svg>
-                </div>
-                <h1 class="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">NetPilot</h1>
-              </div>
-            </div>
-            <div class="hidden sm:ml-8 sm:flex sm:space-x-1">
-              <Link 
-                v-for="item in navigation" 
-                :key="item.name"
-                :href="item.href" 
-                :class="[
-                  'inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out',
-                  isActive(item.href) 
-                    ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                ]"
-              >
-                <component :is="item.icon()" class="mr-2" />
-                {{ item.name }}
-              </Link>
-            </div>
+  <div class="min-h-screen bg-background text-text flex">
+    <!-- Sidebar -->
+    <aside
+      :class="[
+        'bg-surface border-r border-border transition-all duration-300 ease-in-out',
+        sidebarCollapsed ? 'w-16' : 'w-64'
+      ]"
+      :aria-expanded="!sidebarCollapsed"
+    >
+      <!-- Logo e Toggle -->
+      <div class="h-16 flex items-center justify-between px-4 border-b border-border">
+        <div class="flex items-center">
+          <!-- Logo -->
+          <div class="flex-shrink-0 text-accent font-bold text-xl">
+            <span v-if="!sidebarCollapsed">NetPilot</span>
+            <span v-else>NP</span>
           </div>
-          <div class="flex items-center space-x-4">
-            <div class="hidden sm:flex items-center space-x-2">
-              <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span class="text-sm text-gray-600">Proxy Active</span>
+        </div>
+        
+        <!-- Toggle Button -->
+        <button
+          @click="toggleSidebar"
+          class="p-1 rounded-md hover:bg-elevated text-text-muted hover:text-text"
+          aria-label="Toggle sidebar"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              v-if="!sidebarCollapsed"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+            ></path>
+            <path
+              v-else
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 5l7 7-7 7M5 5l7 7-7 7"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="mt-4 px-2 space-y-1">
+        <Link
+          v-for="item in navigation"
+          :key="item.name"
+          :href="item.href"
+          :class="[
+            route().current(item.active) 
+              ? 'bg-elevated text-accent' 
+              : 'text-text-muted hover:bg-elevated hover:text-text',
+            'group flex items-center px-3 py-2 rounded-lg text-sm font-medium'
+          ]"
+          :aria-current="route().current(item.active) ? 'page' : undefined"
+        >
+          <component
+            :is="item.icon"
+            :class="[
+              'flex-shrink-0 w-5 h-5',
+              route().current(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
+            ]"
+            aria-hidden="true"
+          />
+          <span v-if="!sidebarCollapsed" class="ml-3 truncate">{{ item.name }}</span>
+        </Link>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Top Bar -->
+      <header class="bg-surface border-b border-border h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <!-- Page Title -->
+        <h1 class="text-lg font-medium">{{ title }}</h1>
+
+        <!-- User Menu -->
+        <div class="flex items-center space-x-4">
+          <button
+            class="p-1 rounded-full text-text-muted hover:text-text"
+            aria-label="Notificações"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+          </button>
+
+          <div class="relative">
+            <button
+              @click="userMenuOpen = !userMenuOpen"
+              class="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-ring"
+              id="user-menu"
+              aria-haspopup="true"
+              :aria-expanded="userMenuOpen"
+            >
+              <div class="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white">
+                <span class="text-sm font-medium">US</span>
+              </div>
+              <span v-if="!sidebarCollapsed" class="text-sm font-medium">Usuário</span>
+            </button>
+
+            <!-- Dropdown -->
+            <div
+              v-if="userMenuOpen"
+              class="origin-top-right absolute right-0 mt-2 w-48 rounded-lg shadow-elevation bg-elevated border border-border py-1"
+              role="menu"
+              aria-orientation="vertical"
+              aria-labelledby="user-menu"
+            >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-text hover:bg-surface"
+                role="menuitem"
+              >
+                Perfil
+              </a>
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-text hover:bg-surface"
+                role="menuitem"
+              >
+                Configurações
+              </a>
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-danger hover:bg-surface"
+                role="menuitem"
+              >
+                Sair
+              </a>
             </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </header>
 
-    <!-- Page Content -->
-    <main class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-      <transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 transform translate-y-4"
-        enter-to-class="opacity-100 transform translate-y-0"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 transform translate-y-0"
-        leave-to-class="opacity-0 transform translate-y-4"
-        mode="out-in"
-      >
+      <!-- Page Content -->
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <slot />
-      </transition>
-    </main>
+      </main>
+    </div>
 
-    <!-- Toast Notifications -->
+    <!-- Toast Container -->
     <Toast />
   </div>
 </template>
 
-<script setup>
-import { Link, usePage } from '@inertiajs/vue3'
-import { computed, h } from 'vue'
-import Toast from '@/Components/Toast.vue'
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import Toast from '@/Components/ui/Toast.vue';
 
-const page = usePage()
+// Importar a função route do Inertia
+import { route } from '@/ziggy';
 
-const navigation = [
-  { 
-    name: 'Dashboard', 
-    href: '/',
-    icon: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z' }),
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 5a2 2 0 012-2h4a2 2 0 012 2v3H8V5z' })
-    ])
-  },
-  { 
-    name: 'Domains', 
-    href: '/domains',
-    icon: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9' })
-    ])
-  },
-  { 
-    name: 'Upstreams', 
-    href: '/upstreams',
-    icon: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M13 10V3L4 14h7v7l9-11h-7z' })
-    ])
-  },
-  { 
-    name: 'Routes', 
-    href: '/routes',
-    icon: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' })
-    ])
-  },
-  { 
-    name: 'Redirects', 
-    href: '/redirects',
-    icon: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
-    ])
-  },
-  { 
-    name: 'Sync', 
-    href: '/sync',
-    icon: () => h('svg', { class: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' })
-    ])
-  }
-]
-
-const currentUrl = computed(() => page?.url?.value || page?.url || window.location.pathname || '/')
-
-const isActive = (path) => {
-  try {
-    const url = currentUrl.value
-    if (path === '/') {
-      return url === path
-    }
-    return url === path || (url && url.startsWith(path + '/'))
-  } catch (error) {
-    console.warn('Error in isActive:', error)
-    return false
-  }
+interface Props {
+  title?: string;
 }
+
+const props = withDefaults(defineProps<Props>(), {
+  title: 'NetPilot'
+});
+
+// Sidebar state
+const sidebarCollapsed = ref(false);
+const toggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value;
+  localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value.toString());
+};
+
+// User menu state
+const userMenuOpen = ref(false);
+
+// Fechar menu ao clicar fora
+const closeUserMenu = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (userMenuOpen.value && !target.closest('#user-menu')) {
+    userMenuOpen.value = false;
+  }
+};
+
+// Componentes de ícones
+const DashboardIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+  `
+};
+
+const GlobeIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  `
+};
+
+const ServerIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+    </svg>
+  `
+};
+
+const ShieldIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  `
+};
+
+const ProxyIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 5v14M8 5v14" />
+    </svg>
+  `
+};
+
+const SSLIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    </svg>
+  `
+};
+
+const RedirectIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+    </svg>
+  `
+};
+
+const LogsIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  `
+};
+
+// Navegação (usando apenas rotas existentes)
+const navigation = [
+  { name: 'Dashboard', href: route('dashboard'), active: '', icon: DashboardIcon },
+  { name: 'Domínios', href: route('domains.index'), active: 'domains.*', icon: GlobeIcon },
+  { name: 'Proxy Reverso', href: route('proxy.index'), active: 'proxy.*', icon: ProxyIcon },
+  { name: 'Certificados SSL', href: route('ssl.index'), active: 'ssl.*', icon: SSLIcon },
+  { name: 'Redirects', href: route('redirects.index'), active: 'redirects.*', icon: RedirectIcon },
+  { name: 'Logs', href: route('logs.index'), active: 'logs.*', icon: LogsIcon },
+];
+
+// Lifecycle hooks
+onMounted(() => {
+  // Restaurar estado do sidebar do localStorage
+  const savedState = localStorage.getItem('sidebarCollapsed');
+  if (savedState) {
+    sidebarCollapsed.value = savedState === 'true';
+  }
+  
+  // Adicionar listener para fechar menu ao clicar fora
+  document.addEventListener('click', closeUserMenu);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeUserMenu);
+});
 </script>
