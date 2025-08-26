@@ -91,7 +91,7 @@
                     </svg>
             <p class="text-danger font-medium mb-2">Erro ao carregar domínios</p>
             <p class="text-text-muted max-w-md">Ocorreu um erro ao carregar os dados. Por favor, tente novamente ou contate o suporte.</p>
-            <Button @click="loadDomains" variant="outline" class="mt-4">
+            <Button @click="window.location.reload()" variant="outline" class="mt-4">
               Tentar novamente
             </Button>
                   </div>
@@ -180,26 +180,26 @@
                 />
               </td>
               <td class="px-4 py-4 font-medium">
-                {{ domain.domain }}
+                {{ domain.name }}
               </td>
               <td class="px-4 py-4 text-text-muted">
                 {{ domain.description || '—' }}
               </td>
               <td class="px-4 py-4">
-                <Badge :variant="domain.autoTLS ? 'info' : 'neutral'">
-                  {{ domain.autoTLS ? 'Habilitado' : 'Desabilitado' }}
+                <Badge :variant="domain.auto_ssl ? 'info' : 'neutral'">
+                  {{ domain.auto_ssl ? 'Habilitado' : 'Desabilitado' }}
                 </Badge>
               </td>
               <td class="px-4 py-4">
-                <Badge :variant="domain.active ? 'success' : 'danger'">
-                  {{ domain.active ? 'Ativo' : 'Inativo' }}
+                <Badge :variant="domain.is_active ? 'success' : 'danger'">
+                  {{ domain.is_active ? 'Ativo' : 'Inativo' }}
                 </Badge>
               </td>
               <td class="px-4 py-4">
-                {{ domain.routesCount }}
+                {{ domain.proxy_rules_count + domain.ssl_certificates_count + domain.redirect_rules_count }}
               </td>
               <td class="px-4 py-4 text-text-muted">
-                {{ formatDate(domain.createdAt) }}
+                {{ formatDate(domain.created_at) }}
               </td>
               <td class="px-4 py-4 text-right space-x-2 whitespace-nowrap">
                 <Button variant="ghost" size="sm" @click="editDomain(domain)">
@@ -219,6 +219,83 @@
           </div>
       </Card>
     </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div v-if="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <!-- Overlay -->
+      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="closeDeleteModal"></div>
+      
+      <!-- Modal -->
+      <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-md transform overflow-hidden rounded-lg bg-surface border border-border shadow-xl transition-all">
+          <!-- Header -->
+          <div class="bg-danger/10 px-6 py-4 border-b border-border">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-lg font-medium text-text">Confirmar Exclusão</h3>
+                <p class="text-sm text-text-muted">Esta ação não pode ser desfeita.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="px-6 py-4">
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-danger/10 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+              </div>
+              <div class="flex-1">
+                <p class="text-text">
+                  Tem certeza que deseja excluir o domínio 
+                  <span class="font-semibold text-danger">{{ domainToDelete?.name }}</span>?
+                </p>
+                <div class="mt-2 text-sm text-text-muted">
+                  <p>Esta ação irá:</p>
+                  <ul class="list-disc list-inside mt-1 space-y-1">
+                    <li>Remover permanentemente o domínio</li>
+                    <li>Excluir todas as regras de proxy associadas</li>
+                    <li>Remover certificados SSL relacionados</li>
+                    <li>Apagar regras de redirecionamento</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="bg-elevated px-6 py-4 flex items-center justify-end space-x-3">
+            <Button 
+              variant="outline" 
+              @click="closeDeleteModal"
+              :disabled="isDeleting"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              variant="danger" 
+              @click="executeDelete"
+              :disabled="isDeleting"
+            >
+              <template #icon v-if="isDeleting">
+                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+              </template>
+              {{ isDeleting ? 'Excluindo...' : 'Excluir Domínio' }}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   </AppLayout>
 </template>
 
@@ -232,17 +309,28 @@ import Badge from '@/Components/ui/Badge.vue';
 import Table from '@/Components/ui/Table.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import { toast } from '@/Composables/useToast';
-import { route } from '@/ziggy';
+
+// Props
+interface Props {
+  domains: {
+    data: Domain[];
+    links: any[];
+  };
+}
+
+const props = defineProps<Props>();
 
 // Tipos
 interface Domain {
   id: number;
-  domain: string;
+  name: string;
   description: string | null;
-  autoTLS: boolean;
-  active: boolean;
-  routesCount: number;
-  createdAt: string;
+  auto_ssl: boolean;
+  is_active: boolean;
+  proxy_rules_count: number;
+  ssl_certificates_count: number;
+  redirect_rules_count: number;
+  created_at: string;
 }
 
 interface Filters {
@@ -252,13 +340,7 @@ interface Filters {
 }
 
 // Estado
-const domains = ref<{
-  data: Domain[];
-  links: any[];
-}>({
-  data: [],
-  links: []
-});
+const domains = ref(props.domains);
 const loading = ref(true);
 const error = ref(false);
 const selectedDomains = ref<number[]>([]);
@@ -268,27 +350,32 @@ const filters = ref<Filters>({
   autoTLS: ''
 });
 
+// Modal de exclusão
+const showDeleteModal = ref(false);
+const domainToDelete = ref<Domain | null>(null);
+const isDeleting = ref(false);
+
 // Computed
 const filteredDomains = computed(() => {
   return domains.value.data.filter(domain => {
     // Filtro de busca
-    if (filters.value.search && !domain.domain.toLowerCase().includes(filters.value.search.toLowerCase())) {
+    if (filters.value.search && !domain.name.toLowerCase().includes(filters.value.search.toLowerCase())) {
       return false;
     }
     
     // Filtro de status
-    if (filters.value.status === 'active' && !domain.active) {
+    if (filters.value.status === 'active' && !domain.is_active) {
       return false;
     }
-    if (filters.value.status === 'inactive' && domain.active) {
+    if (filters.value.status === 'inactive' && domain.is_active) {
       return false;
     }
     
     // Filtro de autoTLS
-    if (filters.value.autoTLS === 'enabled' && !domain.autoTLS) {
+    if (filters.value.autoTLS === 'enabled' && !domain.auto_ssl) {
       return false;
     }
-    if (filters.value.autoTLS === 'disabled' && domain.autoTLS) {
+    if (filters.value.autoTLS === 'disabled' && domain.auto_ssl) {
       return false;
     }
     
@@ -309,83 +396,11 @@ const allSelectedActive = computed(() => {
   
   return selectedDomains.value.every(id => {
     const domain = domains.value.data.find(d => d.id === id);
-    return domain && domain.active;
+    return domain && domain.is_active;
   });
 });
 
 // Métodos
-const loadDomains = async () => {
-  loading.value = true;
-  error.value = false;
-  
-  try {
-    // Simulação de carregamento de dados (em produção, use Inertia.get ou fetch)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Dados de exemplo
-    domains.value = {
-      data: [
-        {
-          id: 1,
-          domain: 'example.com',
-          description: 'Site principal',
-          autoTLS: true,
-          active: true,
-          routesCount: 3,
-          createdAt: '2023-08-15T14:30:00Z'
-        },
-        {
-          id: 2,
-          domain: 'api.example.com',
-          description: 'API pública',
-          autoTLS: true,
-          active: true,
-          routesCount: 5,
-          createdAt: '2023-08-16T10:15:00Z'
-        },
-        {
-          id: 3,
-          domain: 'staging.example.com',
-          description: 'Ambiente de homologação',
-          autoTLS: false,
-          active: false,
-          routesCount: 2,
-          createdAt: '2023-08-17T09:45:00Z'
-        },
-        {
-          id: 4,
-          domain: 'blog.example.com',
-          description: null,
-          autoTLS: true,
-          active: true,
-          routesCount: 1,
-          createdAt: '2023-08-18T16:20:00Z'
-        },
-        {
-          id: 5,
-          domain: 'admin.example.com',
-          description: 'Painel administrativo',
-          autoTLS: true,
-          active: true,
-          routesCount: 4,
-          createdAt: '2023-08-19T11:05:00Z'
-        }
-      ],
-      links: [
-        { url: null, label: '&laquo; Previous', active: false },
-        { url: '#', label: '1', active: true },
-        { url: '#', label: '2', active: false },
-        { url: '#', label: '3', active: false },
-        { url: '#', label: 'Next &raquo;', active: false }
-      ]
-    };
-  } catch (e) {
-    error.value = true;
-    console.error('Erro ao carregar domínios:', e);
-  } finally {
-    loading.value = false;
-  }
-};
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -430,38 +445,87 @@ const clearSelection = () => {
 };
 
 const openCreateModal = () => {
-  router.visit(route('domains.create'));
+  router.visit('/domains/create');
 };
 
 const editDomain = (domain: Domain) => {
   // Em produção, abra um modal ou navegue para uma página de edição
-  toast.info('Editar domínio', `Editando ${domain.domain}`);
+  toast.info('Editar domínio', `Editando ${domain.name}`);
 };
 
 const confirmDelete = (domain: Domain) => {
-  // Em produção, exiba um modal de confirmação
-  if (confirm(`Tem certeza que deseja excluir o domínio ${domain.domain}?`)) {
-    deleteDomain(domain.id);
+  domainToDelete.value = domain;
+  showDeleteModal.value = true;
+};
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false;
+  domainToDelete.value = null;
+  isDeleting.value = false;
+};
+
+const executeDelete = async () => {
+  if (!domainToDelete.value) return;
+  
+  isDeleting.value = true;
+  
+  try {
+    // Fazer requisição real para excluir o domínio
+    const url = `/domains/${domainToDelete.value.id}`;
+    await router.delete(url, {
+      onSuccess: () => {
+        toast.success('Domínio excluído', 'O domínio foi excluído com sucesso.');
+        closeDeleteModal();
+      },
+      onError: (errors) => {
+        toast.error('Erro ao excluir', 'Não foi possível excluir o domínio.');
+        console.error('Erro ao excluir domínio:', errors);
+      }
+    });
+  } catch (error) {
+    toast.error('Erro ao excluir', 'Ocorreu um erro inesperado.');
+    console.error('Erro inesperado:', error);
+  } finally {
+    isDeleting.value = false;
   }
 };
 
-const deleteDomain = (id: number) => {
-  // Em produção, envie uma requisição para excluir o domínio
-  domains.value.data = domains.value.data.filter(domain => domain.id !== id);
-  toast.success('Domínio excluído', 'O domínio foi excluído com sucesso.');
-};
-
 const confirmDeleteSelected = () => {
-  // Em produção, exiba um modal de confirmação
+  // Para múltiplos domínios, usar confirmação simples por enquanto
   if (confirm(`Tem certeza que deseja excluir ${selectedDomains.value.length} domínios?`)) {
     deleteSelected();
   }
 };
 
-const deleteSelected = () => {
-  // Em produção, envie uma requisição para excluir os domínios selecionados
-  domains.value.data = domains.value.data.filter(domain => !selectedDomains.value.includes(domain.id));
-  toast.success('Domínios excluídos', `${selectedDomains.value.length} domínios foram excluídos com sucesso.`);
+const deleteSelected = async () => {
+  const domainsToDelete = selectedDomains.value;
+  let successCount = 0;
+  let errorCount = 0;
+  
+  for (const id of domainsToDelete) {
+    try {
+      const url = `/domains/${id}`;
+      await router.delete(url, {
+        onSuccess: () => {
+          successCount++;
+        },
+        onError: () => {
+          errorCount++;
+        }
+      });
+    } catch (error) {
+      errorCount++;
+    }
+  }
+  
+  if (successCount > 0) {
+    toast.success('Domínios excluídos', `${successCount} domínios foram excluídos com sucesso.`);
+  }
+  
+  if (errorCount > 0) {
+    toast.error('Erros na exclusão', `${errorCount} domínios não puderam ser excluídos.`);
+  }
+  
   selectedDomains.value = [];
 };
 
@@ -471,7 +535,7 @@ const toggleSelectedStatus = () => {
   
   domains.value.data = domains.value.data.map(domain => {
     if (selectedDomains.value.includes(domain.id)) {
-      return { ...domain, active: newStatus };
+      return { ...domain, is_active: newStatus };
     }
     return domain;
   });
@@ -489,6 +553,7 @@ const goToPage = (url: string) => {
 
 // Lifecycle
 onMounted(() => {
-  loadDomains();
+  // Os dados já são carregados via props do Inertia.js
+  loading.value = false;
 });
 </script>
