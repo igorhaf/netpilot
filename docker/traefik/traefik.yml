@@ -1,0 +1,30 @@
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+api:
+  dashboard: false
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic/
+    watch: true
+
+certificatesResolvers:
+  le_http01:
+    acme:
+      email: ${TRAEFIK_ACME_EMAIL}
+      caServer: ${TRAEFIK_ACME_CA_SERVER}
+      storage: /acme.json
+      http01:
+        entryPoint: web
+  le_dns01:
+    acme:
+      email: ${TRAEFIK_ACME_EMAIL}
+      caServer: ${TRAEFIK_ACME_CA_SERVER}
+      storage: /acme.json
+      dnsChallenge:
+        provider: ${TRAEFIK_DNS_PROVIDER}
+        delayBeforeCheck: 0

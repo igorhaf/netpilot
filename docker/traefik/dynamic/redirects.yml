@@ -1,0 +1,22 @@
+http:
+  routers:
+    redirect_5adcdcb6976c74df705ce8e263f86e2d:
+      rule: "Host(`app.localtest.me`) && PathPrefix(`/old`)"
+      service: noop
+      entryPoints:
+        - web
+      middlewares:
+        - redirect_a75eccaa38224a6fe6acf48b21d992b1
+      priority: 100
+  services:
+    noop:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://127.0.0.1:1"
+  middlewares:
+    redirect_a75eccaa38224a6fe6acf48b21d992b1:
+      redirectRegex:
+        regex: ".*"
+        replacement: "https://app.localtest.me/new${query}"
+        permanent: true

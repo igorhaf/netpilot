@@ -1,0 +1,24 @@
+services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.file.filename=/traefik.yml
+      - --providers.file.watch=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/traefik/traefik.yml:/traefik.yml:ro
+      - ./docker/traefik/dynamic/:/etc/traefik/dynamic/:rw
+      - ./docker/traefik/acme.json:/acme.json
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+      - sail
+    restart: unless-stopped
+
+networks:
+  proxy:
+    name: proxy
+  sail:
+    external: false
