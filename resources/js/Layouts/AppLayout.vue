@@ -1,27 +1,27 @@
 <template>
-  <div class="min-h-screen bg-background text-text flex">
+  <div class="h-screen bg-background text-text flex overflow-hidden">
     <!-- Sidebar -->
     <aside
       :class="[
-        'bg-surface border-r border-border transition-all duration-300 ease-in-out',
+        'bg-surface border-r border-border transition-all duration-300 ease-in-out flex-shrink-0 overflow-hidden h-screen',
         sidebarCollapsed ? 'w-16' : 'w-64'
       ]"
       :aria-expanded="!sidebarCollapsed"
     >
       <!-- Logo e Toggle -->
-      <div class="h-16 flex items-center justify-between px-4 border-b border-border">
+      <div class="h-16 flex items-center justify-between px-4 border-b border-border flex-shrink-0">
         <div class="flex items-center">
           <!-- Logo -->
-          <div class="flex-shrink-0 text-accent font-bold text-xl">
-            <span v-if="!sidebarCollapsed">NetPilot</span>
-            <span v-else>NP</span>
+          <div class="flex-shrink-0 text-accent font-bold text-xl transition-all duration-300">
+            <span v-if="!sidebarCollapsed" class="opacity-100">NetPilot</span>
+            <span v-else class="opacity-100">NP</span>
           </div>
         </div>
         
         <!-- Toggle Button -->
         <button
           @click="toggleSidebar"
-          class="p-1 rounded-md hover:bg-elevated text-text-muted hover:text-text"
+          class="p-1 rounded-md hover:bg-elevated text-text-muted hover:text-text transition-colors"
           aria-label="Toggle sidebar"
         >
           <svg
@@ -50,7 +50,7 @@
       </div>
 
       <!-- Navigation Links -->
-      <nav class="mt-4 px-2 space-y-1">
+      <nav class="mt-4 px-2 space-y-1 flex-1 overflow-y-auto pb-4">
         <Link
           v-for="item in navigation"
           :key="item.name"
@@ -59,7 +59,7 @@
             route().current(item.active) 
               ? 'bg-elevated text-accent' 
               : 'text-text-muted hover:bg-elevated hover:text-text',
-            'group flex items-center px-3 py-2 rounded-lg text-sm font-medium'
+            'group flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200'
           ]"
           :aria-current="route().current(item.active) ? 'page' : undefined"
         >
@@ -71,15 +71,15 @@
             ]"
             aria-hidden="true"
           />
-          <span v-if="!sidebarCollapsed" class="ml-3 truncate">{{ item.name }}</span>
+          <span v-if="!sidebarCollapsed" class="ml-3 truncate transition-all duration-300">{{ item.name }}</span>
         </Link>
       </nav>
     </aside>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0">
       <!-- Top Bar -->
-      <header class="bg-surface border-b border-border h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <header class="bg-surface border-b border-border h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 transition-all duration-300">
         <!-- Page Title -->
         <h1 class="text-lg font-medium">{{ title }}</h1>
 
@@ -143,7 +143,7 @@
       </header>
 
       <!-- Page Content -->
-      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background scrollbar-thin scrollbar-thumb-elevated scrollbar-track-transparent transition-all duration-300">
         <slot />
       </main>
     </div>

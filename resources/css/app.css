@@ -251,4 +251,28 @@
     .bg-green-600 {
         background-color: var(--accent) !important;
     }
+
+    /* Scrollbar customizada */
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: var(--elevated);
+        border-radius: 3px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: var(--border);
+    }
+
+    /* Firefox scrollbar */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: var(--elevated) transparent;
+    }
 }
