@@ -6,6 +6,7 @@ use App\Models\Domain;
 use App\Models\ProxyRule;
 use App\Services\NginxService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -170,25 +171,89 @@ class ProxyController extends Controller
             ->with('success', 'Regra de proxy atualizada com sucesso!');
     }
 
-    public function destroy(ProxyRule $proxyRule)
+    public function destroy($id)
     {
-        $ruleId = $proxyRule->id;
-        $proxyRule->delete();
-
-        // Log de remoção
-        \App\Models\DeploymentLog::create([
-            'type' => 'proxy_update',
-            'action' => 'delete_rule',
-            'status' => 'success',
-            'payload' => [
-                'proxy_rule_id' => $ruleId,
-            ],
-            'started_at' => now(),
-            'completed_at' => now(),
+        \Log::info("🔴 INÍCIO ProxyController::destroy", [
+            'id_param' => $id,
+            'method' => request()->method(),
+            'url' => request()->fullUrl()
         ]);
+        
+        // 🔧 SOLUÇÃO: Buscar o proxy manualmente em vez de usar Route Model Binding
+        $proxyRule = ProxyRule::find($id);
+        
+        if (!$proxyRule) {
+            \Log::error("❌ Proxy com ID {$id} não encontrado!");
+            return redirect()->route('proxy.index')
+                ->with('error', 'Regra de proxy não encontrada!');
+        }
+        
+        \Log::info("✅ Proxy encontrado", [
+            'proxy_id' => $proxyRule->id,
+            'source_host' => $proxyRule->source_host
+        ]);
+        
+        $ruleId = $proxyRule->id;
+        $sourceHost = $proxyRule->source_host;
+        
+        try {
+            \Log::info("🔨 SOLUÇÃO DIRETA: Usando SQL direto para exclusão", ['proxy_id' => $ruleId]);
+            
+            // 🔧 SOLUÇÃO: Ignorar Eloquent completamente e usar SQL direto
+            $deleted = \DB::table('proxy_rules')->where('id', $ruleId)->delete();
+            
+            \Log::info("🔨 SQL DELETE retornou", [
+                'result' => $deleted,
+                'proxy_id' => $ruleId
+            ]);
+            
+            // Verificar se realmente foi deletado
+            $stillExists = \DB::table('proxy_rules')->where('id', $ruleId)->first();
+            if ($stillExists) {
+                \Log::error("❌ ERRO CRÍTICO: Proxy ainda existe mesmo após SQL direto!", [
+                    'proxy_id' => $ruleId,
+                    'still_exists' => true
+                ]);
+                
+                // Última tentativa: verificar se há algum problema de constraint
+                \Log::info("🔍 Verificando se há problema de constraint...");
+                $constraintCheck = \DB::select("PRAGMA foreign_key_check");
+                \Log::info("Constraint check:", $constraintCheck);
+                
+            } else {
+                \Log::info("✅ Proxy foi removido com sucesso via SQL direto!", ['proxy_id' => $ruleId]);
+            }
+            
+            // Log de remoção
+            \App\Models\DeploymentLog::create([
+                'type' => 'proxy_update',
+                'action' => 'delete_rule',
+                'status' => $stillExists ? 'failed' : 'success',
+                'payload' => [
+                    'proxy_rule_id' => $ruleId,
+                    'source_host' => $sourceHost,
+                    'eloquent_delete_result' => $deleted,
+                    'still_exists_after_delete' => $stillExists ? true : false,
+                ],
+                'started_at' => now(),
+                'completed_at' => now(),
+            ]);
 
-        return redirect()->route('proxy.index')
-            ->with('success', 'Regra de proxy removida com sucesso!');
+            \Log::info("🔄 Retornando redirect para proxy.index");
+            
+            return redirect()->route('proxy.index')
+                ->with('success', 'Regra de proxy removida com sucesso!');
+                
+        } catch (\Exception $e) {
+            \Log::error("❌ ERRO na exclusão do proxy", [
+                'proxy_id' => $ruleId,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            throw $e;
+        }
     }
 
     public function toggle(ProxyRule $proxyRule)

@@ -275,7 +275,9 @@ interface Props {
 const props = defineProps<Props>();
 const { success, error } = useToast();
 
-// State
+// State - Criar refs locais das props para permitir modificação
+const proxyRules = ref(props.proxyRules);
+const stats = ref(props.stats);
 const loading = ref(false);
 const isDeploying = ref(false);
 const filters = reactive({
@@ -326,37 +328,56 @@ const openUrl = (url: string) => {
 };
 
 const deleteProxy = (proxyRule: ProxyRule) => {
+  console.log('🔴 INÍCIO deleteProxy:', {
+    id: proxyRule.id,
+    source_host: proxyRule.source_host,
+    url: `/proxy/${proxyRule.id}`
+  });
+  
   if (confirm(`Tem certeza que deseja excluir a regra "${proxyRule.source_host}"?`)) {
+    console.log('✅ Usuário confirmou exclusão');
+    console.log('📊 Estado ANTES da exclusão:', {
+      total_rules: proxyRules.value.data.length,
+      total_stats: stats.value.total,
+      active_stats: stats.value.active,
+      inactive_stats: stats.value.inactive
+    });
+    
     router.delete(`/proxy/${proxyRule.id}`, {
-      onSuccess: () => {
-        // 🎯 ESTRATÉGIA DE DOMÍNIOS: Atualizar estado local IMEDIATAMENTE
-        // Remover da lista local para feedback visual instantâneo
-        props.proxyRules.data = props.proxyRules.data.filter(rule => rule.id !== proxyRule.id);
-        
-        // Atualizar stats localmente
-        if (proxyRule.is_active) {
-          props.stats.active = Math.max(0, props.stats.active - 1);
-        } else {
-          props.stats.inactive = Math.max(0, props.stats.inactive - 1);
-        }
-        props.stats.total = Math.max(0, props.stats.total - 1);
+      onBefore: () => {
+        console.log('⏳ onBefore: Iniciando requisição DELETE');
+        return true;
+      },
+      onStart: () => {
+        console.log('🚀 onStart: Requisição iniciada');
+      },
+      onProgress: (progress) => {
+        console.log('📈 onProgress:', progress);
+      },
+      onSuccess: (page) => {
+        console.log('✅ onSuccess chamado!', {
+          page_data: page,
+          response_type: typeof page
+        });
         
         success('Regra excluída com sucesso!');
         
-        // Recarregar dados do backend para garantir sincronização (como domínios)
+        // 🔧 SOLUÇÃO: Forçar reload completo da página para garantir sincronização
         setTimeout(() => {
-          router.visit('/proxy', {
-            only: ['proxyRules', 'stats'],
-            preserveState: false,
-            preserveScroll: false
-          });
-        }, 100);
+          console.log('🔄 Forçando reload completo da página...');
+          window.location.reload();
+        }, 500);
       },
       onError: (errors) => {
-        console.error('Erro ao excluir:', errors);
+        console.error('❌ onError chamado:', errors);
         error('Erro ao excluir regra');
+      },
+      onFinish: () => {
+        console.log('🏁 onFinish: Requisição finalizada');
       }
     });
+  } else {
+    console.log('❌ Usuário cancelou exclusão');
   }
 };
 
