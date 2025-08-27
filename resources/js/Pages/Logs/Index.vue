@@ -360,6 +360,18 @@ const clearLogs = () => {
       onSuccess: (response) => {
         if (response.success) {
           success(response.message || 'Logs limpos com sucesso!');
+          
+          // Mostrar detalhes da limpeza se disponível
+          if (response.details) {
+            const details = response.details;
+            console.log('Detalhes da limpeza:', details);
+            
+            // Mostrar toast com detalhes
+            if (details.stuck_running_logs > 0) {
+              success(`Logs travados removidos: ${details.stuck_running_logs}`);
+            }
+          }
+          
           // Recarregar os logs após limpeza
           refreshLogs();
         } else {

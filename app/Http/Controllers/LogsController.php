@@ -62,12 +62,30 @@ class LogsController extends Controller
     public function clear()
     {
         try {
+            // Limpar logs que não estão executando
             $deletedCount = DeploymentLog::where('status', '!=', 'running')->delete();
+            
+            // Limpar logs "running" que estão travados há mais de 1 hora
+            $stuckLogsCount = DeploymentLog::where('status', 'running')
+                ->where('started_at', '<', now()->subHour())
+                ->delete();
+            
+            // Limpar logs "running" sem started_at (logs órfãos)
+            $orphanLogsCount = DeploymentLog::where('status', 'running')
+                ->whereNull('started_at')
+                ->delete();
+            
+            $totalDeleted = $deletedCount + $stuckLogsCount + $orphanLogsCount;
             
             return response()->json([
                 'success' => true,
-                'message' => "Logs limpos com sucesso! {$deletedCount} registros removidos.",
-                'deleted_count' => $deletedCount
+                'message' => "Logs limpos com sucesso! {$totalDeleted} registros removidos.",
+                'details' => [
+                    'completed_logs' => $deletedCount,
+                    'stuck_running_logs' => $stuckLogsCount,
+                    'orphan_logs' => $orphanLogsCount,
+                    'total' => $totalDeleted
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([

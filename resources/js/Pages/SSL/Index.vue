@@ -92,6 +92,31 @@
         </Card>
       </div>
 
+      <!-- Debug Info -->
+      <Card class="p-4 mb-6 bg-yellow-50 border-yellow-200">
+        <div class="text-sm">
+          <h3 class="font-medium text-yellow-800 mb-2">Debug Info - SSL</h3>
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <strong>Certificates Total:</strong> {{ certificates.total }}<br>
+              <strong>Certificates Count:</strong> {{ certificates.data.length }}<br>
+              <strong>Current Page:</strong> {{ certificates.current_page }}<br>
+              <strong>Last Page:</strong> {{ certificates.last_page }}
+            </div>
+            <div>
+              <strong>Stats Total:</strong> {{ stats.total }}<br>
+              <strong>Stats Valid:</strong> {{ stats.valid }}<br>
+              <strong>Stats Expiring:</strong> {{ stats.expiring }}<br>
+              <strong>Stats Expired:</strong> {{ stats.expired }}
+            </div>
+          </div>
+          <div class="mt-2">
+            <strong>Sample Certificates:</strong>
+            <pre class="text-xs bg-white p-2 rounded mt-1 overflow-auto">{{ JSON.stringify(certificates.data.slice(0, 2), null, 2) }}</pre>
+          </div>
+        </div>
+      </Card>
+
       <!-- Filters -->
       <Card class="p-4 mb-6">
         <div class="flex flex-col sm:flex-row gap-4">
@@ -122,95 +147,113 @@
 
       <!-- Table -->
       <Card>
-        <Table
-          :columns="columns"
-          :data="certificates.data"
-          :loading="loading"
-          :empty-message="'Nenhum certificado SSL encontrado'"
-          zebra
-        >
-          <template #domain_name="{ row }">
-            <div class="font-medium text-text">{{ row.domain_name }}</div>
-            <div class="text-sm text-text-muted">{{ row.domain?.name || 'N/A' }}</div>
-          </template>
-
-          <template #san_domains="{ row }">
-            <div v-if="row.san_domains && row.san_domains.length" class="space-y-1">
-              <div 
-                v-for="domain in row.san_domains.slice(0, 2)" 
-                :key="domain"
-                class="text-sm text-text-muted"
-              >
-                {{ domain }}
-              </div>
-              <div v-if="row.san_domains.length > 2" class="text-xs text-text-muted">
-                +{{ row.san_domains.length - 2 }} mais
-              </div>
-            </div>
-            <span v-else class="text-sm text-text-muted">Nenhum</span>
-          </template>
-
-          <template #status="{ row }">
-            <Badge 
-              :variant="getStatusVariant(row.status)"
-            >
-              {{ getStatusLabel(row.status) }}
-            </Badge>
-          </template>
-
-          <template #expires_at="{ row }">
-            <div v-if="row.expires_at">
-              <div class="font-medium text-text">{{ formatDate(row.expires_at) }}</div>
-              <div class="text-sm" :class="getExpiryClass(row.expires_at)">
-                {{ getExpiryText(row.expires_at) }}
-              </div>
-            </div>
-            <span v-else class="text-sm text-text-muted">N/A</span>
-          </template>
-
-          <template #auto_renew="{ row }">
-            <Badge 
-              :variant="row.auto_renew ? 'positive' : 'neutral'"
-            >
-              {{ row.auto_renew ? 'Sim' : 'Não' }}
-            </Badge>
-          </template>
-
-          <template #actions="{ row }">
-            <div class="flex items-center gap-2">
-              <Button
-                v-if="row.status === 'expiring' || row.status === 'expired'"
-                @click="renewCertificate(row)"
-                variant="default"
-                size="sm"
-              >
-                Renovar
-              </Button>
-              <Button
-                @click="toggleAutoRenew(row)"
-                :variant="row.auto_renew ? 'outline' : 'default'"
-                size="sm"
-              >
-                {{ row.auto_renew ? 'Desativar Auto' : 'Ativar Auto' }}
-              </Button>
-              <Button @click="viewCertificate(row)" variant="ghost" size="sm">
-                <template #icon>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  </svg>
-                </template>
-              </Button>
-              <Button @click="deleteCertificate(row)" variant="danger" size="sm">
-                <template #icon>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                </template>
-              </Button>
-            </div>
-          </template>
-        </Table>
+        <!-- Tabela HTML Simples para Debug -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-elevated border-b border-border">
+              <tr>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Domínio Principal</th>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">SAN Domains</th>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Status</th>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Expira em</th>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Auto Renovação</th>
+                <th class="px-4 py-3 text-center font-medium text-text-muted">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="certificates.data.length === 0" class="border-b border-border">
+                <td colspan="6" class="px-4 py-8 text-center text-text-muted">
+                  Nenhum certificado SSL encontrado
+                </td>
+              </tr>
+              <tr v-for="cert in certificates.data" :key="cert.id" class="border-b border-border hover:bg-elevated/50">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-text">{{ cert.domain_name }}</div>
+                  <div class="text-sm text-text-muted">{{ cert.domain?.name || 'N/A' }}</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div v-if="cert.san_domains && cert.san_domains.length" class="space-y-1">
+                    <div 
+                      v-for="domain in cert.san_domains.slice(0, 2)" 
+                      :key="domain"
+                      class="text-sm text-text-muted"
+                    >
+                      {{ domain }}
+                    </div>
+                    <div v-if="cert.san_domains.length > 2" class="text-xs text-text-muted">
+                      +{{ cert.san_domains.length - 2 }} mais
+                    </div>
+                  </div>
+                  <span v-else class="text-sm text-text-muted">Nenhum</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                        :class="{
+                          'bg-success/20 text-success': cert.status === 'valid',
+                          'bg-danger/20 text-danger': cert.status === 'expired',
+                          'bg-warning/20 text-warning': cert.status === 'expiring',
+                          'bg-info/20 text-info': cert.status === 'pending',
+                          'bg-red-500/20 text-red-400': cert.status === 'failed'
+                        }">
+                    {{ getStatusLabel(cert.status) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div v-if="cert.expires_at">
+                    <div class="font-medium text-text">{{ formatDate(cert.expires_at) }}</div>
+                    <div class="text-sm" :class="getExpiryClass(cert.expires_at)">
+                      {{ getExpiryText(cert.expires_at) }}
+                    </div>
+                  </div>
+                  <span v-else class="text-sm text-text-muted">N/A</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                        :class="{
+                          'bg-success/20 text-success': cert.auto_renew,
+                          'bg-muted/20 text-muted': !cert.auto_renew
+                        }">
+                    {{ cert.auto_renew ? 'Sim' : 'Não' }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <div class="flex items-center gap-2">
+                    <Button
+                      v-if="cert.status === 'expiring' || cert.status === 'expired'"
+                      @click="renewCertificate(cert)"
+                      variant="default"
+                      size="sm"
+                    >
+                      Renovar
+                    </Button>
+                    <Button
+                      @click="toggleAutoRenew(cert)"
+                      :variant="cert.auto_renew ? 'outline' : 'default'"
+                      size="sm"
+                    >
+                      {{ cert.auto_renew ? 'Desativar Auto' : 'Ativar Auto' }}
+                    </Button>
+                    <Button @click="viewCertificate(cert)" variant="ghost" size="sm">
+                      <template #icon>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                      </template>
+                    </Button>
+                    <Button @click="deleteCertificate(cert)" variant="danger" size="sm">
+                      <template #icon>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </template>
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-border">
@@ -234,7 +277,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Card from '@/Components/ui/Card.vue';
-import Table from '@/Components/ui/Table.vue';
+
 import Pagination from '@/Components/ui/Pagination.vue';
 import { useToast } from '@/Composables/useToast';
 import { route } from '@/ziggy';

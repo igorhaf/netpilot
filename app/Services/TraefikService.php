@@ -34,4 +34,35 @@ class TraefikService
 
         return $results;
     }
+
+    /**
+     * Deploy das configurações do Traefik
+     */
+    public function deployConfiguration(): array
+    {
+        try {
+            // Recarregar Traefik
+            $reloadResult = $this->cmd->execute('traefik', 'traefik_reload', 'systemctl reload traefik', [
+                'action' => 'reload_traefik',
+                'description' => 'Recarregando configurações do Traefik'
+            ]);
+
+            if (!$reloadResult['success']) {
+                throw new \Exception('Falha ao recarregar Traefik: ' . ($reloadResult['stderr'] ?? $reloadResult['error'] ?? 'Erro desconhecido'));
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Configurações do Traefik deployadas com sucesso',
+                'reload_result' => $reloadResult
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Erro ao fazer deploy das configurações do Traefik: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 }

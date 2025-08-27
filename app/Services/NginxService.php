@@ -52,4 +52,46 @@ server {\n    listen 80;\n    server_name %s;\n    return 301 https://$server_na
 
         return $results;
     }
+
+    /**
+     * Deploy das configurações do Nginx
+     */
+    public function deployConfiguration(): array
+    {
+        try {
+            // Testar configuração do Nginx
+            $testResult = $this->cmd->execute('nginx', 'nginx_test_config', 'nginx -t', [
+                'action' => 'test_configuration',
+                'description' => 'Testando configuração do Nginx antes do deploy'
+            ]);
+
+            if (!$testResult['success']) {
+                throw new \Exception('Configuração do Nginx inválida: ' . ($testResult['stderr'] ?? $testResult['error'] ?? 'Erro desconhecido'));
+            }
+
+            // Recarregar Nginx
+            $reloadResult = $this->cmd->execute('nginx', 'nginx_reload', 'systemctl reload nginx', [
+                'action' => 'reload_nginx',
+                'description' => 'Recarregando configurações do Nginx'
+            ]);
+
+            if (!$reloadResult['success']) {
+                throw new \Exception('Falha ao recarregar Nginx: ' . ($reloadResult['stderr'] ?? $reloadResult['error'] ?? 'Erro desconhecido'));
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Configurações do Nginx deployadas com sucesso',
+                'test_result' => $testResult,
+                'reload_result' => $reloadResult
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Erro ao fazer deploy das configurações do Nginx: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 }

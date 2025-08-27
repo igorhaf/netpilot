@@ -92,12 +92,15 @@
         </Card>
       </div>
 
+
+
       <!-- Filters -->
       <Card class="p-4 mb-6">
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="flex-1">
             <input
               v-model="filters.search"
+              @input="watchSearch"
               type="text"
               placeholder="Buscar por domínio, target..."
               class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
@@ -106,6 +109,7 @@
           <div class="flex gap-3">
             <select
               v-model="filters.status"
+              @change="watchStatus"
               class="px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             >
               <option value="">Todos os status</option>
@@ -119,68 +123,91 @@
 
       <!-- Table -->
       <Card>
-        <Table
-          :columns="columns"
-          :data="proxyRules.data"
-          :loading="loading"
-          :empty-message="'Nenhuma regra de proxy encontrada'"
-          zebra
-        >
-          <template #source_host="{ row }">
-            <div class="font-medium text-text">{{ row.source_host }}</div>
-            <div class="text-sm text-text-muted">{{ row.protocol }}://{{ row.source_host }}:{{ row.source_port }}</div>
-          </template>
-
-          <template #target="{ row }">
-            <div class="font-medium text-text">{{ row.target_host }}:{{ row.target_port }}</div>
-            <div class="text-sm text-text-muted">{{ row.protocol }}</div>
-          </template>
-
-          <template #domain="{ row }">
-            <div class="font-medium text-text">{{ row.domain?.name || 'N/A' }}</div>
-            <div class="text-sm text-text-muted">{{ row.domain?.description || '' }}</div>
-          </template>
-
-          <template #is_active="{ row }">
-            <Badge 
-              :variant="row.is_active ? 'positive' : 'negative'"
-            >
-              {{ row.is_active ? 'Ativo' : 'Inativo' }}
-            </Badge>
-          </template>
-
-          <template #priority="{ row }">
-            <div class="text-center">
-              <Badge variant="neutral">{{ row.priority }}</Badge>
-            </div>
-          </template>
-
-          <template #actions="{ row }">
-            <div class="flex items-center gap-2">
-              <Button
-                @click="toggleProxy(row)"
-                :variant="row.is_active ? 'outline' : 'default'"
-                size="sm"
-              >
-                {{ row.is_active ? 'Desativar' : 'Ativar' }}
-              </Button>
-              <Button @click="editProxy(row)" variant="ghost" size="sm">
-                <template #icon>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
-                </template>
-              </Button>
-              <Button @click="deleteProxy(row)" variant="danger" size="sm">
-                <template #icon>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                </template>
-              </Button>
-            </div>
-          </template>
-        </Table>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-muted/20 border-b border-border">
+              <tr>
+                <th class="px-4 py-3 text-left text-sm font-medium text-text">Origem</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-text">Destino</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-text">Domínio</th>
+                <th class="px-4 py-3 text-center text-sm font-medium text-text">Prioridade</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-text">Status</th>
+                <th class="px-4 py-3 text-center text-sm font-medium text-text">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-if="proxyRules.data.length === 0">
+                <td colspan="6" class="px-4 py-8 text-center text-text-muted">
+                  Nenhuma regra de proxy encontrada
+                </td>
+              </tr>
+              <tr v-for="(rule, index) in proxyRules.data" :key="rule.id" :class="{ 'bg-muted/10': index % 2 === 1 }">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <div>
+                      <div class="font-medium text-text">{{ rule.source_host }}</div>
+                      <div class="text-sm text-text-muted">{{ rule.protocol }}://{{ rule.source_host }}:{{ rule.source_port }}</div>
+                    </div>
+                    <Button
+                      @click="openUrl(`${rule.protocol}://${rule.source_host}:${rule.source_port}`)"
+                      variant="ghost"
+                      size="sm"
+                      class="p-1"
+                      title="Abrir endereço em nova aba"
+                    >
+                      <template #icon>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                      </template>
+                    </Button>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-text">{{ rule.target_host }}:{{ rule.target_port }}</div>
+                  <div class="text-sm text-text-muted">{{ rule.protocol }}</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-text">{{ rule.domain?.name || 'N/A' }}</div>
+                  <div class="text-sm text-text-muted">{{ rule.domain?.description || '' }}</div>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <Badge variant="neutral">{{ rule.priority }}</Badge>
+                </td>
+                <td class="px-4 py-3">
+                  <Badge :variant="rule.is_active ? 'positive' : 'negative'">
+                    {{ rule.is_active ? 'Ativo' : 'Inativo' }}
+                  </Badge>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center justify-center gap-2">
+                    <Button
+                      @click="toggleProxy(rule)"
+                      :variant="rule.is_active ? 'outline' : 'default'"
+                      size="sm"
+                    >
+                      {{ rule.is_active ? 'Desativar' : 'Ativar' }}
+                    </Button>
+                    <Button @click="editProxy(rule)" variant="ghost" size="sm">
+                      <template #icon>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </template>
+                    </Button>
+                    <Button @click="deleteProxy(rule)" variant="danger" size="sm">
+                      <template #icon>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </template>
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-border">
@@ -204,10 +231,10 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Card from '@/Components/ui/Card.vue';
-import Table from '@/Components/ui/Table.vue';
+
 import Pagination from '@/Components/ui/Pagination.vue';
 import { useToast } from '@/Composables/useToast';
-import { route } from '@/ziggy';
+
 
 interface ProxyRule {
   id: number;
@@ -239,6 +266,10 @@ interface Props {
     active: number;
     inactive: number;
   };
+  filters?: {
+    search: string;
+    status: string;
+  };
 }
 
 const props = defineProps<Props>();
@@ -248,56 +279,81 @@ const { success, error } = useToast();
 const loading = ref(false);
 const isDeploying = ref(false);
 const filters = reactive({
-  search: '',
-  status: '',
+  search: props.filters?.search || '',
+  status: props.filters?.status || '',
 });
 
-// Table columns
-const columns = [
-  { key: 'source_host', label: 'Origem', sortable: true },
-  { key: 'target', label: 'Destino' },
-  { key: 'domain', label: 'Domínio' },
-  { key: 'priority', label: 'Prioridade', sortable: true },
-  { key: 'is_active', label: 'Status' },
-  { key: 'actions', label: 'Ações', align: 'center' },
-];
+
 
 // Methods
 const createProxy = () => {
-  router.visit(route('proxy.create'));
+  router.visit('/proxy/create');
 };
 
 const editProxy = (proxyRule: ProxyRule) => {
-  router.visit(route('proxy.edit', proxyRule.id));
+  router.visit(`/proxy/${proxyRule.id}/edit`);
 };
 
 const toggleProxy = async (proxyRule: ProxyRule) => {
   try {
-    await router.post(route('proxy.toggle', proxyRule.id), {}, {
+    console.log('Tentando alterar status da regra:', proxyRule.id, 'URL:', `/proxy/${proxyRule.id}/toggle`);
+    await router.post(`/proxy/${proxyRule.id}/toggle`, {}, {
       preserveState: true,
       preserveScroll: true,
-      onSuccess: () => {
-        const action = proxyRule.is_active ? 'desativada' : 'ativada';
-        success(`Regra ${action} com sucesso!`);
+      onSuccess: (response) => {
+        console.log('Sucesso ao alterar status:', response);
+        if (response.success) {
+          success(response.message || 'Status alterado com sucesso!');
+          // Atualizar estado local
+          proxyRule.is_active = response.is_active;
+        } else {
+          error(response.message || 'Erro ao alterar status da regra');
+        }
       },
-      onError: () => {
+      onError: (errors) => {
+        console.error('Erro ao alterar status:', errors);
         error('Erro ao alterar status da regra');
       }
     });
   } catch (error) {
-          error('Erro ao alterar status da regra');
+    console.error('Exceção ao alterar status:', error);
+    error('Erro ao alterar status da regra');
   }
+};
+
+const openUrl = (url: string) => {
+  window.open(url, '_blank', 'noopener,noreferrer');
 };
 
 const deleteProxy = (proxyRule: ProxyRule) => {
   if (confirm(`Tem certeza que deseja excluir a regra "${proxyRule.source_host}"?`)) {
-    router.delete(route('proxy.destroy', proxyRule.id), {
-      preserveState: true,
-      preserveScroll: true,
+    router.delete(`/proxy/${proxyRule.id}`, {
       onSuccess: () => {
+        // 🎯 ESTRATÉGIA DE DOMÍNIOS: Atualizar estado local IMEDIATAMENTE
+        // Remover da lista local para feedback visual instantâneo
+        props.proxyRules.data = props.proxyRules.data.filter(rule => rule.id !== proxyRule.id);
+        
+        // Atualizar stats localmente
+        if (proxyRule.is_active) {
+          props.stats.active = Math.max(0, props.stats.active - 1);
+        } else {
+          props.stats.inactive = Math.max(0, props.stats.inactive - 1);
+        }
+        props.stats.total = Math.max(0, props.stats.total - 1);
+        
         success('Regra excluída com sucesso!');
+        
+        // Recarregar dados do backend para garantir sincronização (como domínios)
+        setTimeout(() => {
+          router.visit('/proxy', {
+            only: ['proxyRules', 'stats'],
+            preserveState: false,
+            preserveScroll: false
+          });
+        }, 100);
       },
-      onError: () => {
+      onError: (errors) => {
+        console.error('Erro ao excluir:', errors);
         error('Erro ao excluir regra');
       }
     });
@@ -307,7 +363,7 @@ const deleteProxy = (proxyRule: ProxyRule) => {
 const deployNginx = async () => {
   isDeploying.value = true;
   try {
-    await router.post(route('proxy.deploy'), {}, {
+    await router.post('/proxy/deploy', {}, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -321,7 +377,7 @@ const deployNginx = async () => {
       }
     });
   } catch (error) {
-          error('Erro ao aplicar configuração do Nginx');
+    error('Erro ao aplicar configuração do Nginx');
     isDeploying.value = false;
   }
 };
@@ -338,14 +394,14 @@ const applyFilters = () => {
     status: filters.status || undefined,
   };
   
-  router.get(route('proxy.index'), params, {
+  router.get('/proxy', params, {
     preserveState: true,
     preserveScroll: true,
   });
 };
 
 const handlePageChange = (page: number) => {
-  router.get(route('proxy.index'), { page }, {
+  router.get('/proxy', { page }, {
     preserveState: true,
     preserveScroll: true,
   });
@@ -363,16 +419,6 @@ const watchStatus = () => {
 };
 
 onMounted(() => {
-  // Watch for filter changes
-  const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
-  const statusSelect = document.querySelector('select') as HTMLSelectElement;
-  
-  if (searchInput) {
-    searchInput.addEventListener('input', watchSearch);
-  }
-  
-  if (statusSelect) {
-    statusSelect.addEventListener('change', watchStatus);
-  }
+  // Componente montado
 });
 </script>

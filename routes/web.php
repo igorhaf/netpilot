@@ -16,9 +16,9 @@ Route::middleware('web')->group(function () {
     Route::resource('domains', DomainsController::class);
 
     // Proxy Rules CRUD
-    Route::resource('proxy', ProxyController::class);
     Route::post('/proxy/{proxyRule}/toggle', [ProxyController::class, 'toggle'])->name('proxy.toggle');
     Route::post('/proxy/deploy', [ProxyController::class, 'deploy'])->name('proxy.deploy');
+    Route::resource('proxy', ProxyController::class);
 
     // SSL Certificates CRUD
     Route::resource('ssl', SslController::class)->except(['edit', 'update']);

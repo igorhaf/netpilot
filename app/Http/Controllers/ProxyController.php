@@ -15,20 +15,50 @@ class ProxyController extends Controller
         private NginxService $nginxService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $proxyRules = ProxyRule::with('domain')
+        $query = ProxyRule::with('domain');
+
+        // Filtro de busca
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('source_host', 'like', "%{$search}%")
+                  ->orWhere('target_host', 'like', "%{$search}%")
+                  ->orWhereHas('domain', function($domainQuery) use ($search) {
+                      $domainQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filtro de status
+        if ($request->filled('status')) {
+            $status = $request->get('status') === '1';
+            $query->where('is_active', $status);
+        }
+
+        $proxyRules = $query
             ->orderBy('priority', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
+        // Recalcular stats em tempo real
+        $totalCount = ProxyRule::count();
+        $activeCount = ProxyRule::where('is_active', true)->count();
+        $inactiveCount = ProxyRule::where('is_active', false)->count();
+
         return Inertia::render('Proxy/Index', [
             'proxyRules' => $proxyRules,
             'stats' => [
-                'total' => ProxyRule::count(),
-                'active' => ProxyRule::where('is_active', true)->count(),
-                'inactive' => ProxyRule::where('is_active', false)->count(),
-            ]
+                'total' => $totalCount,
+                'active' => $activeCount,
+                'inactive' => $inactiveCount,
+            ],
+            'filters' => [
+                'search' => $request->get('search', ''),
+                'status' => $request->get('status', ''),
+            ],
+            'timestamp' => now()->timestamp, // Força atualização no frontend
         ]);
     }
 
@@ -142,18 +172,16 @@ class ProxyController extends Controller
 
     public function destroy(ProxyRule $proxyRule)
     {
+        $ruleId = $proxyRule->id;
         $proxyRule->delete();
 
-        // Redeploy nginx without this rule
-        $this->nginxService->deployConfiguration();
-
-        // Log deletion
+        // Log de remoção
         \App\Models\DeploymentLog::create([
             'type' => 'proxy_update',
             'action' => 'delete_rule',
             'status' => 'success',
             'payload' => [
-                'proxy_rule_id' => $proxyRule->id,
+                'proxy_rule_id' => $ruleId,
             ],
             'started_at' => now(),
             'completed_at' => now(),
@@ -165,15 +193,26 @@ class ProxyController extends Controller
 
     public function toggle(ProxyRule $proxyRule)
     {
-        $proxyRule->update([
-            'is_active' => !$proxyRule->is_active
-        ]);
+        try {
+            $proxyRule->update([
+                'is_active' => !$proxyRule->is_active
+            ]);
 
-        $this->nginxService->deployConfiguration();
+            $this->nginxService->deployConfiguration();
 
-        $status = $proxyRule->is_active ? 'ativada' : 'desativada';
+            $status = $proxyRule->is_active ? 'ativada' : 'desativada';
 
-        return back()->with('success', "Regra de proxy {$status} com sucesso!");
+            return response()->json([
+                'success' => true,
+                'message' => "Regra de proxy {$status} com sucesso!",
+                'is_active' => $proxyRule->is_active
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao alterar status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function deploy()
