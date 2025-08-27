@@ -44,7 +44,7 @@
               <select
                 id="type"
                 v-model="filters.type"
-                class="block w-full border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                class="block w-full px-3 py-2 border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent text-sm"
               >
                 <option value="">Todos os tipos</option>
                 <option value="301">301 - Permanente</option>
@@ -57,7 +57,7 @@
               <select
                 id="status"
                 v-model="filters.status"
-                class="block w-full border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                class="block w-full px-3 py-2 border border-border rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent text-sm"
               >
                 <option value="">Todos os status</option>
                 <option value="active">Ativo</option>
@@ -138,7 +138,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18" />
                     </svg>
                   </div>
-                  <span class="font-medium">{{ redirect.domain }}</span>
+                  <span class="font-medium">{{ redirect.domain.name }}</span>
                     </div>
                   </td>
               <td class="px-4 py-4">
@@ -181,7 +181,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
-import { route } from '@/ziggy';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Card from '@/Components/ui/Card.vue';
@@ -189,15 +188,36 @@ import Badge from '@/Components/ui/Badge.vue';
 import Table from '@/Components/ui/Table.vue';
 import { toast } from '@/Composables/useToast';
 
+// Props
+interface Props {
+  redirects: {
+    data: Redirect[];
+    links: any[];
+    total?: number;
+  };
+  stats?: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
+}
+
+const props = defineProps<Props>();
+
 // Tipos
 interface Redirect {
   id: number;
-  domain: string;
+  domain: {
+    id: number;
+    name: string;
+  };
   source_pattern: string;
   target_url: string;
   redirect_type: number;
   priority: number;
   is_active: boolean;
+  preserve_query: boolean;
+  created_at: string;
 }
 
 interface Filters {
@@ -207,8 +227,8 @@ interface Filters {
 }
 
 // Estado
-const redirects = ref<Redirect[]>([]);
-const loading = ref(true);
+const redirects = ref(props.redirects);
+const loading = ref(false);
 const filters = ref<Filters>({
   search: '',
   type: '',
@@ -217,10 +237,10 @@ const filters = ref<Filters>({
 
 // Computed
 const filteredRedirects = computed(() => {
-  return redirects.value.filter(redirect => {
+  return redirects.value.data.filter(redirect => {
     // Filtro de busca
     if (filters.value.search && 
-        !redirect.domain.toLowerCase().includes(filters.value.search.toLowerCase()) &&
+        !redirect.domain.name.toLowerCase().includes(filters.value.search.toLowerCase()) &&
         !redirect.source_pattern.toLowerCase().includes(filters.value.search.toLowerCase()) &&
         !redirect.target_url.toLowerCase().includes(filters.value.search.toLowerCase())) {
       return false;
@@ -248,45 +268,6 @@ const hasFilters = computed(() => {
 });
 
 // Métodos
-const loadRedirects = async () => {
-  loading.value = true;
-  
-  try {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    redirects.value = [
-      {
-        id: 1,
-        domain: 'example.com',
-        source_pattern: '/old-page',
-        target_url: 'https://example.com/new-page',
-        redirect_type: 301,
-        priority: 100,
-        is_active: true
-      },
-      {
-        id: 2,
-        domain: 'example.com',
-        source_pattern: '/temp/*',
-        target_url: 'https://temp.example.com/$1',
-        redirect_type: 302,
-        priority: 90,
-        is_active: true
-      },
-      {
-        id: 3,
-        domain: 'old.example.com',
-        source_pattern: '/*',
-        target_url: 'https://example.com/$1',
-        redirect_type: 301,
-        priority: 80,
-        is_active: false
-      }
-    ];
-  } finally {
-    loading.value = false;
-  }
-};
 
 const resetFilters = () => {
   filters.value = {
@@ -297,11 +278,11 @@ const resetFilters = () => {
 };
 
 const openCreateModal = () => {
-  router.visit(route('redirects.create'));
+  router.visit('/redirects/create');
 };
 
 const editRedirect = (redirect: Redirect) => {
-  toast.info('Editar redirect', `Editando redirect ${redirect.source_pattern}`);
+  router.visit(`/redirects/${redirect.id}/edit`);
 };
 
 const confirmDelete = (redirect: Redirect) => {
@@ -310,13 +291,34 @@ const confirmDelete = (redirect: Redirect) => {
   }
 };
 
-const deleteRedirect = (id: number) => {
-  redirects.value = redirects.value.filter(redirect => redirect.id !== id);
-  toast.success('Redirect excluído', 'O redirect foi excluído com sucesso.');
+const deleteRedirect = async (id: number) => {
+  try {
+    await router.delete(`/redirects/${id}`, {
+      onSuccess: () => {
+        // Atualizar estado local imediatamente
+        redirects.value.data = redirects.value.data.filter(redirect => redirect.id !== id);
+        
+        // Atualizar contadores se disponíveis
+        if (redirects.value.total) {
+          redirects.value.total--;
+        }
+        
+        toast.success('Redirect excluído', 'O redirect foi excluído com sucesso.');
+      },
+      onError: (errors) => {
+        toast.error('Erro ao excluir', 'Não foi possível excluir o redirect.');
+        console.error('Erro ao excluir redirect:', errors);
+      }
+    });
+  } catch (error) {
+    toast.error('Erro ao excluir', 'Ocorreu um erro inesperado.');
+    console.error('Erro inesperado:', error);
+  }
 };
 
 // Lifecycle
 onMounted(() => {
-  loadRedirects();
+  // Os dados já são carregados via props do Inertia.js
+  loading.value = false;
 });
 </script>

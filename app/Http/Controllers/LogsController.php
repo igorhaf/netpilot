@@ -47,6 +47,8 @@ class LogsController extends Controller
                 'traefik' => 'Traefik',
                 'ssl_renewal' => 'SSL Renewal',
                 'proxy_update' => 'Proxy Update',
+                'domain' => 'Domínio',
+                'redirect' => 'Redirect',
             ],
             'statuses' => [
                 'pending' => 'Pendente',
@@ -59,8 +61,19 @@ class LogsController extends Controller
 
     public function clear()
     {
-        DeploymentLog::where('status', '!=', 'running')->delete();
-
-        return back()->with('success', 'Logs limpos com sucesso!');
+        try {
+            $deletedCount = DeploymentLog::where('status', '!=', 'running')->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Logs limpos com sucesso! {$deletedCount} registros removidos.",
+                'deleted_count' => $deletedCount
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao limpar logs: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -51,6 +51,24 @@ class RedirectsController extends Controller
 
         $redirectRule = RedirectRule::create($validated);
 
+        // Log creation
+        \App\Models\DeploymentLog::create([
+            'type' => 'redirect',
+            'action' => 'create',
+            'status' => 'success',
+            'payload' => [
+                'redirect_id' => $redirectRule->id,
+                'domain_id' => $redirectRule->domain_id,
+                'source_pattern' => $redirectRule->source_pattern,
+                'target_url' => $redirectRule->target_url,
+                'redirect_type' => $redirectRule->redirect_type,
+                'priority' => $redirectRule->priority,
+                'is_active' => $redirectRule->is_active,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
         return redirect()->route('redirects.index')
             ->with('success', 'Regra de redirect criada com sucesso!');
     }
@@ -80,13 +98,39 @@ class RedirectsController extends Controller
 
         $redirect->update($validated);
 
+        // Log update
+        \App\Models\DeploymentLog::create([
+            'type' => 'redirect',
+            'action' => 'update',
+            'status' => 'success',
+            'payload' => [
+                'redirect_id' => $redirect->id,
+                'changes' => $validated,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
         return redirect()->route('redirects.index')
             ->with('success', 'Regra de redirect atualizada com sucesso!');
     }
 
     public function destroy(RedirectRule $redirect)
     {
+        $redirectId = $redirect->id;
         $redirect->delete();
+
+        // Log deletion
+        \App\Models\DeploymentLog::create([
+            'type' => 'redirect',
+            'action' => 'delete',
+            'status' => 'success',
+            'payload' => [
+                'redirect_id' => $redirectId,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
 
         return redirect()->route('redirects.index')
             ->with('success', 'Regra de redirect removida com sucesso!');

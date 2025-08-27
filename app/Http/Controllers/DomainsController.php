@@ -34,7 +34,48 @@ class DomainsController extends Controller
             $data['dns_records'] = $data['dns_records'];
         }
 
-        Domain::create($data);
+        $domain = Domain::create($data);
+
+        // Log de criação de domínio
+        \App\Models\DeploymentLog::create([
+            'type' => 'domain',
+            'action' => 'create',
+            'status' => 'success',
+            'payload' => [
+                'domain_id' => $domain->id,
+                'name' => $domain->name,
+                'is_active' => $domain->is_active,
+                'auto_ssl' => $domain->auto_ssl ?? false,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        // Create SSL certificate if auto_ssl is enabled
+        if ($data["auto_ssl"] ?? false) {
+            try {
+                $sslCertificate = \App\Models\SslCertificate::create([
+                    'domain_id' => $domain->id,
+                    'domain_name' => $domain->name,
+                    'status' => 'pending',
+                    'auto_renew' => true,
+                    'renewal_days_before' => 30,
+                ]);
+
+                $shouldRunSync = app()->environment('local', 'testing') || config('queue.default') === 'sync';
+                if ($shouldRunSync) {
+                    \App\Jobs\CreateSslCertificateJob::dispatchSync($sslCertificate);
+                } else {
+                    \App\Jobs\CreateSslCertificateJob::dispatch($sslCertificate);
+                }
+
+                return redirect()->route('domains.index')
+                    ->with('success', 'Domínio criado com sucesso! Certificado SSL está sendo gerado...');
+            } catch (\Exception $e) {
+                return redirect()->route('domains.index')
+                    ->with('warning', 'Domínio criado, mas houve erro ao solicitar SSL: ' . $e->getMessage());
+            }
+        }
 
         return redirect()->route('domains.index')
             ->with('success', 'Domínio criado com sucesso!');
@@ -49,7 +90,21 @@ class DomainsController extends Controller
 
     public function update(DomainRequest $request, Domain $domain)
     {
-        $domain->update($request->validated());
+        $validated = $request->validated();
+        $domain->update($validated);
+
+        // Log de atualização
+        \App\Models\DeploymentLog::create([
+            'type' => 'domain',
+            'action' => 'update',
+            'status' => 'success',
+            'payload' => [
+                'domain_id' => $domain->id,
+                'changes' => $validated,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
 
         return redirect()->route('domains.index')
             ->with('success', 'Domínio atualizado com sucesso!');
@@ -57,7 +112,20 @@ class DomainsController extends Controller
 
     public function destroy(Domain $domain)
     {
+        $domainId = $domain->id;
         $domain->delete();
+
+        // Log de remoção
+        \App\Models\DeploymentLog::create([
+            'type' => 'domain',
+            'action' => 'delete',
+            'status' => 'success',
+            'payload' => [
+                'domain_id' => $domainId,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
 
         return redirect()->route('domains.index')
             ->with('success', 'Domínio removido com sucesso!');

@@ -15,7 +15,7 @@
           <h1 class="text-2xl font-bold text-text">Novo Domínio</h1>
         </div>
         <p class="text-sm text-text-muted">
-          Adicione um novo domínio ao sistema
+          Adicione um domínio para gerenciar redirects e certificados SSL automáticos
         </p>
       </div>
 
@@ -57,108 +57,66 @@
             <p v-if="errors.description" class="mt-2 text-sm text-danger">{{ errors.description }}</p>
           </div>
 
-          <!-- DNS Records -->
-          <div>
-            <label class="block text-sm font-medium text-text mb-2">
-              Registros DNS
-            </label>
-            <div class="space-y-3">
-              <div 
-                v-for="(record, index) in form.dns_records" 
-                :key="index"
-                class="grid grid-cols-3 gap-3"
-              >
-                <select
-                  v-model="record.type"
-                  class="px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                >
-                  <option value="A">A</option>
-                  <option value="CNAME">CNAME</option>
-                  <option value="MX">MX</option>
-                  <option value="TXT">TXT</option>
-                </select>
-                <input
-                  v-model="record.name"
-                  type="text"
-                  placeholder="Nome"
-                  class="px-3 py-2 bg-elevated border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                />
-                <div class="flex gap-2">
+
+
+          <!-- Configurações -->
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-lg font-medium text-text mb-4">Configurações do Domínio</h3>
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
                   <input
-                    v-model="record.value"
-                    type="text"
-                    placeholder="Valor"
-                    class="flex-1 px-3 py-2 bg-elevated border border-border rounded-lg text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                    v-model="form.is_active"
+                    id="is_active"
+                    type="checkbox"
+                    class="w-5 h-5 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2 mt-0.5"
                   />
-                  <Button 
-                    @click="removeDnsRecord(index)" 
-                    type="button"
-                    variant="danger" 
-                    size="sm"
-                  >
-                    <template #icon>
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
-                    </template>
-                  </Button>
+                  <div>
+                    <label for="is_active" class="text-sm font-medium text-text cursor-pointer">
+                      Ativar Domínio
+                    </label>
+                    <p class="text-xs text-text-muted mt-1">
+                      Quando ativo, o domínio ficará disponível para receber tráfego e configurar redirects
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input
+                    v-model="form.auto_ssl"
+                    id="auto_ssl"
+                    type="checkbox"
+                    class="w-5 h-5 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2 mt-0.5"
+                  />
+                  <div>
+                    <label for="auto_ssl" class="text-sm font-medium text-text cursor-pointer">
+                      SSL Automático (Let's Encrypt)
+                    </label>
+                    <p class="text-xs text-text-muted mt-1">
+                      Gerar e renovar automaticamente certificados SSL gratuitos via Let's Encrypt
+                    </p>
+                  </div>
                 </div>
               </div>
-              <Button 
-                @click="addDnsRecord" 
-                type="button"
-                variant="outline" 
-                size="sm"
-              >
-                <template #icon>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                  </svg>
-                </template>
-                Adicionar Registro DNS
-              </Button>
-            </div>
-            <p class="mt-1 text-xs text-text-muted">Registros DNS para configuração do domínio</p>
-          </div>
-
-          <!-- Settings -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="flex items-center gap-2">
-                <input
-                  v-model="form.is_active"
-                  type="checkbox"
-                  class="w-4 h-4 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2"
-                />
-                <span class="text-sm font-medium text-text">Domínio Ativo</span>
-              </label>
-              <p class="mt-1 text-xs text-text-muted">Ativar o domínio no sistema</p>
-            </div>
-
-            <div>
-              <label class="flex items-center gap-2">
-                <input
-                  v-model="form.auto_ssl"
-                  type="checkbox"
-                  class="w-4 h-4 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2"
-                />
-                <span class="text-sm font-medium text-text">SSL Automático</span>
-              </label>
-              <p class="mt-1 text-xs text-text-muted">Solicitar certificado SSL automaticamente</p>
             </div>
           </div>
 
           <!-- Preview -->
           <div v-if="form.name" class="p-4 bg-elevated/50 rounded-lg border border-border">
-            <h3 class="text-sm font-medium text-text mb-2">Preview do Domínio:</h3>
-            <div class="text-sm text-text-muted space-y-1">
-              <p><strong>Nome:</strong> {{ form.name }}</p>
-              <p v-if="form.description"><strong>Descrição:</strong> {{ form.description }}</p>
-              <p><strong>Status:</strong> {{ form.is_active ? 'Ativo' : 'Inativo' }}</p>
-              <p><strong>SSL Automático:</strong> {{ form.auto_ssl ? 'Sim' : 'Não' }}</p>
-              <p v-if="form.dns_records.length > 0">
-                <strong>Registros DNS:</strong> {{ form.dns_records.length }} configurado(s)
-              </p>
+            <h3 class="text-sm font-medium text-text mb-3">Preview do Domínio</h3>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-accent"></div>
+                <span class="text-sm font-medium text-text">{{ form.name }}</span>
+                <span v-if="form.auto_ssl" class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-success/10 text-success">
+                  🔒 SSL Ativo
+                </span>
+              </div>
+              <p v-if="form.description" class="text-sm text-text-muted pl-4">{{ form.description }}</p>
+              <div class="flex items-center gap-4 text-xs text-text-muted pl-4">
+                <span>Status: {{ form.is_active ? '✅ Ativo' : '❌ Inativo' }}</span>
+                <span>SSL: {{ form.auto_ssl ? '🔒 Let\'s Encrypt' : '🔓 Desabilitado' }}</span>
+              </div>
             </div>
           </div>
 
@@ -183,6 +141,15 @@
         </form>
       </Card>
     </div>
+
+    <!-- SSL Progress Monitor -->
+    <SslProgressMonitor 
+      :domain-name="form.name"
+      :certificate-id="createdCertificateId"
+      :is-visible="showSslProgress"
+      @close="closeSslProgress"
+      @retry="retrySslCreation"
+    />
   </AppLayout>
 </template>
 
@@ -192,14 +159,16 @@ import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Card from '@/Components/ui/Card.vue';
+import SslProgressMonitor from '@/Components/SslProgressMonitor.vue';
 import { useToast } from '@/Composables/useToast';
-import { route } from '@/ziggy';
 
 const { success, error } = useToast();
 
 // State
 const isSubmitting = ref(false);
 const errors = reactive<Record<string, string>>({});
+const showSslProgress = ref(false);
+const createdCertificateId = ref<number | undefined>();
 
 // Form
 const form = reactive({
@@ -207,43 +176,33 @@ const form = reactive({
   description: '',
   is_active: true,
   auto_ssl: true,
-  dns_records: [] as Array<{ type: string; name: string; value: string }>,
 });
 
 // Methods
 const goBack = () => {
-  router.visit(route('domains.index'));
-};
-
-const addDnsRecord = () => {
-  form.dns_records.push({ type: 'A', name: '', value: '' });
-};
-
-const removeDnsRecord = (index: number) => {
-  form.dns_records.splice(index, 1);
+  router.visit('/domains');
 };
 
 const submitForm = async () => {
   isSubmitting.value = true;
-  errors.value = {};
+  Object.keys(errors).forEach(key => delete errors[key]);
 
   try {
-    // Prepare DNS records data
-    const dnsRecords = form.dns_records
-      .filter(record => record.name && record.value)
-      .reduce((acc, record) => {
-        acc[record.type] = record.value;
-        return acc;
-      }, {} as Record<string, string>);
-
-    const payload = {
-      ...form,
-      dns_records: Object.keys(dnsRecords).length > 0 ? dnsRecords : null,
-    };
-
-    await router.post(route('domains.store'), payload, {
-      onSuccess: () => {
+    await router.post('/domains', form, {
+      onSuccess: (page) => {
         success('Domínio criado com sucesso!');
+        
+        // Se SSL automático está ativado, mostrar monitor de progresso
+        if (form.auto_ssl) {
+          showSslProgress.value = true;
+          // Simular ID do certificado (em produção, viria do backend)
+          createdCertificateId.value = Math.floor(Math.random() * 1000);
+        } else {
+          // Redirecionar diretamente se não há SSL
+          setTimeout(() => {
+            router.visit('/domains');
+          }, 1000);
+        }
       },
       onError: (validationErrors) => {
         Object.keys(validationErrors).forEach(key => {
@@ -255,9 +214,22 @@ const submitForm = async () => {
         isSubmitting.value = false;
       }
     });
-  } catch (error) {
+  } catch (err) {
     error('Erro ao criar domínio');
     isSubmitting.value = false;
   }
+};
+
+const closeSslProgress = () => {
+  showSslProgress.value = false;
+  // Redirecionar para lista de domínios
+  setTimeout(() => {
+    router.visit('/domains');
+  }, 500);
+};
+
+const retrySslCreation = () => {
+  // Em produção, fazer nova requisição para criar certificado SSL
+  console.log('Retrying SSL certificate creation for domain:', form.name);
 };
 </script>

@@ -2,8 +2,8 @@
   <AppLayout>
     <div class="px-4 py-6 sm:px-0">
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Edit Domain</h1>
-        <p class="mt-2 text-sm text-gray-600">Update domain configuration and SSL settings for <span class="font-semibold">{{ domain.name }}</span>.</p>
+        <h1 class="text-3xl font-bold text-gray-900">Editar Domínio</h1>
+        <p class="mt-2 text-sm text-gray-600">Atualizar configuração do domínio e configurações SSL para <span class="font-semibold">{{ domain.name }}</span>.</p>
       </div>
 
       <Card class="max-w-2xl">
@@ -11,22 +11,22 @@
           <Input
             id="name"
             v-model="form.name"
-            label="Domain Name"
+            label="Nome do Domínio"
             type="text"
-            placeholder="example.com"
+            placeholder="exemplo.com"
             required
             :error="errors.name"
-            help="Enter a valid domain name (e.g., example.com, api.example.com)"
+            help="Digite um nome de domínio válido (ex: exemplo.com, api.exemplo.com)"
           />
 
           <Input
             id="description"
             v-model="form.description"
-            label="Description"
+            label="Descrição"
             type="textarea"
-            placeholder="Optional description for this domain"
+            placeholder="Descrição opcional para este domínio"
             :error="errors.description"
-            help="Add a description to help identify this domain's purpose"
+            help="Adicione uma descrição para ajudar a identificar o propósito deste domínio"
             :rows="3"
           />
 
@@ -34,15 +34,15 @@
             <div class="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div class="flex items-center h-5">
                 <input
-                  id="auto_tls"
-                  v-model="form.auto_tls"
+                  id="auto_ssl"
+                  v-model="form.auto_ssl"
                   type="checkbox"
                   class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded transition-colors duration-200"
                 />
               </div>
               <div class="text-sm">
-                <label for="auto_tls" class="font-medium text-blue-900">Enable Auto TLS</label>
-                <p class="text-blue-700">Automatically obtain and renew SSL certificates via Let's Encrypt</p>
+                <label for="auto_ssl" class="font-medium text-blue-900">SSL Automático (Let's Encrypt)</label>
+                <p class="text-blue-700">Obter e renovar automaticamente certificados SSL via Let's Encrypt</p>
               </div>
             </div>
 
@@ -63,11 +63,11 @@
           </div>
 
           <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button href="/domains" variant="outline">
-              Cancel
+            <Button @click="router.visit('/domains')" variant="outline">
+              Cancelar
             </Button>
-            <Button type="submit" :loading="processing" variant="primary">
-              Update Domain
+            <Button type="submit" :loading="processing" variant="default">
+              Atualizar Domínio
             </Button>
           </div>
         </form>
@@ -80,8 +80,8 @@
 import { reactive, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import Card from '@/Components/Card.vue'
-import Button from '@/Components/Button.vue'
+import Card from '@/Components/ui/Card.vue'
+import Button from '@/Components/ui/Button.vue'
 import Input from '@/Components/Input.vue'
 
 const props = defineProps({
@@ -92,7 +92,7 @@ const props = defineProps({
 const form = reactive({
   name: props.domain.name,
   description: props.domain.description || '',
-  auto_tls: props.domain.auto_tls,
+  auto_ssl: props.domain.auto_ssl,
   is_active: props.domain.is_active
 })
 
@@ -101,7 +101,16 @@ const processing = ref(false)
 const submit = () => {
   processing.value = true
   router.put(`/domains/${props.domain.id}`, form, {
-    onFinish: () => (processing.value = false)
+    onSuccess: () => {
+      // Redirecionar para a lista de domínios após sucesso
+      router.visit('/domains');
+    },
+    onError: (errors) => {
+      console.error('Erro ao atualizar domínio:', errors);
+    },
+    onFinish: () => {
+      processing.value = false;
+    }
   })
 }
 </script>

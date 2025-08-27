@@ -9,21 +9,21 @@
       <Card class="max-w-2xl">
         <form @submit.prevent="submit" class="space-y-6">
           <div>
-            <label for="domain_id" class="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+            <label for="domain_id" class="block text-sm font-medium text-text mb-2">Domínio</label>
             <select
               id="domain_id"
               v-model="form.domain_id"
               required
-              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-colors duration-200"
-              :class="{ 'border-red-300': errors.domain_id }"
+              class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+              :class="{ 'border-danger': errors.domain_id }"
             >
-              <option value="">Select a domain</option>
+              <option value="">Selecione um domínio</option>
               <option v-for="domain in domains" :key="domain.id" :value="domain.id">
                 {{ domain.name }}
               </option>
             </select>
-            <p v-if="errors.domain_id" class="mt-2 text-sm text-red-600">{{ errors.domain_id }}</p>
-            <p class="mt-1 text-sm text-gray-500">Choose the domain this redirect applies to</p>
+            <p v-if="errors.domain_id" class="mt-2 text-sm text-danger">{{ errors.domain_id }}</p>
+            <p class="mt-1 text-sm text-text-muted">Escolha o domínio ao qual este redirect se aplica</p>
           </div>
 
           <Input
@@ -50,22 +50,22 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="redirect_type" class="block text-sm font-medium text-gray-700 mb-2">Redirect Type</label>
+              <label for="redirect_type" class="block text-sm font-medium text-text mb-2">Tipo de Redirect</label>
               <select
                 id="redirect_type"
                 v-model="form.redirect_type"
                 required
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-colors duration-200"
-                :class="{ 'border-red-300': errors.redirect_type }"
+                class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                :class="{ 'border-danger': errors.redirect_type }"
               >
-                <option value="301">301 - Permanent Redirect</option>
-                <option value="302">302 - Temporary Redirect</option>
-                <option value="303">303 - See Other</option>
-                <option value="307">307 - Temporary Redirect (Preserve Method)</option>
-                <option value="308">308 - Permanent Redirect (Preserve Method)</option>
+                <option value="301">301 - Redirecionamento Permanente</option>
+                <option value="302">302 - Redirecionamento Temporário</option>
+                <option value="303">303 - Ver Outro</option>
+                <option value="307">307 - Redirecionamento Temporário (Preserva Método)</option>
+                <option value="308">308 - Redirecionamento Permanente (Preserva Método)</option>
               </select>
-              <p v-if="errors.redirect_type" class="mt-2 text-sm text-red-600">{{ errors.redirect_type }}</p>
-              <p class="mt-1 text-sm text-gray-500">Choose the appropriate HTTP redirect status code</p>
+                              <p v-if="errors.redirect_type" class="mt-2 text-sm text-danger">{{ errors.redirect_type }}</p>
+                <p class="mt-1 text-sm text-text-muted">Escolha o código de status HTTP apropriado</p>
             </div>
 
             <Input

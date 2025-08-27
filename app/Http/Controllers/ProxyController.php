@@ -67,6 +67,24 @@ class ProxyController extends Controller
             $this->nginxService->deployConfiguration();
         }
 
+        // Log creation
+        \App\Models\DeploymentLog::create([
+            'type' => 'proxy_update',
+            'action' => 'create_rule',
+            'status' => 'success',
+            'payload' => [
+                'proxy_rule_id' => $proxyRule->id,
+                'domain_id' => $proxyRule->domain_id,
+                'source' => [$proxyRule->source_host, $proxyRule->source_port],
+                'target' => [$proxyRule->target_host, $proxyRule->target_port],
+                'protocol' => $proxyRule->protocol,
+                'priority' => $proxyRule->priority,
+                'is_active' => $proxyRule->is_active,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
         return redirect()->route('proxy.index')
             ->with('success', 'Regra de proxy criada com sucesso!');
     }
@@ -105,6 +123,19 @@ class ProxyController extends Controller
         // Deploy to nginx
         $this->nginxService->deployConfiguration();
 
+        // Log update
+        \App\Models\DeploymentLog::create([
+            'type' => 'proxy_update',
+            'action' => 'update_rule',
+            'status' => 'success',
+            'payload' => [
+                'proxy_rule_id' => $proxyRule->id,
+                'changes' => $validated,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
         return redirect()->route('proxy.index')
             ->with('success', 'Regra de proxy atualizada com sucesso!');
     }
@@ -115,6 +146,18 @@ class ProxyController extends Controller
 
         // Redeploy nginx without this rule
         $this->nginxService->deployConfiguration();
+
+        // Log deletion
+        \App\Models\DeploymentLog::create([
+            'type' => 'proxy_update',
+            'action' => 'delete_rule',
+            'status' => 'success',
+            'payload' => [
+                'proxy_rule_id' => $proxyRule->id,
+            ],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
 
         return redirect()->route('proxy.index')
             ->with('success', 'Regra de proxy removida com sucesso!');

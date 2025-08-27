@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('deployment_logs', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['nginx', 'traefik', 'ssl_renewal', 'proxy_update']);
-            $table->string('action'); // deploy, reload, renew, update
+            $table->string('type'); // Changed from enum to string to allow more types
+            $table->string('action'); // deploy, reload, renew, update, create, delete
             $table->enum('status', ['pending', 'running', 'success', 'failed'])->default('pending');
             $table->json('payload')->nullable(); // Configuration data
             $table->text('output')->nullable(); // Command output

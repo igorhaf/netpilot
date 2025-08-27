@@ -449,8 +449,8 @@ const openCreateModal = () => {
 };
 
 const editDomain = (domain: Domain) => {
-  // Em produção, abra um modal ou navegue para uma página de edição
-  toast.info('Editar domínio', `Editando ${domain.name}`);
+  // Navegar para a página de edição do domínio
+  router.visit(`/domains/${domain.id}/edit`);
 };
 
 const confirmDelete = (domain: Domain) => {
@@ -464,6 +464,34 @@ const closeDeleteModal = () => {
   isDeleting.value = false;
 };
 
+const reloadDomains = async () => {
+  try {
+    // Tentar recarregar via Inertia primeiro
+    await router.visit(window.location.pathname, {
+      only: ['domains'],
+      preserveState: false,
+      preserveScroll: false
+    });
+  } catch (error) {
+    console.error('Erro ao recarregar via Inertia:', error);
+    
+    try {
+      // Fallback: fazer requisição GET manual e atualizar estado
+      const response = await fetch('/domains');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.domains && data.domains.data) {
+          domains.value = data.domains;
+        }
+      }
+    } catch (fetchError) {
+      console.error('Erro ao fazer fetch manual:', fetchError);
+      // Último recurso: recarregar página completa
+      window.location.reload();
+    }
+  }
+};
+
 const executeDelete = async () => {
   if (!domainToDelete.value) return;
   
@@ -474,8 +502,23 @@ const executeDelete = async () => {
     const url = `/domains/${domainToDelete.value.id}`;
     await router.delete(url, {
       onSuccess: () => {
+        // Atualizar estado local imediatamente para feedback visual
+        domains.value.data = domains.value.data.filter(
+          domain => domain.id !== domainToDelete.value?.id
+        );
+        
+        // Atualizar contadores
+        if (domains.value.total) {
+          domains.value.total--;
+        }
+        
         toast.success('Domínio excluído', 'O domínio foi excluído com sucesso.');
         closeDeleteModal();
+        
+        // Recarregar dados do backend para garantir sincronização completa
+        setTimeout(() => {
+          reloadDomains();
+        }, 100);
       },
       onError: (errors) => {
         toast.error('Erro ao excluir', 'Não foi possível excluir o domínio.');
@@ -508,6 +551,8 @@ const deleteSelected = async () => {
       await router.delete(url, {
         onSuccess: () => {
           successCount++;
+          // Atualizar estado local imediatamente
+          domains.value.data = domains.value.data.filter(domain => domain.id !== id);
         },
         onError: () => {
           errorCount++;
@@ -518,8 +563,18 @@ const deleteSelected = async () => {
     }
   }
   
+  // Atualizar contadores
+  if (successCount > 0 && domains.value.total) {
+    domains.value.total -= successCount;
+  }
+  
   if (successCount > 0) {
     toast.success('Domínios excluídos', `${successCount} domínios foram excluídos com sucesso.`);
+    
+    // Recarregar dados do backend para garantir sincronização completa
+    setTimeout(() => {
+      reloadDomains();
+    }, 100);
   }
   
   if (errorCount > 0) {

@@ -88,6 +88,8 @@
         </Card>
       </div>
 
+
+
       <!-- Filters -->
       <Card class="p-4 mb-6">
         <div class="flex flex-col sm:flex-row gap-4">
@@ -125,61 +127,80 @@
 
       <!-- Logs Table -->
       <Card>
-        <Table
-          :columns="columns"
-          :data="logs.data"
-          :loading="loading"
-          :empty-message="'Nenhum log encontrado'"
-          zebra
-        >
-          <template #type="{ row }">
-            <div class="flex items-center gap-2">
-              <div class="p-1 rounded" :class="getTypeIconClass(row.type)">
-                <component :is="getTypeIcon(row.type)" class="w-4 h-4" />
-              </div>
-              <div>
-                <div class="font-medium text-text">{{ types[row.type] || row.type }}</div>
-                <div class="text-sm text-text-muted">{{ row.action }}</div>
-              </div>
-            </div>
-          </template>
-
-          <template #status="{ row }">
-            <Badge :variant="getStatusVariant(row.status)">
-              {{ statuses[row.status] || row.status }}
-            </Badge>
-          </template>
-
-          <template #created_at="{ row }">
-            <div class="font-medium text-text">{{ formatDate(row.created_at) }}</div>
-            <div class="text-sm text-text-muted">{{ formatTime(row.created_at) }}</div>
-          </template>
-
-          <template #duration="{ row }">
-            <div v-if="row.started_at && row.completed_at" class="text-sm">
-              {{ formatDuration(row.started_at, row.completed_at) }}
-            </div>
-            <div v-else-if="row.status === 'running'" class="text-sm text-info">
-              Executando...
-            </div>
-            <div v-else class="text-sm text-text-muted">-</div>
-          </template>
-
-          <template #actions="{ row }">
-            <Button 
-              @click="viewLogDetails(row)" 
-              variant="ghost" 
-              size="sm"
-            >
-              <template #icon>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </template>
-            </Button>
-          </template>
-        </Table>
+        <!-- Tabela HTML Simples para Debug -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-elevated border-b border-border">
+              <tr>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Tipo / Ação</th>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Status</th>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Iniciado em</th>
+                <th class="px-4 py-3 text-left font-medium text-text-muted">Duração</th>
+                <th class="px-4 py-3 text-center font-medium text-text-muted">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="logs.data.length === 0" class="border-b border-border">
+                <td colspan="5" class="px-4 py-8 text-center text-text-muted">
+                  Nenhum log encontrado
+                </td>
+              </tr>
+              <tr v-for="log in logs.data" :key="log.id" class="border-b border-border hover:bg-elevated/50">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1 rounded" :class="getTypeIconClass(log.type)">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="font-medium text-text">{{ types[log.type] || log.type }}</div>
+                      <div class="text-sm text-text-muted">{{ formatAction(log.action) }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                        :class="{
+                          'bg-success/20 text-success': log.status === 'success',
+                          'bg-danger/20 text-danger': log.status === 'failed',
+                          'bg-info/20 text-info': log.status === 'running',
+                          'bg-warning/20 text-warning': log.status === 'pending'
+                        }">
+                    {{ statuses[log.status] || log.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-text">{{ formatDate(log.created_at) }}</div>
+                  <div class="text-sm text-text-muted">{{ formatTime(log.created_at) }}</div>
+                </td>
+                <td class="px-4 py-3">
+                  <div v-if="log.started_at && log.completed_at" class="text-sm">
+                    {{ formatDuration(log.started_at, log.completed_at) }}
+                  </div>
+                  <div v-else-if="log.status === 'running'" class="text-sm text-info">
+                    Executando...
+                  </div>
+                  <div v-else class="text-sm text-text-muted">-</div>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <Button 
+                    @click="viewLogDetails(log)" 
+                    variant="ghost" 
+                    size="sm"
+                  >
+                    <template #icon>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    </template>
+                  </Button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Pagination -->
         <div class="px-6 py-4 border-t border-border">
@@ -257,10 +278,8 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Card from '@/Components/ui/Card.vue';
-import Table from '@/Components/ui/Table.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import { useToast } from '@/Composables/useToast';
-import { route } from '@/ziggy';
 
 interface DeploymentLog {
   id: number;
@@ -310,30 +329,49 @@ const filters = reactive({
   status: props.filters.status || '',
 });
 
-// Table columns
-const columns = [
-  { key: 'type', label: 'Tipo / Ação' },
-  { key: 'status', label: 'Status' },
-  { key: 'created_at', label: 'Iniciado em', sortable: true },
-  { key: 'duration', label: 'Duração' },
-  { key: 'actions', label: 'Ações', align: 'center' },
-];
+// Table columns (não usado na tabela HTML simples)
+// const columns = [
+//   { key: 'type', label: 'Tipo / Ação' },
+//   { key: 'status', label: 'Status' },
+//   { key: 'created_at', label: 'Iniciado em', sortable: true },
+//   { key: 'duration', label: 'Duração' },
+//   { key: 'actions', label: 'Ações', align: 'center' },
+// ];
 
 // Methods
 const refreshLogs = () => {
-  router.reload({ preserveState: true, preserveScroll: true });
+  loading.value = true;
+  router.visit(window.location.pathname, {
+    only: ['logs', 'stats', 'types', 'statuses', 'filters'],
+    preserveState: false,
+    preserveScroll: false,
+    onFinish: () => {
+      loading.value = false;
+    }
+  });
 };
 
 const clearLogs = () => {
   if (confirm('Tem certeza que deseja limpar todos os logs (exceto os em execução)?')) {
-    router.post(route('logs.clear'), {}, {
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: () => {
-        success('Logs limpos com sucesso!');
+    loading.value = true;
+    router.post('/logs/clear', {}, {
+      preserveState: false,
+      preserveScroll: false,
+      onSuccess: (response) => {
+        if (response.success) {
+          success(response.message || 'Logs limpos com sucesso!');
+          // Recarregar os logs após limpeza
+          refreshLogs();
+        } else {
+          error(response.message || 'Erro ao limpar logs');
+        }
       },
-      onError: () => {
+      onError: (errors) => {
         error('Erro ao limpar logs');
+        console.error('Erro:', errors);
+      },
+      onFinish: () => {
+        loading.value = false;
       }
     });
   }
@@ -364,6 +402,8 @@ const getTypeIcon = (type: string) => {
     traefik: 'ShieldIcon', 
     ssl_renewal: 'CertificateIcon',
     proxy_update: 'ArrowsIcon',
+    domain: 'GlobeIcon',
+    redirect: 'RedirectIcon',
   };
   return icons[type] || 'DocumentIcon';
 };
@@ -374,8 +414,36 @@ const getTypeIconClass = (type: string) => {
     traefik: 'bg-green-500/20 text-green-400',
     ssl_renewal: 'bg-yellow-500/20 text-yellow-400',
     proxy_update: 'bg-purple-500/20 text-purple-400',
+    domain: 'bg-blue-500/20 text-blue-400',
+    redirect: 'bg-purple-500/20 text-purple-400',
   };
   return classes[type] || 'bg-muted/20 text-muted';
+};
+
+// Função para formatar a ação de forma mais legível
+const formatAction = (action: string) => {
+  const actionMap: Record<string, string> = {
+    'issue_certificate': 'Emissão de Certificado',
+    'domain_validation': 'Validação do Domínio',
+    'port_check': 'Verificação de Portas',
+    'environment_prep': 'Preparação do Ambiente',
+    'certificate_issuance': 'Emissão do Certificado',
+    'certificate_application': 'Aplicação do Certificado',
+    'final_verification': 'Verificação Final',
+    'renew_certificate': 'Renovação de Certificado',
+    'renewal_preparation': 'Preparação da Renovação',
+    'renewal_execution': 'Execução da Renovação',
+    'renewal_verification': 'Verificação da Renovação',
+    'revoke_certificate': 'Revogação de Certificado',
+    'revocation_preparation': 'Preparação da Revogação',
+    'revocation_execution': 'Execução da Revogação',
+    'revocation_cleanup': 'Limpeza da Revogação',
+    'create': 'Criação',
+    'update': 'Atualização',
+    'delete': 'Exclusão',
+  };
+  
+  return actionMap[action] || action;
 };
 
 const formatDate = (dateString: string) => {
@@ -463,6 +531,23 @@ const DocumentIcon = {
   template: `
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+  `
+};
+
+// Extra icons matching sidebar
+const GlobeIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  `
+};
+
+const RedirectIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
     </svg>
   `
 };

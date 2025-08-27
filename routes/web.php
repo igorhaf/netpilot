@@ -32,4 +32,5 @@ Route::middleware('web')->group(function () {
 
     // Logs
     Route::get('/logs', [LogsController::class, 'index'])->name('logs.index');
+    Route::post('/logs/clear', [LogsController::class, 'clear'])->name('logs.clear');
 });
