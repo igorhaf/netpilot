@@ -133,12 +133,12 @@ class LetsEncryptService
     private function logSslPhase(SslCertificate $certificate, string $phase, string $status, string $message): void
     {
         DeploymentLog::create([
-            'type' => 'ssl_renewal',
+                'type' => 'ssl_renewal',
             'action' => $phase,
             'status' => $status,
-            'payload' => [
-                'certificate_id' => $certificate->id,
-                'domain_name' => $certificate->domain_name,
+                'payload' => [
+                    'certificate_id' => $certificate->id,
+                    'domain_name' => $certificate->domain_name,
                 'phase' => $phase,
                 'parent_action' => 'issue_certificate',
             ],

@@ -280,7 +280,7 @@ import Card from '@/Components/ui/Card.vue';
 
 import Pagination from '@/Components/ui/Pagination.vue';
 import { useToast } from '@/Composables/useToast';
-import { route } from '@/ziggy';
+
 
 interface SslCertificate {
   id: number;
@@ -338,16 +338,16 @@ const columns = [
 
 // Methods
 const createSSL = () => {
-  router.visit(route('ssl.create'));
+          router.visit('/ssl/create');
 };
 
 const viewCertificate = (certificate: SslCertificate) => {
-  router.visit(route('ssl.show', certificate.id));
+          router.visit(`/ssl/${certificate.id}`);
 };
 
 const renewCertificate = async (certificate: SslCertificate) => {
   try {
-    await router.post(route('ssl.renew', certificate.id), {}, {
+            await router.post(`/ssl/${certificate.id}/renew`, {}, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -364,7 +364,7 @@ const renewCertificate = async (certificate: SslCertificate) => {
 
 const toggleAutoRenew = async (certificate: SslCertificate) => {
   try {
-    await router.post(route('ssl.toggle', certificate.id), {}, {
+            await router.post(`/ssl/${certificate.id}/toggle`, {}, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -382,7 +382,7 @@ const toggleAutoRenew = async (certificate: SslCertificate) => {
 
 const deleteCertificate = (certificate: SslCertificate) => {
   if (confirm(`Tem certeza que deseja excluir o certificado para "${certificate.domain_name}"?`)) {
-    router.delete(route('ssl.destroy', certificate.id), {
+            router.delete(`/ssl/${certificate.id}`, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -398,7 +398,7 @@ const deleteCertificate = (certificate: SslCertificate) => {
 const renewAll = async () => {
   isRenewing.value = true;
   try {
-    await router.post(route('ssl.renewAll'), {}, {
+            await router.post('/ssl/renew-all', {}, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
@@ -479,14 +479,14 @@ const applyFilters = () => {
     status: filters.status || undefined,
   };
   
-  router.get(route('ssl.index'), params, {
+          router.get('/ssl', params, {
     preserveState: true,
     preserveScroll: true,
   });
 };
 
 const handlePageChange = (page: number) => {
-  router.get(route('ssl.index'), { page }, {
+          router.get('/ssl', { page }, {
     preserveState: true,
     preserveScroll: true,
   });

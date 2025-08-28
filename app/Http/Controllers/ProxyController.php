@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Domain;
 use App\Models\ProxyRule;
-use App\Services\NginxService;
+use App\Services\TraefikService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -13,7 +13,7 @@ use Inertia\Response;
 class ProxyController extends Controller
 {
     public function __construct(
-        private NginxService $nginxService
+        private TraefikService $traefikService
     ) {}
 
     public function index(Request $request): Response
@@ -93,9 +93,9 @@ class ProxyController extends Controller
             'nginx_config' => $proxyRule->generateNginxConfig()
         ]);
 
-        // Deploy to nginx if active
+        // Deploy para Traefik se ativo
         if ($proxyRule->is_active) {
-            $this->nginxService->deployConfiguration();
+            $this->traefikService->generateConfiguration();
         }
 
         // Log creation
@@ -120,8 +120,16 @@ class ProxyController extends Controller
             ->with('success', 'Regra de proxy criada com sucesso!');
     }
 
-    public function edit(ProxyRule $proxyRule): Response
+    public function edit($id): Response
     {
+        // 🔧 SOLUÇÃO: Buscar o proxy manualmente em vez de usar Route Model Binding
+        $proxyRule = ProxyRule::find($id);
+        
+        if (!$proxyRule) {
+            return redirect()->route('proxy.index')
+                ->with('error', 'Regra de proxy não encontrada!');
+        }
+        
         $domains = Domain::where('is_active', true)->get();
 
         return Inertia::render('Proxy/Edit', [
@@ -130,8 +138,16 @@ class ProxyController extends Controller
         ]);
     }
 
-    public function update(Request $request, ProxyRule $proxyRule)
+    public function update(Request $request, $id)
     {
+        // 🔧 SOLUÇÃO: Buscar o proxy manualmente em vez de usar Route Model Binding
+        $proxyRule = ProxyRule::find($id);
+        
+        if (!$proxyRule) {
+            return redirect()->route('proxy.index')
+                ->with('error', 'Regra de proxy não encontrada!');
+        }
+        
         $validated = $request->validate([
             'domain_id' => 'required|exists:domains,id',
             'source_host' => 'required|string|max:255',
@@ -151,8 +167,8 @@ class ProxyController extends Controller
             'nginx_config' => $proxyRule->generateNginxConfig()
         ]);
 
-        // Deploy to nginx
-        $this->nginxService->deployConfiguration();
+        // Deploy para Traefik
+        $this->traefikService->generateConfiguration();
 
         // Log update
         \App\Models\DeploymentLog::create([
@@ -263,7 +279,7 @@ class ProxyController extends Controller
                 'is_active' => !$proxyRule->is_active
             ]);
 
-            $this->nginxService->deployConfiguration();
+            $this->traefikService->generateConfiguration();
 
             $status = $proxyRule->is_active ? 'ativada' : 'desativada';
 
@@ -283,11 +299,11 @@ class ProxyController extends Controller
     public function deploy()
     {
         try {
-            $result = $this->nginxService->deployConfiguration();
+            $result = $this->traefikService->generateConfiguration();
 
-            return back()->with('success', 'Configuração do Nginx atualizada com sucesso!');
+            return back()->with('success', 'Configuração do Traefik gerada com sucesso!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao atualizar configuração: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao gerar configuração: ' . $e->getMessage());
         }
     }
 }

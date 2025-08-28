@@ -1,0 +1,11 @@
+http:
+  routers:
+    router-16:
+      rule: Host(`framily.space`)
+      entryPoints: [https]
+      service: service-16
+  services:
+    service-16:
+      loadBalancer:
+        servers:
+          - url: 'https://localhost:8484'

@@ -144,12 +144,9 @@
               <tr v-for="(rule, index) in proxyRules.data" :key="rule.id" :class="{ 'bg-muted/10': index % 2 === 1 }">
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2">
-                    <div>
-                      <div class="font-medium text-text">{{ rule.source_host }}</div>
-                      <div class="text-sm text-text-muted">{{ rule.protocol }}://{{ rule.source_host }}:{{ rule.source_port }}</div>
-                    </div>
+                    <div class="font-medium text-text">{{ resolveOriginProtocol(rule) }}://{{ rule.source_host }}:{{ rule.source_port }}</div>
                     <Button
-                      @click="openUrl(`${rule.protocol}://${rule.source_host}:${rule.source_port}`)"
+                      @click="openUrl(`${resolveOriginProtocol(rule)}://${rule.source_host}:${rule.source_port}`)"
                       variant="ghost"
                       size="sm"
                       class="p-1"
@@ -164,8 +161,7 @@
                   </div>
                 </td>
                 <td class="px-4 py-3">
-                  <div class="font-medium text-text">{{ rule.target_host }}:{{ rule.target_port }}</div>
-                  <div class="text-sm text-text-muted">{{ rule.protocol }}</div>
+                  <div class="font-medium text-text">{{ rule.protocol }}://{{ rule.target_host }}:{{ rule.target_port }}</div>
                 </td>
                 <td class="px-4 py-3">
                   <div class="font-medium text-text">{{ rule.domain?.name || 'N/A' }}</div>
@@ -325,6 +321,15 @@ const toggleProxy = async (proxyRule: ProxyRule) => {
 
 const openUrl = (url: string) => {
   window.open(url, '_blank', 'noopener,noreferrer');
+};
+
+const resolveOriginProtocol = (rule: ProxyRule): string => {
+  const portText = String(rule.source_port).trim();
+  if (portText === '443' || portText === '8443') {
+    return 'https';
+  }
+  // Default para http (inclui 80 e outras portas comuns não-TLS)
+  return 'http';
 };
 
 const deleteProxy = (proxyRule: ProxyRule) => {

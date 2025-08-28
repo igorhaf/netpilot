@@ -97,13 +97,45 @@ services:
             - '/dev/shm:/dev/shm'
         networks:
             - sail
+    traefik:
+        image: traefik:v3.0
+        container_name: netpilot-traefik
+        command:
+            - '--api.dashboard=true'
+            - '--api.insecure=true'
+            - '--providers.file.directory=/etc/traefik/dynamic'
+            - '--providers.file.watch=true'
+            - '--entrypoints.web.address=:80'
+            - '--entrypoints.websecure.address=:443'
+            - '--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-admin@example.com}'
+            - '--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme.json'
+            - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+        ports:
+            - '80:80'
+            - '443:443'
+            - '8080:8080'
+        volumes:
+            - './traefik/dynamic:/etc/traefik/dynamic'
+            - './traefik/acme.json:/etc/traefik/acme.json'
+            - '/var/run/docker.sock:/var/run/docker.sock:ro'
+        networks:
+            - sail
+        labels:
+            - 'traefik.enable=true'
+            - 'traefik.http.routers.traefik.rule=Host(`traefik.localhost`)'
+            - 'traefik.http.routers.traefik.entrypoints=web'
+            - 'traefik.http.services.traefik.loadbalancer.server.port=8080'
+
 networks:
     sail:
         driver: bridge
+
 volumes:
     sail-mysql:
         driver: local
     sail-redis:
         driver: local
     sail-meilisearch:
+        driver: local
+    sail-traefik:
         driver: local
