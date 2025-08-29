@@ -80,7 +80,9 @@ function runSync() {
   output.value = ''
   router.post('/sync', {}, {
     onSuccess: (page) => {
-      output.value = page.props?.sync?.message || 'Sync completed.'
+      const success = page.props?.flash?.success
+      const error = page.props?.flash?.error
+      output.value = success || error || 'Sync completed.'
     },
     onFinish: () => (loading.value = false),
     preserveScroll: true,

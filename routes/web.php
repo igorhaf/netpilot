@@ -12,6 +12,10 @@ use App\Http\Controllers\LogsController;
 Route::middleware('web')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Sync
+    Route::get('/sync', [SyncController::class, 'index'])->name('sync.index');
+    Route::post('/sync', [SyncController::class, 'sync'])->name('sync.run');
+
     // Domains CRUD
     Route::resource('domains', DomainsController::class);
 

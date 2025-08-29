@@ -60,3 +60,33 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 # netpilot
+
+## Blueprint Index
+
+- ARCHITECTURE: [`ARCHITECTURE.md`](./ARCHITECTURE.md)
+- MODELS: [`MODELS.md`](./MODELS.md)
+- SERVICES: [`SERVICES.md`](./SERVICES.md)
+- COMMANDS: [`COMMANDS.md`](./COMMANDS.md)
+- FRONTEND: [`FRONTEND.md`](./FRONTEND.md)
+- API: [`API.md`](./API.md)
+
+## Blueprint Regeneration Checklist
+
+Follow these steps to update any blueprint without overwriting unrelated content:
+
+1. Identify scope
+   - Reference the file and section anchors exactly (e.g., `### 1. Domain Model` in `MODELS.md`).
+2. Preserve anchors
+   - Do not rename existing headings; add new sections using the documented patterns in each file's "Blueprint Maintenance Protocol".
+3. Make additive changes
+   - Prefer adding clarifications/notes. If changing contracts (fields, routes, signatures), include a dated note with rationale.
+4. Cross-file consistency
+   - Keep docs aligned with code in: `app/Models/`, `app/Services/`, `app/Http/Controllers/`, `app/Http/Requests/`, `routes/web.php`, and configs in `config/`.
+5. Update Change Log
+   - Append a dated entry under the "## Change Log" section of the edited blueprint.
+6. Minimal examples
+   - Link to source paths (e.g., `app/Infra/Traefik/TraefikProvider.php`) instead of duplicating large code blocks.
+7. Validate
+   - After edits, skim the other blueprints for impacted references and update as needed.
+
+Tip: Each blueprint now begins with its own "Blueprint Maintenance Protocol" summarizing anchors, regeneration rules, and cross-file contracts.
