@@ -1,11 +1,19 @@
 http:
   routers:
-    router-16:
+    router-18:
       rule: Host(`framily.space`)
-      entryPoints: [https]
-      service: service-16
+      entryPoints: [web]
+      service: service-18
+    router-19:
+      rule: Host(`api.framily.space`)
+      entryPoints: [web]
+      service: service-19
   services:
-    service-16:
+    service-18:
       loadBalancer:
         servers:
-          - url: 'https://localhost:8484'
+          - url: 'http://laravel.test:80'
+    service-19:
+      loadBalancer:
+        servers:
+          - url: 'http://laravel.test:80'

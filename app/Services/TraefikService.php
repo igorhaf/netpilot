@@ -336,23 +336,50 @@ class TraefikService
             $routerName = sprintf('router-%d', $rule->id);
             $serviceName = sprintf('service-%d', $rule->id);
 
+            // Determinar o entrypoint correto baseado no protocolo
+            $entryPoint = strtolower($rule->protocol) === 'https' ? 'websecure' : 'web';
+
             $routers[] = sprintf("    %s:\n      rule: Host(`%s`)\n      entryPoints: [%s]\n      service: %s\n",
                 $routerName,
                 $rule->source_host,
-                strtolower($rule->protocol) === 'https' ? 'https' : 'http',
+                $entryPoint,
                 $serviceName
             );
 
-            $targetScheme = strtolower($rule->protocol) === 'https' ? 'https' : 'http';
+            // Para o serviço, usar o protocolo correto baseado na porta de destino
+            $targetScheme = $this->resolveTargetScheme($rule->target_port);
+            
+            // Se o host de destino for localhost, usar o nome do serviço Docker
+            $targetHost = $rule->target_host === 'localhost' ? 'laravel.test' : $rule->target_host;
+            
+            // Se a porta de destino for uma porta externa comum, usar a porta interna do container
+            $targetPort = match($rule->target_port) {
+                '8484' => 80,    // Porta externa Laravel -> porta interna 80
+                '3000' => 80,    // Porta externa Node.js -> porta interna 80
+                '8080' => 80,    // Porta externa comum -> porta interna 80
+                default => (int)$rule->target_port
+            };
+            
             $services[] = sprintf("    %s:\n      loadBalancer:\n        servers:\n          - url: '%s://%s:%s'\n",
                 $serviceName,
                 $targetScheme,
-                $rule->target_host,
-                $rule->target_port
+                $targetHost,
+                $targetPort
             );
         }
 
         $yaml = "http:\n  routers:\n" . implode('', $routers) . "  services:\n" . implode('', $services);
         return $yaml;
+    }
+
+    /**
+     * Resolve o protocolo baseado na porta de destino
+     */
+    private function resolveTargetScheme(int $port): string
+    {
+        return match($port) {
+            443, 8443 => 'https',
+            default => 'http'
+        };
     }
 }

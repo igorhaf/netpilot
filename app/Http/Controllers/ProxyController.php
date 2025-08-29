@@ -93,9 +93,33 @@ class ProxyController extends Controller
             'nginx_config' => $proxyRule->generateNginxConfig()
         ]);
 
-        // Deploy para Traefik se ativo
+        // 🚀 DEPLOY AUTOMÁTICO PARA TRAEFIK
+        $deployResult = null;
         if ($proxyRule->is_active) {
-            $this->traefikService->generateConfiguration();
+            try {
+                \Log::info("🚀 Deploy automático Traefik após criação de proxy", [
+                    'proxy_id' => $proxyRule->id,
+                    'source_host' => $proxyRule->source_host
+                ]);
+                
+                $deployResult = $this->traefikService->applyConfiguration();
+                
+                \Log::info("✅ Deploy Traefik concluído", [
+                    'success' => $deployResult['success'] ?? false,
+                    'message' => $deployResult['message'] ?? 'N/A'
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error("❌ Erro no deploy automático Traefik", [
+                    'proxy_id' => $proxyRule->id,
+                    'error' => $e->getMessage()
+                ]);
+                
+                $deployResult = [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
         }
 
         // Log creation
@@ -111,13 +135,21 @@ class ProxyController extends Controller
                 'protocol' => $proxyRule->protocol,
                 'priority' => $proxyRule->priority,
                 'is_active' => $proxyRule->is_active,
+                'traefik_deploy' => $deployResult,
             ],
             'started_at' => now(),
             'completed_at' => now(),
         ]);
 
+        $message = 'Regra de proxy criada com sucesso!';
+        if ($deployResult && $deployResult['success']) {
+            $message .= ' Configuração Traefik aplicada automaticamente.';
+        } elseif ($deployResult && !$deployResult['success']) {
+            $message .= ' Configuração Traefik não foi aplicada automaticamente.';
+        }
+
         return redirect()->route('proxy.index')
-            ->with('success', 'Regra de proxy criada com sucesso!');
+            ->with('success', $message);
     }
 
     public function edit($id): Response
@@ -167,8 +199,33 @@ class ProxyController extends Controller
             'nginx_config' => $proxyRule->generateNginxConfig()
         ]);
 
-        // Deploy para Traefik
-        $this->traefikService->generateConfiguration();
+        // 🚀 DEPLOY AUTOMÁTICO PARA TRAEFIK
+        $deployResult = null;
+        try {
+            \Log::info("🚀 Deploy automático Traefik após atualização de proxy", [
+                'proxy_id' => $proxyRule->id,
+                'source_host' => $proxyRule->source_host,
+                'is_active' => $proxyRule->is_active
+            ]);
+            
+            $deployResult = $this->traefikService->applyConfiguration();
+            
+            \Log::info("✅ Deploy Traefik concluído", [
+                'success' => $deployResult['success'] ?? false,
+                'message' => $deployResult['message'] ?? 'N/A'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error("❌ Erro no deploy automático Traefik", [
+                'proxy_id' => $proxyRule->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            $deployResult = [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
 
         // Log update
         \App\Models\DeploymentLog::create([
@@ -178,13 +235,21 @@ class ProxyController extends Controller
             'payload' => [
                 'proxy_rule_id' => $proxyRule->id,
                 'changes' => $validated,
+                'traefik_deploy' => $deployResult,
             ],
             'started_at' => now(),
             'completed_at' => now(),
         ]);
 
+        $message = 'Regra de proxy atualizada com sucesso!';
+        if ($deployResult && $deployResult['success']) {
+            $message .= ' Configuração Traefik aplicada automaticamente.';
+        } elseif ($deployResult && !$deployResult['success']) {
+            $message .= ' Configuração Traefik não foi aplicada automaticamente.';
+        }
+
         return redirect()->route('proxy.index')
-            ->with('success', 'Regra de proxy atualizada com sucesso!');
+            ->with('success', $message);
     }
 
     public function destroy($id)
@@ -279,14 +344,41 @@ class ProxyController extends Controller
                 'is_active' => !$proxyRule->is_active
             ]);
 
-            $this->traefikService->generateConfiguration();
+            // 🚀 DEPLOY AUTOMÁTICO TRAEFIK APÓS TOGGLE
+            $deployResult = null;
+            try {
+                \Log::info("🚀 Deploy automático Traefik após toggle de proxy", [
+                    'proxy_id' => $proxyRule->id,
+                    'source_host' => $proxyRule->source_host,
+                    'new_status' => $proxyRule->is_active
+                ]);
+                
+                $deployResult = $this->traefikService->applyConfiguration();
+                
+                \Log::info("✅ Deploy Traefik concluído após toggle", [
+                    'success' => $deployResult['success'] ?? false,
+                    'message' => $deployResult['message'] ?? 'N/A'
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error("❌ Erro no deploy automático Traefik após toggle", [
+                    'proxy_id' => $proxyRule->id,
+                    'error' => $e->getMessage()
+                ]);
+                
+                $deployResult = [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
 
             $status = $proxyRule->is_active ? 'ativada' : 'desativada';
 
             return response()->json([
                 'success' => true,
                 'message' => "Regra de proxy {$status} com sucesso!",
-                'is_active' => $proxyRule->is_active
+                'is_active' => $proxyRule->is_active,
+                'traefik_deploy' => $deployResult
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -299,10 +391,31 @@ class ProxyController extends Controller
     public function deploy()
     {
         try {
-            $result = $this->traefikService->generateConfiguration();
-
-            return back()->with('success', 'Configuração do Traefik gerada com sucesso!');
+            \Log::info("🚀 Deploy manual Traefik solicitado");
+            
+            $result = $this->traefikService->applyConfiguration();
+            
+            if ($result['success']) {
+                \Log::info("✅ Deploy manual Traefik concluído com sucesso", [
+                    'message' => $result['message']
+                ]);
+                
+                return back()->with('success', 'Configuração do Traefik aplicada com sucesso! ' . $result['message']);
+            } else {
+                \Log::error("❌ Deploy manual Traefik falhou", [
+                    'error' => $result['error'] ?? 'Erro desconhecido'
+                ]);
+                
+                return back()->with('error', 'Erro ao aplicar configuração Traefik: ' . ($result['error'] ?? 'Erro desconhecido'));
+            }
+            
         } catch (\Exception $e) {
+            \Log::error("❌ Exceção no deploy manual Traefik", [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
             return back()->with('error', 'Erro ao gerar configuração: ' . $e->getMessage());
         }
     }

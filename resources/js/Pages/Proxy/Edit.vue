@@ -261,7 +261,10 @@ const submitForm = async () => {
   isSubmitting.value = true;
   
   try {
-    await router.put(`/proxy/${props.proxyRule.id}`, form, {
+    await router.post(`/proxy/${props.proxyRule.id}`, {
+      _method: 'PUT',
+      ...form
+    }, {
       preserveState: false,
       preserveScroll: false,
       onSuccess: () => {
