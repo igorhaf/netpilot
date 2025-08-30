@@ -15,7 +15,7 @@ class TraefikProvider
 
     public static function make(): self
     {
-        $dir = config('app.proxy_dynamic_dir', base_path('docker/traefik/dynamic'));
+        $dir = config('netpilot.dynamic_dir', base_path('docker/traefik/dynamic'));
         return new self($dir);
     }
 

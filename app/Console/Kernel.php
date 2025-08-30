@@ -13,13 +13,24 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Renovar certificados SSL diariamente às 2:00 AM
-        $schedule->command('ssl:renew')
+        $schedule->command('proxy:renew')
             ->dailyAt('02:00')
             ->withoutOverlapping()
-            ->runInBackground();
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/ssl-renewal.log'));
 
-        // Deploy do Nginx a cada 5 minutos se houver mudanças
-        $schedule->command('nginx:deploy')
+        // Reconciliar configurações periodicamente
+        $reconcileInterval = config('netpilot.reconcile_interval', 60);
+        if (config('netpilot.reconcile_enabled', true)) {
+            $schedule->command('proxy:reconcile')
+                ->everyMinutes($reconcileInterval / 60)
+                ->withoutOverlapping()
+                ->runInBackground()
+                ->appendOutputTo(storage_path('logs/reconciliation.log'));
+        }
+
+        // Deploy do Traefik se houver mudanças
+        $schedule->command('proxy:deploy')
             ->everyFiveMinutes()
             ->withoutOverlapping()
             ->runInBackground();

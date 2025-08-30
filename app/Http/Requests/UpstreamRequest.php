@@ -14,6 +14,7 @@ class UpstreamRequest extends FormRequest
     public function rules(): array
     {
         $upstreamId = $this->route('upstream')?->id;
+        $domainId = $this->input('domain_id');
 
         return [
             'domain_id' => 'required|exists:domains,id',
@@ -21,7 +22,7 @@ class UpstreamRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'unique:upstreams,name,' . $upstreamId
+                'unique:upstreams,name,' . $upstreamId . ',id,domain_id,' . $domainId
             ],
             'target_url' => 'required|url|max:500',
             'weight' => 'nullable|integer|min:1|max:100',

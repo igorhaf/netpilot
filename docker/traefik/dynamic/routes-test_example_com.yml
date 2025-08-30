@@ -1,0 +1,32 @@
+http:
+  routers:
+    r_test_example_com_1:
+      rule: "Host(`test.example.com`) && PathPrefix(`/`)"
+      service: s_test_example_com_1
+      entryPoints:
+        - web
+      priority: 100
+    r_test_example_com_2:
+      rule: "Host(`test.example.com`) && PathPrefix(`/`)"
+      service: s_test_example_com_2
+      entryPoints:
+        - web
+      priority: 100
+  services:
+    s_test_example_com_1:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://192.168.1.100:8080"
+        healthCheck:
+          path: /health
+          interval: 30s
+    s_test_example_com_2:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://192.168.1.100:8080"
+        healthCheck:
+          path: /health
+          interval: 30s
+  middlewares:

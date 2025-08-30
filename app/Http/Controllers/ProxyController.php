@@ -88,11 +88,6 @@ class ProxyController extends Controller
 
         $proxyRule = ProxyRule::create($validated);
 
-        // Generate nginx config
-        $proxyRule->update([
-            'nginx_config' => $proxyRule->generateNginxConfig()
-        ]);
-
         // 🚀 DEPLOY AUTOMÁTICO PARA TRAEFIK
         $deployResult = null;
         if ($proxyRule->is_active) {
@@ -193,11 +188,6 @@ class ProxyController extends Controller
         ]);
 
         $proxyRule->update($validated);
-
-        // Regenerate nginx config
-        $proxyRule->update([
-            'nginx_config' => $proxyRule->generateNginxConfig()
-        ]);
 
         // 🚀 DEPLOY AUTOMÁTICO PARA TRAEFIK
         $deployResult = null;

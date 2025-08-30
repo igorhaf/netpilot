@@ -16,7 +16,7 @@ class TraefikService
     {
         $this->configDir = storage_path('app/traefik');
         $this->configFile = $this->configDir . '/netpilot-proxy.yml';
-        $this->traefikDynamicDir = base_path('traefik/dynamic');
+        $this->traefikDynamicDir = config('netpilot.dynamic_dir', base_path('traefik/dynamic'));
         
         // Criar diretório se não existir
         if (!is_dir($this->configDir)) {
@@ -255,52 +255,24 @@ class TraefikService
     private function reloadTraefikViaApi(): array
     {
         try {
-            // Tentar recarregar via API do Traefik
-            $apiUrl = 'http://traefik:8080/api/http/services';
+            // Since Traefik is configured with file watch, we just need to ensure the file is copied
+            // The configuration will be automatically reloaded
+            \Log::info("🌐 Traefik configured with file watch - configuration will auto-reload");
             
-            \Log::info("🌐 Tentando recarregar via API Traefik", [
-                'api_url' => $apiUrl
-            ]);
-            
-            // Como estamos dentro do container Laravel, podemos acessar o Traefik via nome do serviço
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $apiUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-            
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $error = curl_error($ch);
-            curl_close($ch);
-            
-            \Log::info("🌐 Resposta da API Traefik", [
-                'http_code' => $httpCode,
-                'response_length' => strlen($response),
-                'curl_error' => $error
-            ]);
-            
-            if ($error) {
-                return [
-                    'success' => false,
-                    'error' => 'Erro de conexão: ' . $error
-                ];
-            }
-            
-            if ($httpCode === 200) {
+            // Verify that the dynamic config file exists
+            $dynamicFile = $this->traefikDynamicDir . '/netpilot-proxy.yml';
+            if (file_exists($dynamicFile)) {
                 return [
                     'success' => true,
-                    'message' => 'Traefik API acessível - configuração será aplicada automaticamente',
-                    'http_code' => $httpCode
+                    'message' => 'Configuration file deployed - Traefik will auto-reload',
+                    'file' => $dynamicFile,
+                    'note' => 'Traefik is configured with --providers.file.watch=true'
                 ];
             }
             
-            // Se não conseguimos acessar a API, mas o arquivo foi copiado, o Traefik ainda detectará as mudanças
             return [
-                'success' => true,
-                'message' => 'Arquivo copiado - Traefik detectará mudanças automaticamente',
-                'http_code' => $httpCode,
-                'note' => 'Traefik está configurado com --providers.file.watch=true, então detectará mudanças automaticamente'
+                'success' => false,
+                'error' => 'Configuration file not found at ' . $dynamicFile
             ];
             
         } catch (\Exception $e) {

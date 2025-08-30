@@ -8,8 +8,13 @@ use App\Http\Controllers\ProxyController;
 use App\Http\Controllers\SslController;
 use App\Http\Controllers\RedirectsController;
 use App\Http\Controllers\LogsController;
+use App\Http\Controllers\UpstreamsController;
+use App\Http\Controllers\RoutesController;
 
-Route::middleware('web')->group(function () {
+require __DIR__.'/auth.php';
+
+// Protected routes - require authentication
+Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Sync
@@ -33,6 +38,12 @@ Route::middleware('web')->group(function () {
 
     // Redirects CRUD
     Route::resource('redirects', RedirectsController::class);
+
+    // Upstreams CRUD
+    Route::resource('upstreams', UpstreamsController::class);
+
+    // Routes CRUD (path-based rules)
+    Route::resource('routes', RoutesController::class);
 
     // Logs
     Route::get('/logs', [LogsController::class, 'index'])->name('logs.index');
