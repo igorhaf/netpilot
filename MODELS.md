@@ -220,6 +220,26 @@ public function domain(): BelongsTo // -> Domain
 
 ---
 
+### 8. CertificateEvent Model
+**File**: `app/Models/CertificateEvent.php`
+
+**Purpose**: Rastreia eventos do ciclo de vida de certificados (emissão, renovação, falha, alerta).
+
+**Fields**:
+- `id` (bigint, pk)
+- `certificate_id` (fk -> ssl_certificates.id)
+- `event_type` (string) - renewal_started, renewal_completed, renewal_failed, alert
+- `description` (text, nullable)
+- `metadata` (json, nullable)
+- `created_at`, `updated_at`
+
+**Relationships**:
+```php
+public function certificate(): BelongsTo // -> SslCertificate
+```
+
+---
+
 ## Model Relationships Overview
 
 ```
@@ -327,3 +347,4 @@ $log->markAsSuccess('Certificate renewed successfully');
 
 ## Change Log
 - 2025-08-29: Added Blueprint Maintenance Protocol and Change Log to standardize incremental updates and prevent accidental overwrites.
+- 2025-08-31: Documented CertificateEvent model and relationship with SslCertificate.

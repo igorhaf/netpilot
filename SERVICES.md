@@ -251,6 +251,47 @@ $options = [
 
 ---
 
+### 5. ReconcilerService
+**File**: `app/Services/ReconcilerService.php`
+
+**Purpose**: Reconcilia periodicamente o estado do banco (domínios, upstreams, rotas, redirects, certificados) com os arquivos de configuração do proxy (Traefik/Nginx), valida saúde de serviços e dispara alertas de expiração de SSL.
+
+**Key Methods**:
+
+#### `reconcileAll(): array`
+- Orquestra reconciliação completa de todos os componentes e registra um `DeploymentLog`
+
+#### `reconcileDomains(): array`
+- Garante que cada `Domain` possua configuração aplicada conforme regras e certificados
+
+#### `reconcileUpstreams(): array`
+- Executa health checks básicos em `Upstream` ativos e contabiliza serviços indisponíveis
+
+#### `reconcileRoutes(): array`
+- Valida `RouteRule` ativas e suas dependências (`domain` e `upstream`)
+
+#### `reconcileRedirects(): array`
+- Valida padrões de `RedirectRule` ativos
+
+#### `reconcileCertificates(): array`
+- Classifica certificados por expiração, atualiza status e dispara alertas próximos do vencimento
+
+#### `reconcileTraefik(): array`
+- Sincroniza configurações via `TraefikProvider` e aplica/recarrega com `TraefikService`
+
+#### `verifyConfigurations(): array`
+- Varre diretório dinâmico e valida YAMLs gerados
+
+#### `getStatus(): array`
+- Expõe status resumido (habilitado, intervalo, última/ próxima execução)
+
+**Configuration Keys**:
+- `netpilot.reconcile_enabled` (bool, default true)
+- `netpilot.reconcile_interval` (int seconds, default 60)
+- `netpilot.edge` ("traefik"|"nginx", default "traefik")
+
+---
+
 ## Service Integration Patterns
 
 ### 1. Service Composition

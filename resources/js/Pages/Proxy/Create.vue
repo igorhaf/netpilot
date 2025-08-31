@@ -264,7 +264,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Card from '@/Components/ui/Card.vue';
 import { useToast } from '@/Composables/useToast';
-import { route } from '@/ziggy';
+// A função route está disponível globalmente via window.route
 
 interface Domain {
   id: number;

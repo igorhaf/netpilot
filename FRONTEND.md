@@ -36,8 +36,8 @@ resources/js/
 │   ├── Proxy/           # Proxy rules pages
 │   ├── SSL/             # SSL certificate pages
 │   ├── Redirects/       # Redirect rules pages
-│   ├── Routes/          # Route rules pages
-│   ├── Upstreams/       # Upstream services pages
+│   ├── Routes/          # Route rules pages (Index, Create, Edit)
+│   ├── Upstreams/       # Upstream services pages (Index, Create, Edit)
 │   ├── Logs/            # Deployment logs pages
 │   └── Sync.vue         # Configuration sync page
 ├── app.js               # Main application entry
@@ -593,3 +593,4 @@ npm run lint
  
 ## Change Log
 - 2025-08-29: Added Blueprint Maintenance Protocol and Change Log to standardize safe, incremental updates.
+- 2025-08-31: Clarified presence of Routes/Index.vue and Upstreams/Index.vue.

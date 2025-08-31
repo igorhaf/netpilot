@@ -231,7 +231,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Card from '@/Components/ui/Card.vue';
-import { route } from '@/ziggy';
+// A função route está disponível globalmente via window.route
 
 interface Stats {
   domains: {

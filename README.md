@@ -90,3 +90,32 @@ Follow these steps to update any blueprint without overwriting unrelated content
    - After edits, skim the other blueprints for impacted references and update as needed.
 
 Tip: Each blueprint now begins with its own "Blueprint Maintenance Protocol" summarizing anchors, regeneration rules, and cross-file contracts.
+
+## Project Status Snapshot (2025-08-31)
+
+- Backend
+  - Controllers: Dashboard, Domains, Proxy, SSL, Redirects, Logs, Sync, Upstreams, Routes (autenticado)
+  - Models: Domain, ProxyRule, RouteRule, Upstream, SslCertificate, RedirectRule, DeploymentLog, CertificateEvent, User
+  - Services: TraefikService, NginxService, LetsEncryptService, SystemCommandService, ReconcilerService
+  - Commands: conjunto operacional (deploy/sync/ssl/logs) e testes
+  - Rotas: protegidas por `auth`, agrupadas em `routes/web.php`
+
+- Frontend (Vue 3 + Inertia)
+  - Páginas: Dashboard, Domains (Index/Create/Edit), Proxy (Index/Create/Edit), SSL (Index/Create), Redirects (Index/Create/Edit), Routes (Index/Create/Edit), Upstreams (Index/Create/Edit), Logs (Index), Sync
+  - Autenticação: páginas `Auth/Login.vue` e `Auth/Register.vue`
+
+- Infra & Config
+  - Traefik Provider em `app/Infra/Traefik/TraefikProvider.php`
+  - Diretório dinâmico: `config('netpilot.dynamic_dir')` (default: `docker/traefik/dynamic`)
+  - Variáveis de reconciliação: `RECONCILE_ENABLED`, `RECONCILE_INTERVAL`, `EDGE_PROVIDER`
+
+### Próximos Passos Sugeridos
+
+1. Validar `.env` com chaves de Traefik/LE e reconciliação
+2. Executar `php artisan migrate --force` no ambiente alvo
+3. Rodar `php artisan proxy:sync` e verificar `docker/traefik/dynamic`
+4. Testar renovação: `php artisan proxy:renew --dry-run`
+5. Revisar páginas de Index para Routes e Upstreams (presentes) e UX de feedback de sync
+
+## Change Log
+- 2025-08-31: Adicionado snapshot de status do projeto e próximos passos.

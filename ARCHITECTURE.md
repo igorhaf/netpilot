@@ -139,6 +139,11 @@ TRAEFIK_API_URL=http://traefik:8080
 
 # SSL Configuration
 TRAEFIK_ACME_CA_SERVER=https://acme-v02.api.letsencrypt.org/directory
+
+# Reconciler
+RECONCILE_ENABLED=true
+RECONCILE_INTERVAL=60
+EDGE_PROVIDER=traefik # or nginx
 ```
 
 ### Configuration Files
@@ -238,3 +243,4 @@ TRAEFIK_ACME_CA_SERVER=https://acme-v02.api.letsencrypt.org/directory
 
 ## Change Log
 - 2025-08-29: Added Blueprint Maintenance Protocol, regeneration rules, and change log section to harden against accidental overwrites and guide ongoing updates.
+- 2025-08-31: Added Reconciler env vars and clarified edge provider.

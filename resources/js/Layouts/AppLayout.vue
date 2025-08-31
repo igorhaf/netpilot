@@ -158,8 +158,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import Toast from '@/Components/ui/Toast.vue';
 
-// Importar a função route do Inertia
-import { route } from '@/ziggy';
+// A função route está disponível globalmente via window.route
 
 interface Props {
   title?: string;

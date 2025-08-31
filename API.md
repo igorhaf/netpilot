@@ -327,7 +327,59 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 ---
 
-### 6. Deployment Logs
+### 6. Upstream Services
+**Controller**: `App\Http\Controllers\UpstreamsController`
+
+#### GET /upstreams
+**Purpose**: Listar serviços upstream com paginação e filtros
+
+#### GET /upstreams/create
+**Purpose**: Exibir formulário de criação
+
+#### POST /upstreams
+**Purpose**: Criar novo upstream
+
+#### GET /upstreams/{upstream}
+**Purpose**: Detalhes do upstream
+
+#### GET /upstreams/{upstream}/edit
+**Purpose**: Formulário de edição
+
+#### PUT /upstreams/{upstream}
+**Purpose**: Atualizar upstream
+
+#### DELETE /upstreams/{upstream}
+**Purpose**: Remover upstream
+
+---
+
+### 7. Route Rules (Path-based)
+**Controller**: `App\Http\Controllers\RoutesController`
+
+#### GET /routes
+**Purpose**: Listar regras de rota avançadas
+
+#### GET /routes/create
+**Purpose**: Exibir formulário de criação
+
+#### POST /routes
+**Purpose**: Criar nova regra de rota
+
+#### GET /routes/{route}
+**Purpose**: Detalhes da regra
+
+#### GET /routes/{route}/edit
+**Purpose**: Formulário de edição
+
+#### PUT /routes/{route}
+**Purpose**: Atualizar regra de rota
+
+#### DELETE /routes/{route}
+**Purpose**: Remover regra de rota
+
+---
+
+### 8. Deployment Logs
 **Controller**: `App\Http\Controllers\LogsController`
 
 #### GET /logs
@@ -376,7 +428,7 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 ---
 
-### 7. Configuration Sync
+### 9. Configuration Sync
 **Controller**: `App\Http\Controllers\SyncController`
 
 #### GET /sync
@@ -504,3 +556,4 @@ API endpoints are tested with:
 
 ## Change Log
 - 2025-08-29: Added Blueprint Maintenance Protocol and Change Log to standardize safe, incremental updates.
+- 2025-08-31: Added Upstreams and Route Rules endpoint sections; renumbered sections accordingly.
