@@ -331,6 +331,24 @@ docker-compose up -d
 
 ---
 
+## Wildcard SSL Certificates
+
+To enable wildcard certificate support:
+
+1. Set `LETSENCRYPT_WILDCARD=true` in your .env
+2. Configure your DNS provider credentials:
+   - Cloudflare: `CLOUDFLARE_API_KEY`, `CLOUDFLARE_EMAIL`
+   - AWS: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+   - DigitalOcean: `DIGITALOCEAN_TOKEN`
+3. Set default provider: `LETSENCRYPT_DNS_PROVIDER=cloudflare`
+
+Usage:
+```bash
+php artisan ssl:issue --domain=*.example.com --wildcard
+```
+
+---
+
 ## ⚙️ **Configurações Avançadas**
 
 ### **Configuração do NetPilot**

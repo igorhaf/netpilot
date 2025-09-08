@@ -12,6 +12,7 @@ class Upstream extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'domain_id',
         'name',
         'target_url',
@@ -19,13 +20,25 @@ class Upstream extends Model
         'is_active',
         'health_check_path',
         'health_check_interval',
-        'description'
+        'description',
+        'last_checked_at',
+        'is_healthy',
+        'timeout_ms'
+    ];
+
+    protected $attributes = [
+        'is_healthy' => true,
+        'timeout_ms' => 1000,
+        'health_check_interval' => 30
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'weight' => 'integer',
         'health_check_interval' => 'integer',
+        'last_checked_at' => 'datetime',
+        'is_healthy' => 'boolean',
+        'timeout_ms' => 'integer'
     ];
 
     public function domain(): BelongsTo
@@ -36,5 +49,10 @@ class Upstream extends Model
     public function routeRules(): HasMany
     {
         return $this->hasMany(RouteRule::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }

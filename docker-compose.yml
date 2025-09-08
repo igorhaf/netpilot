@@ -51,11 +51,16 @@ services:
             retries: 3
             timeout: 5s
     redis:
-        image: 'redis:alpine'
+        image: redis:alpine
+        restart: unless-stopped
+        ports:
+            - '${REDIS_PORT:-6379}:6379'
         volumes:
-            - 'sail-redis:/data'
+            - 'sailredis:/data'
         networks:
             - sail
+        environment:
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
         healthcheck:
             test:
                 - CMD
@@ -138,4 +143,6 @@ volumes:
     sail-meilisearch:
         driver: local
     sail-traefik:
+        driver: local
+    sailredis:
         driver: local

@@ -28,21 +28,51 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 ## API Endpoints
 
-### 1. Dashboard
-**Controller**: `App\Http\Controllers\DashboardController`
+### 1. Authentication
 
-#### GET /
-**Purpose**: Display main dashboard with system overview
+#### POST /api/v1/login
+**Purpose**: Authenticate user and obtain API token
 
-**Response**: Inertia page with dashboard data
-- Domain statistics
-- SSL certificate status
-- Recent deployment logs
-- System health indicators
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
 
----
+**Success Response**:
+```json
+{
+  "token": "api-token",
+  "user": {
+    "id": 1,
+    "name": "User Name",
+    "email": "user@example.com"
+  }
+}
+```
 
-### 2. Domain Management
+### 2. Tenants
+
+#### GET /api/v1/tenants
+**Purpose**: List all tenants
+
+**Success Response**:
+```json
+[
+  {
+    "id": 1,
+    "name": "Tenant Name",
+    "slug": "tenant-slug",
+    "is_active": true,
+    "created_at": "2025-09-08T16:00:00.000000Z",
+    "updated_at": "2025-09-08T16:00:00.000000Z"
+  }
+]
+```
+
+### 3. Domain Management
 **Controller**: `App\Http\Controllers\DomainsController`
 
 #### GET /domains
@@ -126,9 +156,7 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 **Response**: Redirect with success/error message
 
----
-
-### 3. Proxy Rules Management
+### 4. Proxy Rules Management
 **Controller**: `App\Http\Controllers\ProxyController`
 
 #### GET /proxy
@@ -206,9 +234,7 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 **Response**: Redirect with success/error message
 
----
-
-### 4. SSL Certificate Management
+### 5. SSL Certificate Management
 **Controller**: `App\Http\Controllers\SslController`
 
 #### GET /ssl
@@ -279,79 +305,28 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 **Response**: Redirect with success/error message
 
----
-
-### 5. Redirect Rules Management
-**Controller**: `App\Http\Controllers\RedirectsController`
-
-#### GET /redirects
-**Purpose**: List redirect rules
-
-**Response**: Inertia page with redirects data
-
-#### GET /redirects/create
-**Purpose**: Show redirect rule creation form
-
-#### POST /redirects
-**Purpose**: Create new redirect rule
-
-**Request Body**:
-```json
-{
-  "domain_id": 1,
-  "source_pattern": "/old-path",
-  "target_url": "https://example.com/new-path",
-  "redirect_type": 301,
-  "preserve_query": true,
-  "priority": 100,
-  "is_active": true
-}
-```
-
-**Validation Rules**:
-- `domain_id`: required, exists:domains,id
-- `source_pattern`: required, string
-- `target_url`: required, url
-- `redirect_type`: in:301,302,307,308
-- `preserve_query`: boolean
-- `priority`: integer, min:1
-
-#### GET /redirects/{redirect}/edit
-**Purpose**: Show redirect rule edit form
-
-#### PUT /redirects/{redirect}
-**Purpose**: Update redirect rule
-
-#### DELETE /redirects/{redirect}
-**Purpose**: Delete redirect rule
-
----
-
 ### 6. Upstream Services
 **Controller**: `App\Http\Controllers\UpstreamsController`
 
-#### GET /upstreams
-**Purpose**: Listar serviços upstream com paginação e filtros
+#### GET /api/v1/upstreams
+**Purpose**: List upstream services
 
-#### GET /upstreams/create
-**Purpose**: Exibir formulário de criação
-
-#### POST /upstreams
-**Purpose**: Criar novo upstream
-
-#### GET /upstreams/{upstream}
-**Purpose**: Detalhes do upstream
-
-#### GET /upstreams/{upstream}/edit
-**Purpose**: Formulário de edição
-
-#### PUT /upstreams/{upstream}
-**Purpose**: Atualizar upstream
-
-#### DELETE /upstreams/{upstream}
-**Purpose**: Remover upstream
-
----
+**Success Response**:
+```json
+[
+  {
+    "id": 1,
+    "tenant_id": 1,
+    "domain_id": 1,
+    "name": "backend-service",
+    "target_url": "http://backend:80",
+    "is_active": true,
+    "is_healthy": true,
+    "created_at": "2025-09-08T16:00:00.000000Z",
+    "updated_at": "2025-09-08T16:00:00.000000Z"
+  }
+]
+```
 
 ### 7. Route Rules (Path-based)
 **Controller**: `App\Http\Controllers\RoutesController`
@@ -376,8 +351,6 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 #### DELETE /routes/{route}
 **Purpose**: Remover regra de rota
-
----
 
 ### 8. Deployment Logs
 **Controller**: `App\Http\Controllers\LogsController`
@@ -426,8 +399,6 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 
 **Response**: Redirect with cleanup results
 
----
-
 ### 9. Configuration Sync
 **Controller**: `App\Http\Controllers\SyncController`
 
@@ -444,7 +415,97 @@ All routes are protected by the `web` middleware group and include CSRF protecti
 - Writes configuration files
 - Returns count of generated files
 
----
+### 10. WAF Management API
+
+#### POST /api/v1/waf
+**Purpose**: Create WAF rule
+
+**Request Body**:
+```json
+{
+  "name": "Block XSS",
+  "expression": "http.request.uri contains \"<script>\""
+}
+```
+
+#### PUT /api/v1/waf/{ruleId}
+**Purpose**: Update WAF rule
+
+**Request Body**:
+```json
+{
+  "expression": "http.request.uri contains \"<script>\" or http.request.uri contains \"javascript:\""
+}
+```
+
+### 11. Domains
+
+#### GET /api/v1/domains
+**Purpose**: List all domains
+
+**Success Response**:
+```json
+[
+  {
+    "id": 1,
+    "tenant_id": 1,
+    "name": "example.com",
+    "description": "Primary domain",
+    "is_active": true,
+    "auto_ssl": true,
+    "status": "active",
+    "created_at": "2025-09-08T16:00:00.000000Z",
+    "updated_at": "2025-09-08T16:00:00.000000Z"
+  }
+]
+```
+
+### 12. Proxy Rules
+
+#### GET /api/v1/proxy-rules
+**Purpose**: List all proxy rules
+
+**Success Response**:
+```json
+[
+  {
+    "id": 1,
+    "tenant_id": 1,
+    "domain_id": 1,
+    "source_host": "example.com",
+    "source_port": "443",
+    "target_host": "backend",
+    "target_port": "80",
+    "protocol": "http",
+    "is_active": true,
+    "created_at": "2025-09-08T16:00:00.000000Z",
+    "updated_at": "2025-09-08T16:00:00.000000Z"
+  }
+]
+```
+
+### 13. SSL Certificates
+
+#### GET /api/v1/ssl-certificates
+**Purpose**: List all SSL certificates
+
+**Success Response**:
+```json
+[
+  {
+    "id": 1,
+    "tenant_id": 1,
+    "domain_id": 1,
+    "domain_name": "example.com",
+    "status": "valid",
+    "issuer": "Let's Encrypt",
+    "expires_at": "2025-12-08T16:00:00.000000Z",
+    "auto_renew": true,
+    "created_at": "2025-09-08T16:00:00.000000Z",
+    "updated_at": "2025-09-08T16:00:00.000000Z"
+  }
+]
+```
 
 ## Response Formats
 
@@ -557,3 +618,5 @@ API endpoints are tested with:
 ## Change Log
 - 2025-08-29: Added Blueprint Maintenance Protocol and Change Log to standardize safe, incremental updates.
 - 2025-08-31: Added Upstreams and Route Rules endpoint sections; renumbered sections accordingly.
+- 2025-09-08: Updated API documentation with comprehensive REST API documentation.
+- 2025-09-09: Added WAF API documentation.

@@ -26,6 +26,20 @@
               <span v-else>Run Sync</span>
             </button>
           </div>
+
+          <!-- Progress Bar -->
+          <div v-if="progress > 0" class="mt-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-1">
+              <span>{{ currentStep }}</span>
+              <span>{{ progress }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                class="bg-blue-600 h-2.5 rounded-full" 
+                :style="{ width: progress + '%' }"
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -68,16 +82,46 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import Echo from 'laravel-echo'
 
+const progress = ref(0)
+const currentStep = ref('')
 const output = ref('')
 const loading = ref(false)
+
+// Initialize Echo
+const echo = new Echo({
+  broadcaster: 'pusher',
+  key: import.meta.env.VITE_PUSHER_APP_KEY,
+  cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+  forceTLS: true
+})
+
+// Listen for sync progress
+onMounted(() => {
+  echo.channel('sync-progress')
+    .listen('SyncProgress', (event) => {
+      progress.value = event.progress
+      currentStep.value = event.message
+      
+      if (event.progress === 100) {
+        setTimeout(() => {
+          progress.value = 0
+          currentStep.value = ''
+        }, 2000)
+      }
+    })
+})
 
 function runSync() {
   loading.value = true
   output.value = ''
+  progress.value = 0
+  currentStep.value = ''
+  
   router.post('/sync', {}, {
     onSuccess: (page) => {
       const success = page.props?.flash?.success

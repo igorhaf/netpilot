@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /var/www/html/app</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="_css/bootstrap.min.css?v=11.0.10" rel="stylesheet" type="text/css">
+  <link href="_css/nv.d3.min.css?v=11.0.10" rel="stylesheet" type="text/css">
+  <link href="_css/style.css?v=11.0.10" rel="stylesheet" type="text/css">
+  <link href="_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="index.html">/var/www/html/app</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Application/UseCases/CheckUpstreamHealth.php.html#8">App\Application\UseCases\CheckUpstreamHealth</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/CreateDomain.php.html#8">App\Application\UseCases\CreateDomain</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/SyncProxyConfig.php.html#8">App\Application\UseCases\SyncProxyConfig</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/ToggleAutoTLS.php.html#8">App\Application\UseCases\ToggleAutoTLS</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/AnalyzeMetrics.php.html#8">App\Console\Commands\AnalyzeMetrics</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ApplyTraefikConfig.php.html#8">App\Console\Commands\ApplyTraefikConfig</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CheckLogs.php.html#9">App\Console\Commands\CheckLogs</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CheckSslCertificates.php.html#9">App\Console\Commands\CheckSslCertificates</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CleanupLogs.php.html#9">App\Console\Commands\CleanupLogs</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CleanupStuckLogs.php.html#8">App\Console\Commands\CleanupStuckLogs</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CreateSampleProxyRules.php.html#9">App\Console\Commands\CreateSampleProxyRules</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/DebugProxyDelete.php.html#8">App\Console\Commands\DebugProxyDelete</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/DeployNginx.php.html#9">App\Console\Commands\DeployNginx</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ListTraefikConfigs.php.html#8">App\Console\Commands\ListTraefikConfigs</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/MonitorAlerts.php.html#8">App\Console\Commands\MonitorAlerts</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/MonitorMetrics.php.html#8">App\Console\Commands\MonitorMetrics</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyBootstrap.php.html#8">App\Console\Commands\ProxyBootstrap</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyLogs.php.html#8">App\Console\Commands\ProxyLogs</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyNetwork.php.html#8">App\Console\Commands\ProxyNetwork</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#8">App\Console\Commands\ProxyReconcile</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyRenew.php.html#13">App\Console\Commands\ProxyRenew</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxySync.php.html#8">App\Console\Commands\ProxySync</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/RenewSslCertificates.php.html#10">App\Console\Commands\RenewSslCertificates</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ResetDatabase.php.html#9">App\Console\Commands\ResetDatabase</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyAutoDeploy.php.html#9">App\Console\Commands\TestProxyAutoDeploy</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyConstraints.php.html#11">App\Console\Commands\TestProxyConstraints</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyController.php.html#10">App\Console\Commands\TestProxyController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDelete.php.html#8">App\Console\Commands\TestProxyDelete</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDeleteDetailed.php.html#10">App\Console\Commands\TestProxyDeleteDetailed</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyOperations.php.html#9">App\Console\Commands\TestProxyOperations</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestSqliteDirect.php.html#8">App\Console\Commands\TestSqliteDirect</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestTraefikConfig.php.html#8">App\Console\Commands\TestTraefikConfig</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#11">App\Console\Commands\UpstreamHealth</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Kernel.php.html#8">App\Console\Kernel</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateExpiring.php.html#13">App\Events\SslCertificateExpiring</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateUpdated.php.html#14">App\Events\SslCertificateUpdated</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SyncProgress.php.html#11">App\Events\SyncProgress</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/CertificateException.php.html#5">App\Exceptions\CertificateException</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ProxyException.php.html#5">App\Exceptions\ProxyException</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ReconciliationException.php.html#5">App\Exceptions\ReconciliationException</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/AnalyticsController.php.html#8">App\Http\Controllers\AnalyticsController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/AuthController.php.html#10">App\Http\Controllers\Api\V1\AuthController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/DomainController.php.html#10">App\Http\Controllers\Api\V1\DomainController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/ProxyRuleController.php.html#10">App\Http\Controllers\Api\V1\ProxyRuleController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/TenantController.php.html#10">App\Http\Controllers\Api\V1\TenantController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Auth/AuthenticatedSessionController.php.html#13">App\Http\Controllers\Auth\AuthenticatedSessionController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Auth/RegisteredUserController.php.html#16">App\Http\Controllers\Auth\RegisteredUserController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DashboardController.php.html#12">App\Http\Controllers\DashboardController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#10">App\Http\Controllers\DomainsController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/LogsController.php.html#10">App\Http\Controllers\LogsController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#13">App\Http\Controllers\ProxyController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RedirectsController.php.html#11">App\Http\Controllers\RedirectsController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#15">App\Http\Controllers\RoutesController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#13">App\Http\Controllers\SslController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SyncController.php.html#10">App\Http\Controllers\SyncController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#9">App\Http\Controllers\TenantController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#14">App\Http\Controllers\UpstreamsController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#9">App\Http\Controllers\WebhookController</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/GeoBlock.php.html#10">App\Http\Middleware\GeoBlock</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/HandleInertiaRequests.php.html#8">App\Http\Middleware\HandleInertiaRequests</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/IpFilter.php.html#10">App\Http\Middleware\IpFilter</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/MeasureResponseTime.php.html#10">App\Http\Middleware\MeasureResponseTime</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/RateLimiter.php.html#10">App\Http\Middleware\RateLimiter</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/TenantScope.php.html#9">App\Http\Middleware\TenantScope</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/WafMiddleware.php.html#10">App\Http\Middleware\WafMiddleware</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#12">App\Http\Requests\Auth\LoginRequest</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/DomainRequest.php.html#7">App\Http\Requests\DomainRequest</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RedirectRequest.php.html#7">App\Http\Requests\RedirectRequest</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RouteRequest.php.html#7">App\Http\Requests\RouteRequest</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/UpstreamRequest.php.html#7">App\Http\Requests\UpstreamRequest</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Resources/V1/DomainResource.php.html#7">App\Http\Resources\V1\DomainResource</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Resources/V1/ProxyRuleResource.php.html#7">App\Http\Resources\V1\ProxyRuleResource</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Resources/V1/TenantResource.php.html#7">App\Http\Resources\V1\TenantResource</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#8">App\Infra\SecretsStore</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#10">App\Infra\Traefik\TraefikProvider</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Jobs/CreateSslCertificateJob.php.html#15">App\Jobs\CreateSslCertificateJob</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Listeners/BroadcastSyncProgress.php.html#7">App\Listeners\BroadcastSyncProgress</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Listeners/DispatchWebhook.php.html#8">App\Listeners\DispatchWebhook</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/CertificateEvent.php.html#9">App\Models\CertificateEvent</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#8">App\Models\DeploymentLog</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#11">App\Models\Domain</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#10">App\Models\ProxyRule</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/RedirectRule.php.html#9">App\Models\RedirectRule</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/RouteRule.php.html#9">App\Models\RouteRule</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#11">App\Models\SslCertificate</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Tenant.php.html#9">App\Models\Tenant</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Upstream.php.html#10">App\Models\Upstream</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#13">App\Models\User</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Webhook.php.html#8">App\Models\Webhook</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/WebhookEvent.php.html#8">App\Models\WebhookEvent</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/EventServiceProvider.php.html#10">App\Providers\EventServiceProvider</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/RouteServiceProvider.php.html#11">App\Providers\RouteServiceProvider</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AlertingService.php.html#9">App\Services\AlertingService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AnalyticsService.php.html#8">App\Services\AnalyticsService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CacheService.php.html#7">App\Services\CacheService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CircuitBreaker.php.html#8">App\Services\CircuitBreaker</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#15">App\Services\LetsEncryptService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#9">App\Services\MetricsService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/NginxService.php.html#7">App\Services\NginxService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#20">App\Services\ReconcilerService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/SystemCommandService.php.html#8">App\Services\SystemCommandService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#12">App\Services\TraefikService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WafInspectionResult.php.html#5">App\Services\WafInspectionResult</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WafService.php.html#7">App\Services\WafService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WebhookDispatcherService.php.html#10">App\Services\WebhookDispatcherService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/NetPilotServiceProvider.php.html#11">App\Providers\NetPilotServiceProvider</a></td><td class="text-right">41%</td></tr>
+       <tr><td><a href="Providers/AppServiceProvider.php.html#11">App\Providers\AppServiceProvider</a></td><td class="text-right">87%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Services/LetsEncryptService.php.html#15">App\Services\LetsEncryptService</a></td><td class="text-right">6480</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#20">App\Services\ReconcilerService</a></td><td class="text-right">3660</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#8">App\Console\Commands\ProxyReconcile</a></td><td class="text-right">2162</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#10">App\Infra\Traefik\TraefikProvider</a></td><td class="text-right">1892</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#13">App\Http\Controllers\ProxyController</a></td><td class="text-right">1190</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#12">App\Services\TraefikService</a></td><td class="text-right">1122</td></tr>
+       <tr><td><a href="Console/Commands/ProxyRenew.php.html#13">App\Console\Commands\ProxyRenew</a></td><td class="text-right">420</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#13">App\Http\Controllers\SslController</a></td><td class="text-right">420</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#11">App\Console\Commands\UpstreamHealth</a></td><td class="text-right">306</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#8">App\Infra\SecretsStore</a></td><td class="text-right">306</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#11">App\Models\SslCertificate</a></td><td class="text-right">272</td></tr>
+       <tr><td><a href="Models/Domain.php.html#11">App\Models\Domain</a></td><td class="text-right">182</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#9">App\Services\MetricsService</a></td><td class="text-right">182</td></tr>
+       <tr><td><a href="Console/Commands/TestSqliteDirect.php.html#8">App\Console\Commands\TestSqliteDirect</a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#10">App\Http\Controllers\DomainsController</a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#8">App\Models\DeploymentLog</a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="Models/RedirectRule.php.html#9">App\Models\RedirectRule</a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="Console/Commands/CheckSslCertificates.php.html#9">App\Console\Commands\CheckSslCertificates</a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyConstraints.php.html#11">App\Console\Commands\TestProxyConstraints</a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="Console/Commands/ApplyTraefikConfig.php.html#8">App\Console\Commands\ApplyTraefikConfig</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Console/Commands/RenewSslCertificates.php.html#10">App\Console\Commands\RenewSslCertificates</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDeleteDetailed.php.html#10">App\Console\Commands\TestProxyDeleteDetailed</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#15">App\Http\Controllers\RoutesController</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#14">App\Http\Controllers\UpstreamsController</a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Console/Commands/DeployNginx.php.html#9">App\Console\Commands\DeployNginx</a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyAutoDeploy.php.html#9">App\Console\Commands\TestProxyAutoDeploy</a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Jobs/CreateSslCertificateJob.php.html#15">App\Jobs\CreateSslCertificateJob</a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#10">App\Models\ProxyRule</a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Console/Commands/ProxyBootstrap.php.html#8">App\Console\Commands\ProxyBootstrap</a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyOperations.php.html#9">App\Console\Commands\TestProxyOperations</a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#12">App\Http\Requests\Auth\LoginRequest</a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Services/NginxService.php.html#7">App\Services\NginxService</a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Application/UseCases/CheckUpstreamHealth.php.html#8">App\Application\UseCases\CheckUpstreamHealth</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/CleanupStuckLogs.php.html#8">App\Console\Commands\CleanupStuckLogs</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/CreateSampleProxyRules.php.html#9">App\Console\Commands\CreateSampleProxyRules</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/ListTraefikConfigs.php.html#8">App\Console\Commands\ListTraefikConfigs</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Http/Controllers/LogsController.php.html#10">App\Http\Controllers\LogsController</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Http/Requests/RedirectRequest.php.html#7">App\Http\Requests\RedirectRequest</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Http/Requests/RouteRequest.php.html#7">App\Http\Requests\RouteRequest</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Http/Requests/UpstreamRequest.php.html#7">App\Http\Requests\UpstreamRequest</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Services/WebhookDispatcherService.php.html#10">App\Services\WebhookDispatcherService</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/CleanupLogs.php.html#9">App\Console\Commands\CleanupLogs</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/DebugProxyDelete.php.html#8">App\Console\Commands\DebugProxyDelete</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyController.php.html#10">App\Console\Commands\TestProxyController</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDelete.php.html#8">App\Console\Commands\TestProxyDelete</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/AlertingService.php.html#9">App\Services\AlertingService</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/CircuitBreaker.php.html#8">App\Services\CircuitBreaker</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/SystemCommandService.php.html#8">App\Services\SystemCommandService</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Application/UseCases/CreateDomain.php.html#8">App\Application\UseCases\CreateDomain</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Application/UseCases/ToggleAutoTLS.php.html#8">App\Application\UseCases\ToggleAutoTLS</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Console/Commands/CheckLogs.php.html#9">App\Console\Commands\CheckLogs</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Console/Commands/TestTraefikConfig.php.html#8">App\Console\Commands\TestTraefikConfig</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Controllers/DashboardController.php.html#12">App\Http\Controllers\DashboardController</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Middleware/GeoBlock.php.html#10">App\Http\Middleware\GeoBlock</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Middleware/IpFilter.php.html#10">App\Http\Middleware\IpFilter</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Middleware/TenantScope.php.html#9">App\Http\Middleware\TenantScope</a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Console/Commands/ProxyLogs.php.html#8">App\Console\Commands\ProxyLogs</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/ProxyNetwork.php.html#8">App\Console\Commands\ProxyNetwork</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/ResetDatabase.php.html#9">App\Console\Commands\ResetDatabase</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Kernel.php.html#8">App\Console\Kernel</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/AuthController.php.html#10">App\Http\Controllers\Api\V1\AuthController</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Controllers/SyncController.php.html#10">App\Http\Controllers\SyncController</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Middleware/WafMiddleware.php.html#10">App\Http\Middleware\WafMiddleware</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Providers/RouteServiceProvider.php.html#11">App\Providers\RouteServiceProvider</a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Application/UseCases/SyncProxyConfig.php.html#8">App\Application\UseCases\SyncProxyConfig</a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Console/Commands/ProxySync.php.html#8">App\Console\Commands\ProxySync</a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Middleware/RateLimiter.php.html#10">App\Http\Middleware\RateLimiter</a></td><td class="text-right">6</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Application/UseCases/CheckUpstreamHealth.php.html#10"><abbr title="App\Application\UseCases\CheckUpstreamHealth::__invoke">__invoke</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/CheckUpstreamHealth.php.html#28"><abbr title="App\Application\UseCases\CheckUpstreamHealth::checkSingleUpstream">checkSingleUpstream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/CreateDomain.php.html#10"><abbr title="App\Application\UseCases\CreateDomain::__invoke">__invoke</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/CreateDomain.php.html#27"><abbr title="App\Application\UseCases\CreateDomain::syncDomainConfig">syncDomainConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/SyncProxyConfig.php.html#10"><abbr title="App\Application\UseCases\SyncProxyConfig::__invoke">__invoke</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/ToggleAutoTLS.php.html#10"><abbr title="App\Application\UseCases\ToggleAutoTLS::__invoke">__invoke</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Application/UseCases/ToggleAutoTLS.php.html#22"><abbr title="App\Application\UseCases\ToggleAutoTLS::syncDomainConfig">syncDomainConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/AnalyzeMetrics.php.html#13"><abbr title="App\Console\Commands\AnalyzeMetrics::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/AnalyzeMetrics.php.html#18"><abbr title="App\Console\Commands\AnalyzeMetrics::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ApplyTraefikConfig.php.html#13"><abbr title="App\Console\Commands\ApplyTraefikConfig::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CheckLogs.php.html#14"><abbr title="App\Console\Commands\CheckLogs::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CheckSslCertificates.php.html#14"><abbr title="App\Console\Commands\CheckSslCertificates::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CleanupLogs.php.html#14"><abbr title="App\Console\Commands\CleanupLogs::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CleanupStuckLogs.php.html#13"><abbr title="App\Console\Commands\CleanupStuckLogs::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/CreateSampleProxyRules.php.html#14"><abbr title="App\Console\Commands\CreateSampleProxyRules::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/DebugProxyDelete.php.html#13"><abbr title="App\Console\Commands\DebugProxyDelete::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/DeployNginx.php.html#14"><abbr title="App\Console\Commands\DeployNginx::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/DeployNginx.php.html#20"><abbr title="App\Console\Commands\DeployNginx::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ListTraefikConfigs.php.html#13"><abbr title="App\Console\Commands\ListTraefikConfigs::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/MonitorAlerts.php.html#13"><abbr title="App\Console\Commands\MonitorAlerts::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/MonitorAlerts.php.html#18"><abbr title="App\Console\Commands\MonitorAlerts::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/MonitorMetrics.php.html#13"><abbr title="App\Console\Commands\MonitorMetrics::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/MonitorMetrics.php.html#18"><abbr title="App\Console\Commands\MonitorMetrics::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyBootstrap.php.html#13"><abbr title="App\Console\Commands\ProxyBootstrap::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyBootstrap.php.html#45"><abbr title="App\Console\Commands\ProxyBootstrap::runningInContainer">runningInContainer</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyLogs.php.html#13"><abbr title="App\Console\Commands\ProxyLogs::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyNetwork.php.html#13"><abbr title="App\Console\Commands\ProxyNetwork::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#19"><abbr title="App\Console\Commands\ProxyReconcile::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#25"><abbr title="App\Console\Commands\ProxyReconcile::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#62"><abbr title="App\Console\Commands\ProxyReconcile::reconcileComponent">reconcileComponent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#93"><abbr title="App\Console\Commands\ProxyReconcile::verifyConfigurations">verifyConfigurations</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#119"><abbr title="App\Console\Commands\ProxyReconcile::showStatus">showStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#138"><abbr title="App\Console\Commands\ProxyReconcile::displayResults">displayResults</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#174"><abbr title="App\Console\Commands\ProxyReconcile::displayComponentResult">displayComponentResult</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#194"><abbr title="App\Console\Commands\ProxyReconcile::formatStatus">formatStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyRenew.php.html#25"><abbr title="App\Console\Commands\ProxyRenew::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyRenew.php.html#31"><abbr title="App\Console\Commands\ProxyRenew::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxyRenew.php.html#207"><abbr title="App\Console\Commands\ProxyRenew::checkUpcomingExpirations">checkUpcomingExpirations</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ProxySync.php.html#13"><abbr title="App\Console\Commands\ProxySync::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/RenewSslCertificates.php.html#15"><abbr title="App\Console\Commands\RenewSslCertificates::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/RenewSslCertificates.php.html#21"><abbr title="App\Console\Commands\RenewSslCertificates::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/ResetDatabase.php.html#14"><abbr title="App\Console\Commands\ResetDatabase::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyAutoDeploy.php.html#14"><abbr title="App\Console\Commands\TestProxyAutoDeploy::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyAutoDeploy.php.html#19"><abbr title="App\Console\Commands\TestProxyAutoDeploy::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyConstraints.php.html#16"><abbr title="App\Console\Commands\TestProxyConstraints::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyController.php.html#15"><abbr title="App\Console\Commands\TestProxyController::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDelete.php.html#13"><abbr title="App\Console\Commands\TestProxyDelete::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDeleteDetailed.php.html#15"><abbr title="App\Console\Commands\TestProxyDeleteDetailed::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyOperations.php.html#14"><abbr title="App\Console\Commands\TestProxyOperations::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestSqliteDirect.php.html#13"><abbr title="App\Console\Commands\TestSqliteDirect::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/TestTraefikConfig.php.html#13"><abbr title="App\Console\Commands\TestTraefikConfig::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#16"><abbr title="App\Console\Commands\UpstreamHealth::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#32"><abbr title="App\Console\Commands\UpstreamHealth::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#96"><abbr title="App\Console\Commands\UpstreamHealth::checkTcpConnection">checkTcpConnection</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#116"><abbr title="App\Console\Commands\UpstreamHealth::checkHttpEndpoint">checkHttpEndpoint</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Kernel.php.html#13"><abbr title="App\Console\Kernel::schedule">schedule</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Console/Kernel.php.html#62"><abbr title="App\Console\Kernel::commands">commands</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateExpiring.php.html#22"><abbr title="App\Events\SslCertificateExpiring::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateExpiring.php.html#32"><abbr title="App\Events\SslCertificateExpiring::broadcastOn">broadcastOn</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateExpiring.php.html#44"><abbr title="App\Events\SslCertificateExpiring::broadcastWith">broadcastWith</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateUpdated.php.html#18"><abbr title="App\Events\SslCertificateUpdated::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateUpdated.php.html#22"><abbr title="App\Events\SslCertificateUpdated::broadcastOn">broadcastOn</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateUpdated.php.html#30"><abbr title="App\Events\SslCertificateUpdated::broadcastWith">broadcastWith</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SslCertificateUpdated.php.html#45"><abbr title="App\Events\SslCertificateUpdated::broadcastAs">broadcastAs</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SyncProgress.php.html#19"><abbr title="App\Events\SyncProgress::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Events/SyncProgress.php.html#26"><abbr title="App\Events\SyncProgress::broadcastOn">broadcastOn</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/CertificateException.php.html#8"><abbr title="App\Exceptions\CertificateException::invalidDomain">invalidDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/CertificateException.php.html#14"><abbr title="App\Exceptions\CertificateException::portsUnavailable">portsUnavailable</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/CertificateException.php.html#20"><abbr title="App\Exceptions\CertificateException::certbotFailed">certbotFailed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/CertificateException.php.html#26"><abbr title="App\Exceptions\CertificateException::verificationFailed">verificationFailed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/CertificateException.php.html#32"><abbr title="App\Exceptions\CertificateException::writePermission">writePermission</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ProxyException.php.html#8"><abbr title="App\Exceptions\ProxyException::invalidConfig">invalidConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ProxyException.php.html#14"><abbr title="App\Exceptions\ProxyException::fileSaveFailed">fileSaveFailed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ProxyException.php.html#19"><abbr title="App\Exceptions\ProxyException::fileNotFound">fileNotFound</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ProxyException.php.html#24"><abbr title="App\Exceptions\ProxyException::fileCopyFailed">fileCopyFailed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ProxyException.php.html#30"><abbr title="App\Exceptions\ProxyException::reloadFailed">reloadFailed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ReconciliationException.php.html#8"><abbr title="App\Exceptions\ReconciliationException::invalidRoute">invalidRoute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ReconciliationException.php.html#14"><abbr title="App\Exceptions\ReconciliationException::invalidRedirectPattern">invalidRedirectPattern</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Exceptions/ReconciliationException.php.html#20"><abbr title="App\Exceptions\ReconciliationException::inactiveUpstream">inactiveUpstream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/AnalyticsController.php.html#10"><abbr title="App\Http\Controllers\AnalyticsController::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/AnalyticsController.php.html#12"><abbr title="App\Http\Controllers\AnalyticsController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/AnalyticsController.php.html#19"><abbr title="App\Http\Controllers\AnalyticsController::apiIndex">apiIndex</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/AnalyticsController.php.html#24"><abbr title="App\Http\Controllers\AnalyticsController::getDashboardStats">getDashboardStats</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/AuthController.php.html#12"><abbr title="App\Http\Controllers\Api\V1\AuthController::login">login</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/AuthController.php.html#34"><abbr title="App\Http\Controllers\Api\V1\AuthController::logout">logout</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/DomainController.php.html#12"><abbr title="App\Http\Controllers\Api\V1\DomainController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/DomainController.php.html#19"><abbr title="App\Http\Controllers\Api\V1\DomainController::show">show</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/ProxyRuleController.php.html#12"><abbr title="App\Http\Controllers\Api\V1\ProxyRuleController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/ProxyRuleController.php.html#19"><abbr title="App\Http\Controllers\Api\V1\ProxyRuleController::show">show</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/TenantController.php.html#12"><abbr title="App\Http\Controllers\Api\V1\TenantController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/TenantController.php.html#19"><abbr title="App\Http\Controllers\Api\V1\TenantController::show">show</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Auth/AuthenticatedSessionController.php.html#18"><abbr title="App\Http\Controllers\Auth\AuthenticatedSessionController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Auth/AuthenticatedSessionController.php.html#26"><abbr title="App\Http\Controllers\Auth\AuthenticatedSessionController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Auth/AuthenticatedSessionController.php.html#38"><abbr title="App\Http\Controllers\Auth\AuthenticatedSessionController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Auth/RegisteredUserController.php.html#21"><abbr title="App\Http\Controllers\Auth\RegisteredUserController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/Auth/RegisteredUserController.php.html#31"><abbr title="App\Http\Controllers\Auth\RegisteredUserController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DashboardController.php.html#14"><abbr title="App\Http\Controllers\DashboardController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DashboardController.php.html#117"><abbr title="App\Http\Controllers\DashboardController::__invoke">__invoke</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#12"><abbr title="App\Http\Controllers\DomainsController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#23"><abbr title="App\Http\Controllers\DomainsController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#28"><abbr title="App\Http\Controllers\DomainsController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#84"><abbr title="App\Http\Controllers\DomainsController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#91"><abbr title="App\Http\Controllers\DomainsController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#113"><abbr title="App\Http\Controllers\DomainsController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/LogsController.php.html#12"><abbr title="App\Http\Controllers\LogsController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/LogsController.php.html#62"><abbr title="App\Http\Controllers\LogsController::clear">clear</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#15"><abbr title="App\Http\Controllers\ProxyController::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#19"><abbr title="App\Http\Controllers\ProxyController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#66"><abbr title="App\Http\Controllers\ProxyController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#75"><abbr title="App\Http\Controllers\ProxyController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#150"><abbr title="App\Http\Controllers\ProxyController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#168"><abbr title="App\Http\Controllers\ProxyController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#245"><abbr title="App\Http\Controllers\ProxyController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#330"><abbr title="App\Http\Controllers\ProxyController::toggle">toggle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#381"><abbr title="App\Http\Controllers\ProxyController::deploy">deploy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RedirectsController.php.html#13"><abbr title="App\Http\Controllers\RedirectsController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RedirectsController.php.html#30"><abbr title="App\Http\Controllers\RedirectsController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RedirectsController.php.html#39"><abbr title="App\Http\Controllers\RedirectsController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RedirectsController.php.html#76"><abbr title="App\Http\Controllers\RedirectsController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RedirectsController.php.html#86"><abbr title="App\Http\Controllers\RedirectsController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RedirectsController.php.html#118"><abbr title="App\Http\Controllers\RedirectsController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#17"><abbr title="App\Http\Controllers\RoutesController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#30"><abbr title="App\Http\Controllers\RoutesController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#38"><abbr title="App\Http\Controllers\RoutesController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#53"><abbr title="App\Http\Controllers\RoutesController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#63"><abbr title="App\Http\Controllers\RoutesController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#78"><abbr title="App\Http\Controllers\RoutesController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#15"><abbr title="App\Http\Controllers\SslController::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#20"><abbr title="App\Http\Controllers\SslController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#42"><abbr title="App\Http\Controllers\SslController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#55"><abbr title="App\Http\Controllers\SslController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#85"><abbr title="App\Http\Controllers\SslController::show">show</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#94"><abbr title="App\Http\Controllers\SslController::renew">renew</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#105"><abbr title="App\Http\Controllers\SslController::renewAll">renewAll</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#134"><abbr title="App\Http\Controllers\SslController::toggle">toggle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#145"><abbr title="App\Http\Controllers\SslController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#163"><abbr title="App\Http\Controllers\SslController::deploy">deploy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SyncController.php.html#12"><abbr title="App\Http\Controllers\SyncController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/SyncController.php.html#17"><abbr title="App\Http\Controllers\SyncController::sync">sync</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#11"><abbr title="App\Http\Controllers\TenantController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#18"><abbr title="App\Http\Controllers\TenantController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#23"><abbr title="App\Http\Controllers\TenantController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#36"><abbr title="App\Http\Controllers\TenantController::show">show</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#43"><abbr title="App\Http\Controllers\TenantController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#50"><abbr title="App\Http\Controllers\TenantController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#63"><abbr title="App\Http\Controllers\TenantController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/TenantController.php.html#70"><abbr title="App\Http\Controllers\TenantController::switch">switch</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#16"><abbr title="App\Http\Controllers\UpstreamsController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#29"><abbr title="App\Http\Controllers\UpstreamsController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#36"><abbr title="App\Http\Controllers\UpstreamsController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#53"><abbr title="App\Http\Controllers\UpstreamsController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#62"><abbr title="App\Http\Controllers\UpstreamsController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#77"><abbr title="App\Http\Controllers\UpstreamsController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#11"><abbr title="App\Http\Controllers\WebhookController::index">index</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#18"><abbr title="App\Http\Controllers\WebhookController::create">create</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#23"><abbr title="App\Http\Controllers\WebhookController::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#39"><abbr title="App\Http\Controllers\WebhookController::show">show</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#46"><abbr title="App\Http\Controllers\WebhookController::edit">edit</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#53"><abbr title="App\Http\Controllers\WebhookController::update">update</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Controllers/WebhookController.php.html#68"><abbr title="App\Http\Controllers\WebhookController::destroy">destroy</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/GeoBlock.php.html#12"><abbr title="App\Http\Middleware\GeoBlock::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/HandleInertiaRequests.php.html#12"><abbr title="App\Http\Middleware\HandleInertiaRequests::version">version</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/HandleInertiaRequests.php.html#17"><abbr title="App\Http\Middleware\HandleInertiaRequests::share">share</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/IpFilter.php.html#12"><abbr title="App\Http\Middleware\IpFilter::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/MeasureResponseTime.php.html#12"><abbr title="App\Http\Middleware\MeasureResponseTime::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/MeasureResponseTime.php.html#14"><abbr title="App\Http\Middleware\MeasureResponseTime::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/RateLimiter.php.html#12"><abbr title="App\Http\Middleware\RateLimiter::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/TenantScope.php.html#11"><abbr title="App\Http\Middleware\TenantScope::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/WafMiddleware.php.html#12"><abbr title="App\Http\Middleware\WafMiddleware::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Middleware/WafMiddleware.php.html#14"><abbr title="App\Http\Middleware\WafMiddleware::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#17"><abbr title="App\Http\Requests\Auth\LoginRequest::authorize">authorize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#27"><abbr title="App\Http\Requests\Auth\LoginRequest::rules">rules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#40"><abbr title="App\Http\Requests\Auth\LoginRequest::authenticate">authenticate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#60"><abbr title="App\Http\Requests\Auth\LoginRequest::ensureIsNotRateLimited">ensureIsNotRateLimited</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#81"><abbr title="App\Http\Requests\Auth\LoginRequest::throttleKey">throttleKey</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/DomainRequest.php.html#9"><abbr title="App\Http\Requests\DomainRequest::authorize">authorize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/DomainRequest.php.html#14"><abbr title="App\Http\Requests\DomainRequest::rules">rules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/DomainRequest.php.html#26"><abbr title="App\Http\Requests\DomainRequest::messages">messages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RedirectRequest.php.html#9"><abbr title="App\Http\Requests\RedirectRequest::authorize">authorize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RedirectRequest.php.html#14"><abbr title="App\Http\Requests\RedirectRequest::rules">rules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RedirectRequest.php.html#28"><abbr title="App\Http\Requests\RedirectRequest::messages">messages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RedirectRequest.php.html#43"><abbr title="App\Http\Requests\RedirectRequest::prepareForValidation">prepareForValidation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RouteRequest.php.html#9"><abbr title="App\Http\Requests\RouteRequest::authorize">authorize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RouteRequest.php.html#14"><abbr title="App\Http\Requests\RouteRequest::rules">rules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RouteRequest.php.html#30"><abbr title="App\Http\Requests\RouteRequest::messages">messages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/RouteRequest.php.html#47"><abbr title="App\Http\Requests\RouteRequest::prepareForValidation">prepareForValidation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/UpstreamRequest.php.html#9"><abbr title="App\Http\Requests\UpstreamRequest::authorize">authorize</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/UpstreamRequest.php.html#14"><abbr title="App\Http\Requests\UpstreamRequest::rules">rules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/UpstreamRequest.php.html#36"><abbr title="App\Http\Requests\UpstreamRequest::messages">messages</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Requests/UpstreamRequest.php.html#52"><abbr title="App\Http\Requests\UpstreamRequest::prepareForValidation">prepareForValidation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Resources/V1/DomainResource.php.html#9"><abbr title="App\Http\Resources\V1\DomainResource::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Resources/V1/ProxyRuleResource.php.html#9"><abbr title="App\Http\Resources\V1\ProxyRuleResource::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Http/Resources/V1/TenantResource.php.html#9"><abbr title="App\Http\Resources\V1\TenantResource::toArray">toArray</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#13"><abbr title="App\Infra\SecretsStore::store">store</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#23"><abbr title="App\Infra\SecretsStore::retrieve">retrieve</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#40"><abbr title="App\Infra\SecretsStore::forget">forget</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#45"><abbr title="App\Infra\SecretsStore::exists">exists</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#50"><abbr title="App\Infra\SecretsStore::storeDnsToken">storeDnsToken</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#55"><abbr title="App\Infra\SecretsStore::getDnsToken">getDnsToken</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#60"><abbr title="App\Infra\SecretsStore::storeApiKey">storeApiKey</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#65"><abbr title="App\Infra\SecretsStore::getApiKey">getApiKey</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#70"><abbr title="App\Infra\SecretsStore::storeCertificate">storeCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#75"><abbr title="App\Infra\SecretsStore::getCertificate">getCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#81"><abbr title="App\Infra\SecretsStore::clearAll">clearAll</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#95"><abbr title="App\Infra\SecretsStore::listKeys">listKeys</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#12"><abbr title="App\Infra\Traefik\TraefikProvider::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#16"><abbr title="App\Infra\Traefik\TraefikProvider::make">make</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#22"><abbr title="App\Infra\Traefik\TraefikProvider::syncAll">syncAll</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#33"><abbr title="App\Infra\Traefik\TraefikProvider::writeDomain">writeDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#146"><abbr title="App\Infra\Traefik\TraefikProvider::writeRedirects">writeRedirects</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#208"><abbr title="App\Infra\Traefik\TraefikProvider::upstreamUrl">upstreamUrl</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#213"><abbr title="App\Infra\Traefik\TraefikProvider::routerName">routerName</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#218"><abbr title="App\Infra\Traefik\TraefikProvider::serviceName">serviceName</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#223"><abbr title="App\Infra\Traefik\TraefikProvider::mwName">mwName</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#228"><abbr title="App\Infra\Traefik\TraefikProvider::toYaml">toYaml</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#254"><abbr title="App\Infra\Traefik\TraefikProvider::yamlScalar">yamlScalar</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#266"><abbr title="App\Infra\Traefik\TraefikProvider::isAssoc">isAssoc</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Jobs/CreateSslCertificateJob.php.html#19"><abbr title="App\Jobs\CreateSslCertificateJob::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Jobs/CreateSslCertificateJob.php.html#23"><abbr title="App\Jobs\CreateSslCertificateJob::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Jobs/CreateSslCertificateJob.php.html#94"><abbr title="App\Jobs\CreateSslCertificateJob::failed">failed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Listeners/BroadcastSyncProgress.php.html#9"><abbr title="App\Listeners\BroadcastSyncProgress::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Listeners/DispatchWebhook.php.html#10"><abbr title="App\Listeners\DispatchWebhook::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Listeners/DispatchWebhook.php.html#14"><abbr title="App\Listeners\DispatchWebhook::handle">handle</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Listeners/DispatchWebhook.php.html#22"><abbr title="App\Listeners\DispatchWebhook::getEventType">getEventType</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Listeners/DispatchWebhook.php.html#34"><abbr title="App\Listeners\DispatchWebhook::getPayload">getPayload</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/CertificateEvent.php.html#25"><abbr title="App\Models\CertificateEvent::domain">domain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#30"><abbr title="App\Models\DeploymentLog::getDurationAttribute">getDurationAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#39"><abbr title="App\Models\DeploymentLog::getIsRunningAttribute">getIsRunningAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#44"><abbr title="App\Models\DeploymentLog::getIsSuccessAttribute">getIsSuccessAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#49"><abbr title="App\Models\DeploymentLog::getIsFailedAttribute">getIsFailedAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#54"><abbr title="App\Models\DeploymentLog::markAsRunning">markAsRunning</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#62"><abbr title="App\Models\DeploymentLog::markAsSuccess">markAsSuccess</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#74"><abbr title="App\Models\DeploymentLog::markAsFailed">markAsFailed</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#30"><abbr title="App\Models\Domain::proxyRules">proxyRules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#35"><abbr title="App\Models\Domain::sslCertificates">sslCertificates</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#40"><abbr title="App\Models\Domain::redirectRules">redirectRules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#45"><abbr title="App\Models\Domain::getActiveProxyRulesAttribute">getActiveProxyRulesAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#50"><abbr title="App\Models\Domain::getCurrentCertificateAttribute">getCurrentCertificateAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#58"><abbr title="App\Models\Domain::getStatusAttribute">getStatusAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Domain.php.html#71"><abbr title="App\Models\Domain::tenant">tenant</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#33"><abbr title="App\Models\ProxyRule::domain">domain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#38"><abbr title="App\Models\ProxyRule::tenant">tenant</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#43"><abbr title="App\Models\ProxyRule::getFullSourceAttribute">getFullSourceAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#49"><abbr title="App\Models\ProxyRule::getFullTargetAttribute">getFullTargetAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#54"><abbr title="App\Models\ProxyRule::generateNginxConfig">generateNginxConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/RedirectRule.php.html#33"><abbr title="App\Models\RedirectRule::domain">domain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/RedirectRule.php.html#38"><abbr title="App\Models\RedirectRule::getRedirectTypeTextAttribute">getRedirectTypeTextAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/RedirectRule.php.html#50"><abbr title="App\Models\RedirectRule::generateNginxConfig">generateNginxConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/RouteRule.php.html#33"><abbr title="App\Models\RouteRule::domain">domain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/RouteRule.php.html#38"><abbr title="App\Models\RouteRule::upstream">upstream</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#41"><abbr title="App\Models\SslCertificate::domain">domain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#46"><abbr title="App\Models\SslCertificate::tenant">tenant</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#51"><abbr title="App\Models\SslCertificate::getDaysUntilExpiryAttribute">getDaysUntilExpiryAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#58"><abbr title="App\Models\SslCertificate::getIsExpiringAttribute">getIsExpiringAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#63"><abbr title="App\Models\SslCertificate::getIsExpiredAttribute">getIsExpiredAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#68"><abbr title="App\Models\SslCertificate::getAllDomainsAttribute">getAllDomainsAttribute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#79"><abbr title="App\Models\SslCertificate::generateTraefikConfig">generateTraefikConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#103"><abbr title="App\Models\SslCertificate::updateStatus">updateStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Tenant.php.html#25"><abbr title="App\Models\Tenant::domains">domains</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Tenant.php.html#30"><abbr title="App\Models\Tenant::proxyRules">proxyRules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Tenant.php.html#35"><abbr title="App\Models\Tenant::upstreams">upstreams</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Tenant.php.html#40"><abbr title="App\Models\Tenant::sslCertificates">sslCertificates</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Upstream.php.html#44"><abbr title="App\Models\Upstream::domain">domain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Upstream.php.html#49"><abbr title="App\Models\Upstream::routeRules">routeRules</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Upstream.php.html#54"><abbr title="App\Models\Upstream::tenant">tenant</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#45"><abbr title="App\Models\User::casts">casts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#52"><abbr title="App\Models\User::tenants">tenants</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/User.php.html#57"><abbr title="App\Models\User::currentTenant">currentTenant</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/Webhook.php.html#26"><abbr title="App\Models\Webhook::tenant">tenant</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Models/WebhookEvent.php.html#25"><abbr title="App\Models\WebhookEvent::webhook">webhook</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/EventServiceProvider.php.html#38"><abbr title="App\Providers\EventServiceProvider::boot">boot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/RouteServiceProvider.php.html#13"><abbr title="App\Providers\RouteServiceProvider::boot">boot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/RouteServiceProvider.php.html#27"><abbr title="App\Providers\RouteServiceProvider::configureRateLimiting">configureRateLimiting</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AlertingService.php.html#11"><abbr title="App\Services\AlertingService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AlertingService.php.html#15"><abbr title="App\Services\AlertingService::checkThresholds">checkThresholds</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AlertingService.php.html#47"><abbr title="App\Services\AlertingService::triggerAlert">triggerAlert</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AnalyticsService.php.html#10"><abbr title="App\Services\AnalyticsService::recordRequest">recordRequest</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AnalyticsService.php.html#23"><abbr title="App\Services\AnalyticsService::recordEvent">recordEvent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/AnalyticsService.php.html#33"><abbr title="App\Services\AnalyticsService::getRequestStats">getRequestStats</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CacheService.php.html#9"><abbr title="App\Services\CacheService::get">get</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CacheService.php.html#14"><abbr title="App\Services\CacheService::forget">forget</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CacheService.php.html#19"><abbr title="App\Services\CacheService::cacheProxyConfig">cacheProxyConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CacheService.php.html#24"><abbr title="App\Services\CacheService::getProxyConfig">getProxyConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CacheService.php.html#29"><abbr title="App\Services\CacheService::cacheSslCertificate">cacheSslCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CacheService.php.html#34"><abbr title="App\Services\CacheService::getSslCertificate">getSslCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CircuitBreaker.php.html#13"><abbr title="App\Services\CircuitBreaker::isAvailable">isAvailable</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CircuitBreaker.php.html#25"><abbr title="App\Services\CircuitBreaker::recordFailure">recordFailure</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/CircuitBreaker.php.html#36"><abbr title="App\Services\CircuitBreaker::recordSuccess">recordSuccess</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#20"><abbr title="App\Services\LetsEncryptService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#29"><abbr title="App\Services\LetsEncryptService::issueCertificate">issueCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#144"><abbr title="App\Services\LetsEncryptService::issueWildcardCertificate">issueWildcardCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#166"><abbr title="App\Services\LetsEncryptService::createDnsChallenge">createDnsChallenge</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#183"><abbr title="App\Services\LetsEncryptService::logSslPhase">logSslPhase</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#201"><abbr title="App\Services\LetsEncryptService::validateDomain">validateDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#213"><abbr title="App\Services\LetsEncryptService::checkPorts">checkPorts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#230"><abbr title="App\Services\LetsEncryptService::prepareEnvironment">prepareEnvironment</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#246"><abbr title="App\Services\LetsEncryptService::applyCertificateToServer">applyCertificateToServer</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#261"><abbr title="App\Services\LetsEncryptService::issueCertificateWithCertbot">issueCertificateWithCertbot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#328"><abbr title="App\Services\LetsEncryptService::createDnsCredentialsFile">createDnsCredentialsFile</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#343"><abbr title="App\Services\LetsEncryptService::simulateCertificateIssuance">simulateCertificateIssuance</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#350"><abbr title="App\Services\LetsEncryptService::simulateCertificateRenewal">simulateCertificateRenewal</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#356"><abbr title="App\Services\LetsEncryptService::simulateCertificateRevocation">simulateCertificateRevocation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#362"><abbr title="App\Services\LetsEncryptService::generateMockCertificateFiles">generateMockCertificateFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#385"><abbr title="App\Services\LetsEncryptService::removeMockCertificateFiles">removeMockCertificateFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#406"><abbr title="App\Services\LetsEncryptService::generateMockCertificateContent">generateMockCertificateContent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#419"><abbr title="App\Services\LetsEncryptService::generateMockPrivateKeyContent">generateMockPrivateKeyContent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#427"><abbr title="App\Services\LetsEncryptService::generateMockChainContent">generateMockChainContent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#439"><abbr title="App\Services\LetsEncryptService::checkCertificateStatus">checkCertificateStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#472"><abbr title="App\Services\LetsEncryptService::getAcmeChallengePath">getAcmeChallengePath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#477"><abbr title="App\Services\LetsEncryptService::cleanupExpiredCertificates">cleanupExpiredCertificates</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#502"><abbr title="App\Services\LetsEncryptService::renewCertificate">renewCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#573"><abbr title="App\Services\LetsEncryptService::renewCertificateWithCertbot">renewCertificateWithCertbot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#627"><abbr title="App\Services\LetsEncryptService::revokeCertificate">revokeCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#678"><abbr title="App\Services\LetsEncryptService::revokeCertificateWithCertbot">revokeCertificateWithCertbot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#698"><abbr title="App\Services\LetsEncryptService::cleanupRevokedCertificate">cleanupRevokedCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#11"><abbr title="App\Services\MetricsService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#16"><abbr title="App\Services\MetricsService::incrementRequestCount">incrementRequestCount</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#26"><abbr title="App\Services\MetricsService::observeResponseTime">observeResponseTime</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#37"><abbr title="App\Services\MetricsService::setUpstreamStatus">setUpstreamStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#47"><abbr title="App\Services\MetricsService::setSslCertificateStatus">setSslCertificateStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#57"><abbr title="App\Services\MetricsService::checkForAnomalies">checkForAnomalies</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#77"><abbr title="App\Services\MetricsService::calculateErrorRate">calculateErrorRate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#91"><abbr title="App\Services\MetricsService::countSlowResponses">countSlowResponses</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/NginxService.php.html#9"><abbr title="App\Services\NginxService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/NginxService.php.html#11"><abbr title="App\Services\NginxService::applyDomain">applyDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/NginxService.php.html#59"><abbr title="App\Services\NginxService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#28"><abbr title="App\Services\ReconcilerService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#43"><abbr title="App\Services\ReconcilerService::reconcileAll">reconcileAll</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#111"><abbr title="App\Services\ReconcilerService::reconcileDomains">reconcileDomains</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#156"><abbr title="App\Services\ReconcilerService::reconcileUpstreams">reconcileUpstreams</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#194"><abbr title="App\Services\ReconcilerService::reconcileRoutes">reconcileRoutes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#240"><abbr title="App\Services\ReconcilerService::reconcileRedirects">reconcileRedirects</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#276"><abbr title="App\Services\ReconcilerService::reconcileCertificates">reconcileCertificates</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#321"><abbr title="App\Services\ReconcilerService::reconcileTraefik">reconcileTraefik</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#356"><abbr title="App\Services\ReconcilerService::verifyConfigurations">verifyConfigurations</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#397"><abbr title="App\Services\ReconcilerService::applyDomainConfiguration">applyDomainConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#411"><abbr title="App\Services\ReconcilerService::checkUpstreamHealth">checkUpstreamHealth</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#439"><abbr title="App\Services\ReconcilerService::validateRedirectPattern">validateRedirectPattern</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#457"><abbr title="App\Services\ReconcilerService::triggerExpirationAlerts">triggerExpirationAlerts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#478"><abbr title="App\Services\ReconcilerService::validateRoute">validateRoute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#488"><abbr title="App\Services\ReconcilerService::validateRedirect">validateRedirect</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#499"><abbr title="App\Services\ReconcilerService::getStatus">getStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/SystemCommandService.php.html#13"><abbr title="App\Services\SystemCommandService::execute">execute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#18"><abbr title="App\Services\TraefikService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#35"><abbr title="App\Services\TraefikService::applyDomain">applyDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#65"><abbr title="App\Services\TraefikService::generateConfiguration">generateConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#147"><abbr title="App\Services\TraefikService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#183"><abbr title="App\Services\TraefikService::applyConfiguration">applyConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#267"><abbr title="App\Services\TraefikService::reloadTraefikViaApi">reloadTraefikViaApi</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#305"><abbr title="App\Services\TraefikService::getConfigPreview">getConfigPreview</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#312"><abbr title="App\Services\TraefikService::buildDynamicConfig">buildDynamicConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#362"><abbr title="App\Services\TraefikService::resolveTargetScheme">resolveTargetScheme</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WafInspectionResult.php.html#7"><abbr title="App\Services\WafInspectionResult::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WafInspectionResult.php.html#12"><abbr title="App\Services\WafInspectionResult::isBlocked">isBlocked</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WafInspectionResult.php.html#17"><abbr title="App\Services\WafInspectionResult::getReason">getReason</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WafService.php.html#9"><abbr title="App\Services\WafService::inspectRequest">inspectRequest</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WebhookDispatcherService.php.html#12"><abbr title="App\Services\WebhookDispatcherService::dispatch">dispatch</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WebhookDispatcherService.php.html#32"><abbr title="App\Services\WebhookDispatcherService::generateSignature">generateSignature</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Services/WebhookDispatcherService.php.html#40"><abbr title="App\Services\WebhookDispatcherService::logEvent">logEvent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="Providers/NetPilotServiceProvider.php.html#16"><abbr title="App\Providers\NetPilotServiceProvider::register">register</abbr></a></td><td class="text-right">36%</td></tr>
+       <tr><td><a href="Providers/AppServiceProvider.php.html#16"><abbr title="App\Providers\AppServiceProvider::register">register</abbr></a></td><td class="text-right">66%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="Console/Commands/ProxyRenew.php.html#31"><abbr title="App\Console\Commands\ProxyRenew::handle">handle</abbr></a></td><td class="text-right">272</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#33"><abbr title="App\Infra\Traefik\TraefikProvider::writeDomain">writeDomain</abbr></a></td><td class="text-right">240</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#138"><abbr title="App\Console\Commands\ProxyReconcile::displayResults">displayResults</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="Console/Commands/TestSqliteDirect.php.html#13"><abbr title="App\Console\Commands\TestSqliteDirect::handle">handle</abbr></a></td><td class="text-right">156</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#32"><abbr title="App\Console\Commands\UpstreamHealth::handle">handle</abbr></a></td><td class="text-right">132</td></tr>
+       <tr><td><a href="Console/Commands/CheckSslCertificates.php.html#14"><abbr title="App\Console\Commands\CheckSslCertificates::handle">handle</abbr></a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyConstraints.php.html#16"><abbr title="App\Console\Commands\TestProxyConstraints::handle">handle</abbr></a></td><td class="text-right">110</td></tr>
+       <tr><td><a href="Console/Commands/ApplyTraefikConfig.php.html#13"><abbr title="App\Console\Commands\ApplyTraefikConfig::handle">handle</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDeleteDetailed.php.html#15"><abbr title="App\Console\Commands\TestProxyDeleteDetailed::handle">handle</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Models/RedirectRule.php.html#50"><abbr title="App\Models\RedirectRule::generateNginxConfig">generateNginxConfig</abbr></a></td><td class="text-right">90</td></tr>
+       <tr><td><a href="Console/Commands/RenewSslCertificates.php.html#21"><abbr title="App\Console\Commands\RenewSslCertificates::handle">handle</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#312"><abbr title="App\Services\TraefikService::buildDynamicConfig">buildDynamicConfig</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="Console/Commands/DeployNginx.php.html#20"><abbr title="App\Console\Commands\DeployNginx::handle">handle</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#25"><abbr title="App\Console\Commands\ProxyReconcile::handle">handle</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyAutoDeploy.php.html#19"><abbr title="App\Console\Commands\TestProxyAutoDeploy::handle">handle</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyOperations.php.html#14"><abbr title="App\Console\Commands\TestProxyOperations::handle">handle</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Http/Controllers/DomainsController.php.html#28"><abbr title="App\Http\Controllers\DomainsController::store">store</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#75"><abbr title="App\Http\Controllers\ProxyController::store">store</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#168"><abbr title="App\Http\Controllers\ProxyController::update">update</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#146"><abbr title="App\Infra\Traefik\TraefikProvider::writeRedirects">writeRedirects</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Models/Domain.php.html#58"><abbr title="App\Models\Domain::getStatusAttribute">getStatusAttribute</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#29"><abbr title="App\Services\LetsEncryptService::issueCertificate">issueCertificate</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#385"><abbr title="App\Services\LetsEncryptService::removeMockCertificateFiles">removeMockCertificateFiles</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#356"><abbr title="App\Services\ReconcilerService::verifyConfigurations">verifyConfigurations</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="Console/Commands/CleanupStuckLogs.php.html#13"><abbr title="App\Console\Commands\CleanupStuckLogs::handle">handle</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/CreateSampleProxyRules.php.html#14"><abbr title="App\Console\Commands\CreateSampleProxyRules::handle">handle</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/ListTraefikConfigs.php.html#13"><abbr title="App\Console\Commands\ListTraefikConfigs::handle">handle</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#93"><abbr title="App\Console\Commands\ProxyReconcile::verifyConfigurations">verifyConfigurations</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#174"><abbr title="App\Console\Commands\ProxyReconcile::displayComponentResult">displayComponentResult</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#194"><abbr title="App\Console\Commands\ProxyReconcile::formatStatus">formatStatus</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#245"><abbr title="App\Http\Controllers\ProxyController::destroy">destroy</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#228"><abbr title="App\Infra\Traefik\TraefikProvider::toYaml">toYaml</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#254"><abbr title="App\Infra\Traefik\TraefikProvider::yamlScalar">yamlScalar</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Jobs/CreateSslCertificateJob.php.html#23"><abbr title="App\Jobs\CreateSslCertificateJob::handle">handle</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#103"><abbr title="App\Models\SslCertificate::updateStatus">updateStatus</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#261"><abbr title="App\Services\LetsEncryptService::issueCertificateWithCertbot">issueCertificateWithCertbot</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#439"><abbr title="App\Services\LetsEncryptService::checkCertificateStatus">checkCertificateStatus</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#573"><abbr title="App\Services\LetsEncryptService::renewCertificateWithCertbot">renewCertificateWithCertbot</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#111"><abbr title="App\Services\ReconcilerService::reconcileDomains">reconcileDomains</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#276"><abbr title="App\Services\ReconcilerService::reconcileCertificates">reconcileCertificates</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="Console/Commands/CleanupLogs.php.html#14"><abbr title="App\Console\Commands\CleanupLogs::handle">handle</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/DebugProxyDelete.php.html#13"><abbr title="App\Console\Commands\DebugProxyDelete::handle">handle</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/ProxyBootstrap.php.html#13"><abbr title="App\Console\Commands\ProxyBootstrap::handle">handle</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#62"><abbr title="App\Console\Commands\ProxyReconcile::reconcileComponent">reconcileComponent</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyController.php.html#15"><abbr title="App\Console\Commands\TestProxyController::handle">handle</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/TestProxyDelete.php.html#13"><abbr title="App\Console\Commands\TestProxyDelete::handle">handle</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#105"><abbr title="App\Http\Controllers\SslController::renewAll">renewAll</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#502"><abbr title="App\Services\LetsEncryptService::renewCertificate">renewCertificate</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#156"><abbr title="App\Services\ReconcilerService::reconcileUpstreams">reconcileUpstreams</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#194"><abbr title="App\Services\ReconcilerService::reconcileRoutes">reconcileRoutes</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/SystemCommandService.php.html#13"><abbr title="App\Services\SystemCommandService::execute">execute</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#183"><abbr title="App\Services\TraefikService::applyConfiguration">applyConfiguration</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="Console/Commands/CheckLogs.php.html#14"><abbr title="App\Console\Commands\CheckLogs::handle">handle</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Console/Commands/TestTraefikConfig.php.html#13"><abbr title="App\Console\Commands\TestTraefikConfig::handle">handle</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Controllers/LogsController.php.html#12"><abbr title="App\Http\Controllers\LogsController::index">index</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#330"><abbr title="App\Http\Controllers\ProxyController::toggle">toggle</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Middleware/GeoBlock.php.html#12"><abbr title="App\Http\Middleware\GeoBlock::handle">handle</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Middleware/IpFilter.php.html#12"><abbr title="App\Http\Middleware\IpFilter::handle">handle</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Http/Middleware/TenantScope.php.html#11"><abbr title="App\Http\Middleware\TenantScope::handle">handle</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#213"><abbr title="App\Services\LetsEncryptService::checkPorts">checkPorts</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#230"><abbr title="App\Services\LetsEncryptService::prepareEnvironment">prepareEnvironment</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#627"><abbr title="App\Services\LetsEncryptService::revokeCertificate">revokeCertificate</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/NginxService.php.html#59"><abbr title="App\Services\NginxService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#43"><abbr title="App\Services\ReconcilerService::reconcileAll">reconcileAll</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#240"><abbr title="App\Services\ReconcilerService::reconcileRedirects">reconcileRedirects</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#321"><abbr title="App\Services\ReconcilerService::reconcileTraefik">reconcileTraefik</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#439"><abbr title="App\Services\ReconcilerService::validateRedirectPattern">validateRedirectPattern</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#65"><abbr title="App\Services\TraefikService::generateConfiguration">generateConfiguration</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="Application/UseCases/CheckUpstreamHealth.php.html#10"><abbr title="App\Application\UseCases\CheckUpstreamHealth::__invoke">__invoke</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Application/UseCases/CheckUpstreamHealth.php.html#28"><abbr title="App\Application\UseCases\CheckUpstreamHealth::checkSingleUpstream">checkSingleUpstream</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/ProxyLogs.php.html#13"><abbr title="App\Console\Commands\ProxyLogs::handle">handle</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/ProxyNetwork.php.html#13"><abbr title="App\Console\Commands\ProxyNetwork::handle">handle</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/ProxyReconcile.php.html#119"><abbr title="App\Console\Commands\ProxyReconcile::showStatus">showStatus</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/ProxyRenew.php.html#207"><abbr title="App\Console\Commands\ProxyRenew::checkUpcomingExpirations">checkUpcomingExpirations</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/ResetDatabase.php.html#14"><abbr title="App\Console\Commands\ResetDatabase::handle">handle</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#96"><abbr title="App\Console\Commands\UpstreamHealth::checkTcpConnection">checkTcpConnection</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Controllers/DashboardController.php.html#14"><abbr title="App\Http\Controllers\DashboardController::index">index</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#19"><abbr title="App\Http\Controllers\ProxyController::index">index</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#381"><abbr title="App\Http\Controllers\ProxyController::deploy">deploy</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#145"><abbr title="App\Http\Controllers\SslController::destroy">destroy</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Requests/RedirectRequest.php.html#43"><abbr title="App\Http\Requests\RedirectRequest::prepareForValidation">prepareForValidation</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Requests/RouteRequest.php.html#47"><abbr title="App\Http\Requests\RouteRequest::prepareForValidation">prepareForValidation</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Http/Requests/UpstreamRequest.php.html#52"><abbr title="App\Http\Requests\UpstreamRequest::prepareForValidation">prepareForValidation</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#23"><abbr title="App\Infra\SecretsStore::retrieve">retrieve</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#81"><abbr title="App\Infra\SecretsStore::clearAll">clearAll</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#30"><abbr title="App\Models\DeploymentLog::getDurationAttribute">getDurationAttribute</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#54"><abbr title="App\Models\ProxyRule::generateNginxConfig">generateNginxConfig</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/AlertingService.php.html#15"><abbr title="App\Services\AlertingService::checkThresholds">checkThresholds</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#201"><abbr title="App\Services\LetsEncryptService::validateDomain">validateDomain</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#246"><abbr title="App\Services\LetsEncryptService::applyCertificateToServer">applyCertificateToServer</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#477"><abbr title="App\Services\LetsEncryptService::cleanupExpiredCertificates">cleanupExpiredCertificates</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#698"><abbr title="App\Services\LetsEncryptService::cleanupRevokedCertificate">cleanupRevokedCertificate</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#57"><abbr title="App\Services\MetricsService::checkForAnomalies">checkForAnomalies</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#411"><abbr title="App\Services\ReconcilerService::checkUpstreamHealth">checkUpstreamHealth</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#478"><abbr title="App\Services\ReconcilerService::validateRoute">validateRoute</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#18"><abbr title="App\Services\TraefikService::__construct">__construct</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#147"><abbr title="App\Services\TraefikService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#267"><abbr title="App\Services\TraefikService::reloadTraefikViaApi">reloadTraefikViaApi</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#362"><abbr title="App\Services\TraefikService::resolveTargetScheme">resolveTargetScheme</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Services/WebhookDispatcherService.php.html#12"><abbr title="App\Services\WebhookDispatcherService::dispatch">dispatch</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="Application/UseCases/CreateDomain.php.html#10"><abbr title="App\Application\UseCases\CreateDomain::__invoke">__invoke</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Application/UseCases/CreateDomain.php.html#27"><abbr title="App\Application\UseCases\CreateDomain::syncDomainConfig">syncDomainConfig</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Application/UseCases/SyncProxyConfig.php.html#10"><abbr title="App\Application\UseCases\SyncProxyConfig::__invoke">__invoke</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Application/UseCases/ToggleAutoTLS.php.html#10"><abbr title="App\Application\UseCases\ToggleAutoTLS::__invoke">__invoke</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Application/UseCases/ToggleAutoTLS.php.html#22"><abbr title="App\Application\UseCases\ToggleAutoTLS::syncDomainConfig">syncDomainConfig</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Console/Commands/ProxyBootstrap.php.html#45"><abbr title="App\Console\Commands\ProxyBootstrap::runningInContainer">runningInContainer</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Console/Commands/ProxySync.php.html#13"><abbr title="App\Console\Commands\ProxySync::handle">handle</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Console/Commands/UpstreamHealth.php.html#116"><abbr title="App\Console\Commands\UpstreamHealth::checkHttpEndpoint">checkHttpEndpoint</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Console/Kernel.php.html#13"><abbr title="App\Console\Kernel::schedule">schedule</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/Api/V1/AuthController.php.html#12"><abbr title="App\Http\Controllers\Api\V1\AuthController::login">login</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/LogsController.php.html#62"><abbr title="App\Http\Controllers\LogsController::clear">clear</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/ProxyController.php.html#150"><abbr title="App\Http\Controllers\ProxyController::edit">edit</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#38"><abbr title="App\Http\Controllers\RoutesController::store">store</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#63"><abbr title="App\Http\Controllers\RoutesController::update">update</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/RoutesController.php.html#78"><abbr title="App\Http\Controllers\RoutesController::destroy">destroy</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#55"><abbr title="App\Http\Controllers\SslController::store">store</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#94"><abbr title="App\Http\Controllers\SslController::renew">renew</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#134"><abbr title="App\Http\Controllers\SslController::toggle">toggle</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/SslController.php.html#163"><abbr title="App\Http\Controllers\SslController::deploy">deploy</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/SyncController.php.html#17"><abbr title="App\Http\Controllers\SyncController::sync">sync</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#36"><abbr title="App\Http\Controllers\UpstreamsController::store">store</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#62"><abbr title="App\Http\Controllers\UpstreamsController::update">update</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Controllers/UpstreamsController.php.html#77"><abbr title="App\Http\Controllers\UpstreamsController::destroy">destroy</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Middleware/RateLimiter.php.html#12"><abbr title="App\Http\Middleware\RateLimiter::handle">handle</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Middleware/WafMiddleware.php.html#14"><abbr title="App\Http\Middleware\WafMiddleware::handle">handle</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#40"><abbr title="App\Http\Requests\Auth\LoginRequest::authenticate">authenticate</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Http/Requests/Auth/LoginRequest.php.html#60"><abbr title="App\Http\Requests\Auth\LoginRequest::ensureIsNotRateLimited">ensureIsNotRateLimited</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Infra/SecretsStore.php.html#75"><abbr title="App\Infra\SecretsStore::getCertificate">getCertificate</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Infra/Traefik/TraefikProvider.php.html#22"><abbr title="App\Infra\Traefik\TraefikProvider::syncAll">syncAll</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#62"><abbr title="App\Models\DeploymentLog::markAsSuccess">markAsSuccess</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Models/DeploymentLog.php.html#74"><abbr title="App\Models\DeploymentLog::markAsFailed">markAsFailed</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Models/ProxyRule.php.html#43"><abbr title="App\Models\ProxyRule::getFullSourceAttribute">getFullSourceAttribute</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#51"><abbr title="App\Models\SslCertificate::getDaysUntilExpiryAttribute">getDaysUntilExpiryAttribute</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#58"><abbr title="App\Models\SslCertificate::getIsExpiringAttribute">getIsExpiringAttribute</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Models/SslCertificate.php.html#68"><abbr title="App\Models\SslCertificate::getAllDomainsAttribute">getAllDomainsAttribute</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Providers/RouteServiceProvider.php.html#27"><abbr title="App\Providers\RouteServiceProvider::configureRateLimiting">configureRateLimiting</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/CircuitBreaker.php.html#13"><abbr title="App\Services\CircuitBreaker::isAvailable">isAvailable</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/CircuitBreaker.php.html#25"><abbr title="App\Services\CircuitBreaker::recordFailure">recordFailure</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#144"><abbr title="App\Services\LetsEncryptService::issueWildcardCertificate">issueWildcardCertificate</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#183"><abbr title="App\Services\LetsEncryptService::logSslPhase">logSslPhase</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#328"><abbr title="App\Services\LetsEncryptService::createDnsCredentialsFile">createDnsCredentialsFile</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#362"><abbr title="App\Services\LetsEncryptService::generateMockCertificateFiles">generateMockCertificateFiles</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/LetsEncryptService.php.html#678"><abbr title="App\Services\LetsEncryptService::revokeCertificateWithCertbot">revokeCertificateWithCertbot</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#37"><abbr title="App\Services\MetricsService::setUpstreamStatus">setUpstreamStatus</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#47"><abbr title="App\Services\MetricsService::setSslCertificateStatus">setSslCertificateStatus</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/MetricsService.php.html#77"><abbr title="App\Services\MetricsService::calculateErrorRate">calculateErrorRate</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/NginxService.php.html#11"><abbr title="App\Services\NginxService::applyDomain">applyDomain</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#397"><abbr title="App\Services\ReconcilerService::applyDomainConfiguration">applyDomainConfiguration</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#457"><abbr title="App\Services\ReconcilerService::triggerExpirationAlerts">triggerExpirationAlerts</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#488"><abbr title="App\Services\ReconcilerService::validateRedirect">validateRedirect</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/ReconcilerService.php.html#499"><abbr title="App\Services\ReconcilerService::getStatus">getStatus</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#35"><abbr title="App\Services\TraefikService::applyDomain">applyDomain</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/TraefikService.php.html#305"><abbr title="App\Services\TraefikService::getConfigPreview">getConfigPreview</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="Services/WebhookDispatcherService.php.html#32"><abbr title="App\Services\WebhookDispatcherService::generateSignature">generateSignature</abbr></a></td><td class="text-right">6</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 11.0.10</a> using <a href="https://www.php.net/" target="_top">PHP 8.4.12</a> and <a href="https://phpunit.de/">PHPUnit 11.5.34</a> at Mon Sep 8 16:51:37 UTC 2025.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="_js/jquery.min.js?v=11.0.10" type="text/javascript"></script>
+  <script src="_js/d3.min.js?v=11.0.10" type="text/javascript"></script>
+  <script src="_js/nv.d3.min.js?v=11.0.10" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([105,0,0,0,0,1,0,0,0,1,0,8], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([359,0,0,0,1,0,0,1,0,0,0,12], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[0,6,"<a href=\"Application\/UseCases\/CheckUpstreamHealth.php.html#8\">App\\Application\\UseCases\\CheckUpstreamHealth<\/a>"],[0,4,"<a href=\"Application\/UseCases\/CreateDomain.php.html#8\">App\\Application\\UseCases\\CreateDomain<\/a>"],[0,2,"<a href=\"Application\/UseCases\/SyncProxyConfig.php.html#8\">App\\Application\\UseCases\\SyncProxyConfig<\/a>"],[0,4,"<a href=\"Application\/UseCases\/ToggleAutoTLS.php.html#8\">App\\Application\\UseCases\\ToggleAutoTLS<\/a>"],[0,2,"<a href=\"Console\/Commands\/AnalyzeMetrics.php.html#8\">App\\Console\\Commands\\AnalyzeMetrics<\/a>"],[0,9,"<a href=\"Console\/Commands\/ApplyTraefikConfig.php.html#8\">App\\Console\\Commands\\ApplyTraefikConfig<\/a>"],[0,4,"<a href=\"Console\/Commands\/CheckLogs.php.html#9\">App\\Console\\Commands\\CheckLogs<\/a>"],[0,10,"<a href=\"Console\/Commands\/CheckSslCertificates.php.html#9\">App\\Console\\Commands\\CheckSslCertificates<\/a>"],[0,5,"<a href=\"Console\/Commands\/CleanupLogs.php.html#9\">App\\Console\\Commands\\CleanupLogs<\/a>"],[0,6,"<a href=\"Console\/Commands\/CleanupStuckLogs.php.html#8\">App\\Console\\Commands\\CleanupStuckLogs<\/a>"],[0,6,"<a href=\"Console\/Commands\/CreateSampleProxyRules.php.html#9\">App\\Console\\Commands\\CreateSampleProxyRules<\/a>"],[0,5,"<a href=\"Console\/Commands\/DebugProxyDelete.php.html#8\">App\\Console\\Commands\\DebugProxyDelete<\/a>"],[0,8,"<a href=\"Console\/Commands\/DeployNginx.php.html#9\">App\\Console\\Commands\\DeployNginx<\/a>"],[0,6,"<a href=\"Console\/Commands\/ListTraefikConfigs.php.html#8\">App\\Console\\Commands\\ListTraefikConfigs<\/a>"],[0,2,"<a href=\"Console\/Commands\/MonitorAlerts.php.html#8\">App\\Console\\Commands\\MonitorAlerts<\/a>"],[0,2,"<a href=\"Console\/Commands\/MonitorMetrics.php.html#8\">App\\Console\\Commands\\MonitorMetrics<\/a>"],[0,7,"<a href=\"Console\/Commands\/ProxyBootstrap.php.html#8\">App\\Console\\Commands\\ProxyBootstrap<\/a>"],[0,3,"<a href=\"Console\/Commands\/ProxyLogs.php.html#8\">App\\Console\\Commands\\ProxyLogs<\/a>"],[0,3,"<a href=\"Console\/Commands\/ProxyNetwork.php.html#8\">App\\Console\\Commands\\ProxyNetwork<\/a>"],[0,46,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#8\">App\\Console\\Commands\\ProxyReconcile<\/a>"],[0,20,"<a href=\"Console\/Commands\/ProxyRenew.php.html#13\">App\\Console\\Commands\\ProxyRenew<\/a>"],[0,2,"<a href=\"Console\/Commands\/ProxySync.php.html#8\">App\\Console\\Commands\\ProxySync<\/a>"],[0,9,"<a href=\"Console\/Commands\/RenewSslCertificates.php.html#10\">App\\Console\\Commands\\RenewSslCertificates<\/a>"],[0,3,"<a href=\"Console\/Commands\/ResetDatabase.php.html#9\">App\\Console\\Commands\\ResetDatabase<\/a>"],[0,8,"<a href=\"Console\/Commands\/TestProxyAutoDeploy.php.html#9\">App\\Console\\Commands\\TestProxyAutoDeploy<\/a>"],[0,10,"<a href=\"Console\/Commands\/TestProxyConstraints.php.html#11\">App\\Console\\Commands\\TestProxyConstraints<\/a>"],[0,5,"<a href=\"Console\/Commands\/TestProxyController.php.html#10\">App\\Console\\Commands\\TestProxyController<\/a>"],[0,5,"<a href=\"Console\/Commands\/TestProxyDelete.php.html#8\">App\\Console\\Commands\\TestProxyDelete<\/a>"],[0,9,"<a href=\"Console\/Commands\/TestProxyDeleteDetailed.php.html#10\">App\\Console\\Commands\\TestProxyDeleteDetailed<\/a>"],[0,7,"<a href=\"Console\/Commands\/TestProxyOperations.php.html#9\">App\\Console\\Commands\\TestProxyOperations<\/a>"],[0,12,"<a href=\"Console\/Commands\/TestSqliteDirect.php.html#8\">App\\Console\\Commands\\TestSqliteDirect<\/a>"],[0,4,"<a href=\"Console\/Commands\/TestTraefikConfig.php.html#8\">App\\Console\\Commands\\TestTraefikConfig<\/a>"],[0,17,"<a href=\"Console\/Commands\/UpstreamHealth.php.html#11\">App\\Console\\Commands\\UpstreamHealth<\/a>"],[0,3,"<a href=\"Console\/Kernel.php.html#8\">App\\Console\\Kernel<\/a>"],[0,3,"<a href=\"Events\/SslCertificateExpiring.php.html#13\">App\\Events\\SslCertificateExpiring<\/a>"],[0,4,"<a href=\"Events\/SslCertificateUpdated.php.html#14\">App\\Events\\SslCertificateUpdated<\/a>"],[0,2,"<a href=\"Events\/SyncProgress.php.html#11\">App\\Events\\SyncProgress<\/a>"],[100,0,"<a href=\"Events\/WebhookEvents.php.html#5\">App\\Events\\WebhookEvents<\/a>"],[0,5,"<a href=\"Exceptions\/CertificateException.php.html#5\">App\\Exceptions\\CertificateException<\/a>"],[0,5,"<a href=\"Exceptions\/ProxyException.php.html#5\">App\\Exceptions\\ProxyException<\/a>"],[0,3,"<a href=\"Exceptions\/ReconciliationException.php.html#5\">App\\Exceptions\\ReconciliationException<\/a>"],[0,4,"<a href=\"Http\/Controllers\/AnalyticsController.php.html#8\">App\\Http\\Controllers\\AnalyticsController<\/a>"],[0,3,"<a href=\"Http\/Controllers\/Api\/V1\/AuthController.php.html#10\">App\\Http\\Controllers\\Api\\V1\\AuthController<\/a>"],[0,2,"<a href=\"Http\/Controllers\/Api\/V1\/DomainController.php.html#10\">App\\Http\\Controllers\\Api\\V1\\DomainController<\/a>"],[0,2,"<a href=\"Http\/Controllers\/Api\/V1\/ProxyRuleController.php.html#10\">App\\Http\\Controllers\\Api\\V1\\ProxyRuleController<\/a>"],[0,2,"<a href=\"Http\/Controllers\/Api\/V1\/TenantController.php.html#10\">App\\Http\\Controllers\\Api\\V1\\TenantController<\/a>"],[0,3,"<a href=\"Http\/Controllers\/Auth\/AuthenticatedSessionController.php.html#13\">App\\Http\\Controllers\\Auth\\AuthenticatedSessionController<\/a>"],[0,2,"<a href=\"Http\/Controllers\/Auth\/RegisteredUserController.php.html#16\">App\\Http\\Controllers\\Auth\\RegisteredUserController<\/a>"],[100,0,"<a href=\"Http\/Controllers\/Controller.php.html#5\">App\\Http\\Controllers\\Controller<\/a>"],[0,4,"<a href=\"Http\/Controllers\/DashboardController.php.html#12\">App\\Http\\Controllers\\DashboardController<\/a>"],[0,12,"<a href=\"Http\/Controllers\/DomainsController.php.html#10\">App\\Http\\Controllers\\DomainsController<\/a>"],[0,6,"<a href=\"Http\/Controllers\/LogsController.php.html#10\">App\\Http\\Controllers\\LogsController<\/a>"],[0,34,"<a href=\"Http\/Controllers\/ProxyController.php.html#13\">App\\Http\\Controllers\\ProxyController<\/a>"],[0,6,"<a href=\"Http\/Controllers\/RedirectsController.php.html#11\">App\\Http\\Controllers\\RedirectsController<\/a>"],[0,9,"<a href=\"Http\/Controllers\/RoutesController.php.html#15\">App\\Http\\Controllers\\RoutesController<\/a>"],[0,20,"<a href=\"Http\/Controllers\/SslController.php.html#13\">App\\Http\\Controllers\\SslController<\/a>"],[0,3,"<a href=\"Http\/Controllers\/SyncController.php.html#10\">App\\Http\\Controllers\\SyncController<\/a>"],[0,8,"<a href=\"Http\/Controllers\/TenantController.php.html#9\">App\\Http\\Controllers\\TenantController<\/a>"],[0,9,"<a href=\"Http\/Controllers\/UpstreamsController.php.html#14\">App\\Http\\Controllers\\UpstreamsController<\/a>"],[0,7,"<a href=\"Http\/Controllers\/WebhookController.php.html#9\">App\\Http\\Controllers\\WebhookController<\/a>"],[100,0,"<a href=\"Http\/Kernel.php.html#7\">App\\Http\\Kernel<\/a>"],[0,4,"<a href=\"Http\/Middleware\/GeoBlock.php.html#10\">App\\Http\\Middleware\\GeoBlock<\/a>"],[0,2,"<a href=\"Http\/Middleware\/HandleInertiaRequests.php.html#8\">App\\Http\\Middleware\\HandleInertiaRequests<\/a>"],[0,4,"<a href=\"Http\/Middleware\/IpFilter.php.html#10\">App\\Http\\Middleware\\IpFilter<\/a>"],[0,2,"<a href=\"Http\/Middleware\/MeasureResponseTime.php.html#10\">App\\Http\\Middleware\\MeasureResponseTime<\/a>"],[0,2,"<a href=\"Http\/Middleware\/RateLimiter.php.html#10\">App\\Http\\Middleware\\RateLimiter<\/a>"],[0,4,"<a href=\"Http\/Middleware\/TenantScope.php.html#9\">App\\Http\\Middleware\\TenantScope<\/a>"],[0,3,"<a href=\"Http\/Middleware\/WafMiddleware.php.html#10\">App\\Http\\Middleware\\WafMiddleware<\/a>"],[0,7,"<a href=\"Http\/Requests\/Auth\/LoginRequest.php.html#12\">App\\Http\\Requests\\Auth\\LoginRequest<\/a>"],[0,3,"<a href=\"Http\/Requests\/DomainRequest.php.html#7\">App\\Http\\Requests\\DomainRequest<\/a>"],[0,6,"<a href=\"Http\/Requests\/RedirectRequest.php.html#7\">App\\Http\\Requests\\RedirectRequest<\/a>"],[0,6,"<a href=\"Http\/Requests\/RouteRequest.php.html#7\">App\\Http\\Requests\\RouteRequest<\/a>"],[0,6,"<a href=\"Http\/Requests\/UpstreamRequest.php.html#7\">App\\Http\\Requests\\UpstreamRequest<\/a>"],[0,1,"<a href=\"Http\/Resources\/V1\/DomainResource.php.html#7\">App\\Http\\Resources\\V1\\DomainResource<\/a>"],[0,1,"<a href=\"Http\/Resources\/V1\/ProxyRuleResource.php.html#7\">App\\Http\\Resources\\V1\\ProxyRuleResource<\/a>"],[0,1,"<a href=\"Http\/Resources\/V1\/TenantResource.php.html#7\">App\\Http\\Resources\\V1\\TenantResource<\/a>"],[0,17,"<a href=\"Infra\/SecretsStore.php.html#8\">App\\Infra\\SecretsStore<\/a>"],[0,43,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#10\">App\\Infra\\Traefik\\TraefikProvider<\/a>"],[0,8,"<a href=\"Jobs\/CreateSslCertificateJob.php.html#15\">App\\Jobs\\CreateSslCertificateJob<\/a>"],[0,1,"<a href=\"Listeners\/BroadcastSyncProgress.php.html#7\">App\\Listeners\\BroadcastSyncProgress<\/a>"],[0,4,"<a href=\"Listeners\/DispatchWebhook.php.html#8\">App\\Listeners\\DispatchWebhook<\/a>"],[100,0,"<a href=\"Models\/AnalyticsData.php.html#8\">App\\Models\\AnalyticsData<\/a>"],[0,1,"<a href=\"Models\/CertificateEvent.php.html#9\">App\\Models\\CertificateEvent<\/a>"],[0,11,"<a href=\"Models\/DeploymentLog.php.html#8\">App\\Models\\DeploymentLog<\/a>"],[0,13,"<a href=\"Models\/Domain.php.html#11\">App\\Models\\Domain<\/a>"],[0,8,"<a href=\"Models\/ProxyRule.php.html#10\">App\\Models\\ProxyRule<\/a>"],[0,11,"<a href=\"Models\/RedirectRule.php.html#9\">App\\Models\\RedirectRule<\/a>"],[100,0,"<a href=\"Models\/RouteBinding.php.html#8\">App\\Models\\RouteBinding<\/a>"],[0,2,"<a href=\"Models\/RouteRule.php.html#9\">App\\Models\\RouteRule<\/a>"],[0,16,"<a href=\"Models\/SslCertificate.php.html#11\">App\\Models\\SslCertificate<\/a>"],[0,4,"<a href=\"Models\/Tenant.php.html#9\">App\\Models\\Tenant<\/a>"],[0,3,"<a href=\"Models\/Upstream.php.html#10\">App\\Models\\Upstream<\/a>"],[0,3,"<a href=\"Models\/User.php.html#13\">App\\Models\\User<\/a>"],[0,1,"<a href=\"Models\/Webhook.php.html#8\">App\\Models\\Webhook<\/a>"],[0,1,"<a href=\"Models\/WebhookEvent.php.html#8\">App\\Models\\WebhookEvent<\/a>"],[87.5,2,"<a href=\"Providers\/AppServiceProvider.php.html#11\">App\\Providers\\AppServiceProvider<\/a>"],[0,1,"<a href=\"Providers\/EventServiceProvider.php.html#10\">App\\Providers\\EventServiceProvider<\/a>"],[41.66666666666667,2,"<a href=\"Providers\/NetPilotServiceProvider.php.html#11\">App\\Providers\\NetPilotServiceProvider<\/a>"],[0,3,"<a href=\"Providers\/RouteServiceProvider.php.html#11\">App\\Providers\\RouteServiceProvider<\/a>"],[0,5,"<a href=\"Services\/AlertingService.php.html#9\">App\\Services\\AlertingService<\/a>"],[0,3,"<a href=\"Services\/AnalyticsService.php.html#8\">App\\Services\\AnalyticsService<\/a>"],[0,6,"<a href=\"Services\/CacheService.php.html#7\">App\\Services\\CacheService<\/a>"],[0,5,"<a href=\"Services\/CircuitBreaker.php.html#8\">App\\Services\\CircuitBreaker<\/a>"],[100,4,"<a href=\"Services\/DnsService.php.html#5\">App\\Services\\DnsService<\/a>"],[0,80,"<a href=\"Services\/LetsEncryptService.php.html#15\">App\\Services\\LetsEncryptService<\/a>"],[0,13,"<a href=\"Services\/MetricsService.php.html#9\">App\\Services\\MetricsService<\/a>"],[100,3,"<a href=\"Services\/MonitoringIntegrationService.php.html#5\">App\\Services\\MonitoringIntegrationService<\/a>"],[0,7,"<a href=\"Services\/NginxService.php.html#7\">App\\Services\\NginxService<\/a>"],[100,3,"<a href=\"Services\/NotificationService.php.html#5\">App\\Services\\NotificationService<\/a>"],[0,60,"<a href=\"Services\/ReconcilerService.php.html#20\">App\\Services\\ReconcilerService<\/a>"],[0,5,"<a href=\"Services\/SystemCommandService.php.html#8\">App\\Services\\SystemCommandService<\/a>"],[0,33,"<a href=\"Services\/TraefikService.php.html#12\">App\\Services\\TraefikService<\/a>"],[0,3,"<a href=\"Services\/WafInspectionResult.php.html#5\">App\\Services\\WafInspectionResult<\/a>"],[0,1,"<a href=\"Services\/WafService.php.html#7\">App\\Services\\WafService<\/a>"],[0,6,"<a href=\"Services\/WebhookDispatcherService.php.html#10\">App\\Services\\WebhookDispatcherService<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[0,3,"<a href=\"Application\/UseCases\/CheckUpstreamHealth.php.html#10\">App\\Application\\UseCases\\CheckUpstreamHealth::__invoke<\/a>"],[0,3,"<a href=\"Application\/UseCases\/CheckUpstreamHealth.php.html#28\">App\\Application\\UseCases\\CheckUpstreamHealth::checkSingleUpstream<\/a>"],[0,2,"<a href=\"Application\/UseCases\/CreateDomain.php.html#10\">App\\Application\\UseCases\\CreateDomain::__invoke<\/a>"],[0,2,"<a href=\"Application\/UseCases\/CreateDomain.php.html#27\">App\\Application\\UseCases\\CreateDomain::syncDomainConfig<\/a>"],[0,2,"<a href=\"Application\/UseCases\/SyncProxyConfig.php.html#10\">App\\Application\\UseCases\\SyncProxyConfig::__invoke<\/a>"],[0,2,"<a href=\"Application\/UseCases\/ToggleAutoTLS.php.html#10\">App\\Application\\UseCases\\ToggleAutoTLS::__invoke<\/a>"],[0,2,"<a href=\"Application\/UseCases\/ToggleAutoTLS.php.html#22\">App\\Application\\UseCases\\ToggleAutoTLS::syncDomainConfig<\/a>"],[0,1,"<a href=\"Console\/Commands\/AnalyzeMetrics.php.html#13\">App\\Console\\Commands\\AnalyzeMetrics::__construct<\/a>"],[0,1,"<a href=\"Console\/Commands\/AnalyzeMetrics.php.html#18\">App\\Console\\Commands\\AnalyzeMetrics::handle<\/a>"],[0,9,"<a href=\"Console\/Commands\/ApplyTraefikConfig.php.html#13\">App\\Console\\Commands\\ApplyTraefikConfig::handle<\/a>"],[0,4,"<a href=\"Console\/Commands\/CheckLogs.php.html#14\">App\\Console\\Commands\\CheckLogs::handle<\/a>"],[0,10,"<a href=\"Console\/Commands\/CheckSslCertificates.php.html#14\">App\\Console\\Commands\\CheckSslCertificates::handle<\/a>"],[0,5,"<a href=\"Console\/Commands\/CleanupLogs.php.html#14\">App\\Console\\Commands\\CleanupLogs::handle<\/a>"],[0,6,"<a href=\"Console\/Commands\/CleanupStuckLogs.php.html#13\">App\\Console\\Commands\\CleanupStuckLogs::handle<\/a>"],[0,6,"<a href=\"Console\/Commands\/CreateSampleProxyRules.php.html#14\">App\\Console\\Commands\\CreateSampleProxyRules::handle<\/a>"],[0,5,"<a href=\"Console\/Commands\/DebugProxyDelete.php.html#13\">App\\Console\\Commands\\DebugProxyDelete::handle<\/a>"],[0,1,"<a href=\"Console\/Commands\/DeployNginx.php.html#14\">App\\Console\\Commands\\DeployNginx::__construct<\/a>"],[0,7,"<a href=\"Console\/Commands\/DeployNginx.php.html#20\">App\\Console\\Commands\\DeployNginx::handle<\/a>"],[0,6,"<a href=\"Console\/Commands\/ListTraefikConfigs.php.html#13\">App\\Console\\Commands\\ListTraefikConfigs::handle<\/a>"],[0,1,"<a href=\"Console\/Commands\/MonitorAlerts.php.html#13\">App\\Console\\Commands\\MonitorAlerts::__construct<\/a>"],[0,1,"<a href=\"Console\/Commands\/MonitorAlerts.php.html#18\">App\\Console\\Commands\\MonitorAlerts::handle<\/a>"],[0,1,"<a href=\"Console\/Commands\/MonitorMetrics.php.html#13\">App\\Console\\Commands\\MonitorMetrics::__construct<\/a>"],[0,1,"<a href=\"Console\/Commands\/MonitorMetrics.php.html#18\">App\\Console\\Commands\\MonitorMetrics::handle<\/a>"],[0,5,"<a href=\"Console\/Commands\/ProxyBootstrap.php.html#13\">App\\Console\\Commands\\ProxyBootstrap::handle<\/a>"],[0,2,"<a href=\"Console\/Commands\/ProxyBootstrap.php.html#45\">App\\Console\\Commands\\ProxyBootstrap::runningInContainer<\/a>"],[0,3,"<a href=\"Console\/Commands\/ProxyLogs.php.html#13\">App\\Console\\Commands\\ProxyLogs::handle<\/a>"],[0,3,"<a href=\"Console\/Commands\/ProxyNetwork.php.html#13\">App\\Console\\Commands\\ProxyNetwork::handle<\/a>"],[0,1,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#19\">App\\Console\\Commands\\ProxyReconcile::__construct<\/a>"],[0,7,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#25\">App\\Console\\Commands\\ProxyReconcile::handle<\/a>"],[0,5,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#62\">App\\Console\\Commands\\ProxyReconcile::reconcileComponent<\/a>"],[0,6,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#93\">App\\Console\\Commands\\ProxyReconcile::verifyConfigurations<\/a>"],[0,3,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#119\">App\\Console\\Commands\\ProxyReconcile::showStatus<\/a>"],[0,12,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#138\">App\\Console\\Commands\\ProxyReconcile::displayResults<\/a>"],[0,6,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#174\">App\\Console\\Commands\\ProxyReconcile::displayComponentResult<\/a>"],[0,6,"<a href=\"Console\/Commands\/ProxyReconcile.php.html#194\">App\\Console\\Commands\\ProxyReconcile::formatStatus<\/a>"],[0,1,"<a href=\"Console\/Commands\/ProxyRenew.php.html#25\">App\\Console\\Commands\\ProxyRenew::__construct<\/a>"],[0,16,"<a href=\"Console\/Commands\/ProxyRenew.php.html#31\">App\\Console\\Commands\\ProxyRenew::handle<\/a>"],[0,3,"<a href=\"Console\/Commands\/ProxyRenew.php.html#207\">App\\Console\\Commands\\ProxyRenew::checkUpcomingExpirations<\/a>"],[0,2,"<a href=\"Console\/Commands\/ProxySync.php.html#13\">App\\Console\\Commands\\ProxySync::handle<\/a>"],[0,1,"<a href=\"Console\/Commands\/RenewSslCertificates.php.html#15\">App\\Console\\Commands\\RenewSslCertificates::__construct<\/a>"],[0,8,"<a href=\"Console\/Commands\/RenewSslCertificates.php.html#21\">App\\Console\\Commands\\RenewSslCertificates::handle<\/a>"],[0,3,"<a href=\"Console\/Commands\/ResetDatabase.php.html#14\">App\\Console\\Commands\\ResetDatabase::handle<\/a>"],[0,1,"<a href=\"Console\/Commands\/TestProxyAutoDeploy.php.html#14\">App\\Console\\Commands\\TestProxyAutoDeploy::__construct<\/a>"],[0,7,"<a href=\"Console\/Commands\/TestProxyAutoDeploy.php.html#19\">App\\Console\\Commands\\TestProxyAutoDeploy::handle<\/a>"],[0,10,"<a href=\"Console\/Commands\/TestProxyConstraints.php.html#16\">App\\Console\\Commands\\TestProxyConstraints::handle<\/a>"],[0,5,"<a href=\"Console\/Commands\/TestProxyController.php.html#15\">App\\Console\\Commands\\TestProxyController::handle<\/a>"],[0,5,"<a href=\"Console\/Commands\/TestProxyDelete.php.html#13\">App\\Console\\Commands\\TestProxyDelete::handle<\/a>"],[0,9,"<a href=\"Console\/Commands\/TestProxyDeleteDetailed.php.html#15\">App\\Console\\Commands\\TestProxyDeleteDetailed::handle<\/a>"],[0,7,"<a href=\"Console\/Commands\/TestProxyOperations.php.html#14\">App\\Console\\Commands\\TestProxyOperations::handle<\/a>"],[0,12,"<a href=\"Console\/Commands\/TestSqliteDirect.php.html#13\">App\\Console\\Commands\\TestSqliteDirect::handle<\/a>"],[0,4,"<a href=\"Console\/Commands\/TestTraefikConfig.php.html#13\">App\\Console\\Commands\\TestTraefikConfig::handle<\/a>"],[0,1,"<a href=\"Console\/Commands\/UpstreamHealth.php.html#16\">App\\Console\\Commands\\UpstreamHealth::__construct<\/a>"],[0,11,"<a href=\"Console\/Commands\/UpstreamHealth.php.html#32\">App\\Console\\Commands\\UpstreamHealth::handle<\/a>"],[0,3,"<a href=\"Console\/Commands\/UpstreamHealth.php.html#96\">App\\Console\\Commands\\UpstreamHealth::checkTcpConnection<\/a>"],[0,2,"<a href=\"Console\/Commands\/UpstreamHealth.php.html#116\">App\\Console\\Commands\\UpstreamHealth::checkHttpEndpoint<\/a>"],[0,2,"<a href=\"Console\/Kernel.php.html#13\">App\\Console\\Kernel::schedule<\/a>"],[0,1,"<a href=\"Console\/Kernel.php.html#62\">App\\Console\\Kernel::commands<\/a>"],[0,1,"<a href=\"Events\/SslCertificateExpiring.php.html#22\">App\\Events\\SslCertificateExpiring::__construct<\/a>"],[0,1,"<a href=\"Events\/SslCertificateExpiring.php.html#32\">App\\Events\\SslCertificateExpiring::broadcastOn<\/a>"],[0,1,"<a href=\"Events\/SslCertificateExpiring.php.html#44\">App\\Events\\SslCertificateExpiring::broadcastWith<\/a>"],[0,1,"<a href=\"Events\/SslCertificateUpdated.php.html#18\">App\\Events\\SslCertificateUpdated::__construct<\/a>"],[0,1,"<a href=\"Events\/SslCertificateUpdated.php.html#22\">App\\Events\\SslCertificateUpdated::broadcastOn<\/a>"],[0,1,"<a href=\"Events\/SslCertificateUpdated.php.html#30\">App\\Events\\SslCertificateUpdated::broadcastWith<\/a>"],[0,1,"<a href=\"Events\/SslCertificateUpdated.php.html#45\">App\\Events\\SslCertificateUpdated::broadcastAs<\/a>"],[0,1,"<a href=\"Events\/SyncProgress.php.html#19\">App\\Events\\SyncProgress::__construct<\/a>"],[0,1,"<a href=\"Events\/SyncProgress.php.html#26\">App\\Events\\SyncProgress::broadcastOn<\/a>"],[0,1,"<a href=\"Exceptions\/CertificateException.php.html#8\">App\\Exceptions\\CertificateException::invalidDomain<\/a>"],[0,1,"<a href=\"Exceptions\/CertificateException.php.html#14\">App\\Exceptions\\CertificateException::portsUnavailable<\/a>"],[0,1,"<a href=\"Exceptions\/CertificateException.php.html#20\">App\\Exceptions\\CertificateException::certbotFailed<\/a>"],[0,1,"<a href=\"Exceptions\/CertificateException.php.html#26\">App\\Exceptions\\CertificateException::verificationFailed<\/a>"],[0,1,"<a href=\"Exceptions\/CertificateException.php.html#32\">App\\Exceptions\\CertificateException::writePermission<\/a>"],[0,1,"<a href=\"Exceptions\/ProxyException.php.html#8\">App\\Exceptions\\ProxyException::invalidConfig<\/a>"],[0,1,"<a href=\"Exceptions\/ProxyException.php.html#14\">App\\Exceptions\\ProxyException::fileSaveFailed<\/a>"],[0,1,"<a href=\"Exceptions\/ProxyException.php.html#19\">App\\Exceptions\\ProxyException::fileNotFound<\/a>"],[0,1,"<a href=\"Exceptions\/ProxyException.php.html#24\">App\\Exceptions\\ProxyException::fileCopyFailed<\/a>"],[0,1,"<a href=\"Exceptions\/ProxyException.php.html#30\">App\\Exceptions\\ProxyException::reloadFailed<\/a>"],[0,1,"<a href=\"Exceptions\/ReconciliationException.php.html#8\">App\\Exceptions\\ReconciliationException::invalidRoute<\/a>"],[0,1,"<a href=\"Exceptions\/ReconciliationException.php.html#14\">App\\Exceptions\\ReconciliationException::invalidRedirectPattern<\/a>"],[0,1,"<a href=\"Exceptions\/ReconciliationException.php.html#20\">App\\Exceptions\\ReconciliationException::inactiveUpstream<\/a>"],[0,1,"<a href=\"Http\/Controllers\/AnalyticsController.php.html#10\">App\\Http\\Controllers\\AnalyticsController::__construct<\/a>"],[0,1,"<a href=\"Http\/Controllers\/AnalyticsController.php.html#12\">App\\Http\\Controllers\\AnalyticsController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/AnalyticsController.php.html#19\">App\\Http\\Controllers\\AnalyticsController::apiIndex<\/a>"],[0,1,"<a href=\"Http\/Controllers\/AnalyticsController.php.html#24\">App\\Http\\Controllers\\AnalyticsController::getDashboardStats<\/a>"],[0,2,"<a href=\"Http\/Controllers\/Api\/V1\/AuthController.php.html#12\">App\\Http\\Controllers\\Api\\V1\\AuthController::login<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Api\/V1\/AuthController.php.html#34\">App\\Http\\Controllers\\Api\\V1\\AuthController::logout<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Api\/V1\/DomainController.php.html#12\">App\\Http\\Controllers\\Api\\V1\\DomainController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Api\/V1\/DomainController.php.html#19\">App\\Http\\Controllers\\Api\\V1\\DomainController::show<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Api\/V1\/ProxyRuleController.php.html#12\">App\\Http\\Controllers\\Api\\V1\\ProxyRuleController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Api\/V1\/ProxyRuleController.php.html#19\">App\\Http\\Controllers\\Api\\V1\\ProxyRuleController::show<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Api\/V1\/TenantController.php.html#12\">App\\Http\\Controllers\\Api\\V1\\TenantController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Api\/V1\/TenantController.php.html#19\">App\\Http\\Controllers\\Api\\V1\\TenantController::show<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Auth\/AuthenticatedSessionController.php.html#18\">App\\Http\\Controllers\\Auth\\AuthenticatedSessionController::create<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Auth\/AuthenticatedSessionController.php.html#26\">App\\Http\\Controllers\\Auth\\AuthenticatedSessionController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Auth\/AuthenticatedSessionController.php.html#38\">App\\Http\\Controllers\\Auth\\AuthenticatedSessionController::destroy<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Auth\/RegisteredUserController.php.html#21\">App\\Http\\Controllers\\Auth\\RegisteredUserController::create<\/a>"],[0,1,"<a href=\"Http\/Controllers\/Auth\/RegisteredUserController.php.html#31\">App\\Http\\Controllers\\Auth\\RegisteredUserController::store<\/a>"],[0,3,"<a href=\"Http\/Controllers\/DashboardController.php.html#14\">App\\Http\\Controllers\\DashboardController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/DashboardController.php.html#117\">App\\Http\\Controllers\\DashboardController::__invoke<\/a>"],[0,1,"<a href=\"Http\/Controllers\/DomainsController.php.html#12\">App\\Http\\Controllers\\DomainsController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/DomainsController.php.html#23\">App\\Http\\Controllers\\DomainsController::create<\/a>"],[0,7,"<a href=\"Http\/Controllers\/DomainsController.php.html#28\">App\\Http\\Controllers\\DomainsController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/DomainsController.php.html#84\">App\\Http\\Controllers\\DomainsController::edit<\/a>"],[0,1,"<a href=\"Http\/Controllers\/DomainsController.php.html#91\">App\\Http\\Controllers\\DomainsController::update<\/a>"],[0,1,"<a href=\"Http\/Controllers\/DomainsController.php.html#113\">App\\Http\\Controllers\\DomainsController::destroy<\/a>"],[0,4,"<a href=\"Http\/Controllers\/LogsController.php.html#12\">App\\Http\\Controllers\\LogsController::index<\/a>"],[0,2,"<a href=\"Http\/Controllers\/LogsController.php.html#62\">App\\Http\\Controllers\\LogsController::clear<\/a>"],[0,1,"<a href=\"Http\/Controllers\/ProxyController.php.html#15\">App\\Http\\Controllers\\ProxyController::__construct<\/a>"],[0,3,"<a href=\"Http\/Controllers\/ProxyController.php.html#19\">App\\Http\\Controllers\\ProxyController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/ProxyController.php.html#66\">App\\Http\\Controllers\\ProxyController::create<\/a>"],[0,7,"<a href=\"Http\/Controllers\/ProxyController.php.html#75\">App\\Http\\Controllers\\ProxyController::store<\/a>"],[0,2,"<a href=\"Http\/Controllers\/ProxyController.php.html#150\">App\\Http\\Controllers\\ProxyController::edit<\/a>"],[0,7,"<a href=\"Http\/Controllers\/ProxyController.php.html#168\">App\\Http\\Controllers\\ProxyController::update<\/a>"],[0,6,"<a href=\"Http\/Controllers\/ProxyController.php.html#245\">App\\Http\\Controllers\\ProxyController::destroy<\/a>"],[0,4,"<a href=\"Http\/Controllers\/ProxyController.php.html#330\">App\\Http\\Controllers\\ProxyController::toggle<\/a>"],[0,3,"<a href=\"Http\/Controllers\/ProxyController.php.html#381\">App\\Http\\Controllers\\ProxyController::deploy<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RedirectsController.php.html#13\">App\\Http\\Controllers\\RedirectsController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RedirectsController.php.html#30\">App\\Http\\Controllers\\RedirectsController::create<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RedirectsController.php.html#39\">App\\Http\\Controllers\\RedirectsController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RedirectsController.php.html#76\">App\\Http\\Controllers\\RedirectsController::edit<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RedirectsController.php.html#86\">App\\Http\\Controllers\\RedirectsController::update<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RedirectsController.php.html#118\">App\\Http\\Controllers\\RedirectsController::destroy<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RoutesController.php.html#17\">App\\Http\\Controllers\\RoutesController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RoutesController.php.html#30\">App\\Http\\Controllers\\RoutesController::create<\/a>"],[0,2,"<a href=\"Http\/Controllers\/RoutesController.php.html#38\">App\\Http\\Controllers\\RoutesController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/RoutesController.php.html#53\">App\\Http\\Controllers\\RoutesController::edit<\/a>"],[0,2,"<a href=\"Http\/Controllers\/RoutesController.php.html#63\">App\\Http\\Controllers\\RoutesController::update<\/a>"],[0,2,"<a href=\"Http\/Controllers\/RoutesController.php.html#78\">App\\Http\\Controllers\\RoutesController::destroy<\/a>"],[0,1,"<a href=\"Http\/Controllers\/SslController.php.html#15\">App\\Http\\Controllers\\SslController::__construct<\/a>"],[0,1,"<a href=\"Http\/Controllers\/SslController.php.html#20\">App\\Http\\Controllers\\SslController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/SslController.php.html#42\">App\\Http\\Controllers\\SslController::create<\/a>"],[0,2,"<a href=\"Http\/Controllers\/SslController.php.html#55\">App\\Http\\Controllers\\SslController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/SslController.php.html#85\">App\\Http\\Controllers\\SslController::show<\/a>"],[0,2,"<a href=\"Http\/Controllers\/SslController.php.html#94\">App\\Http\\Controllers\\SslController::renew<\/a>"],[0,5,"<a href=\"Http\/Controllers\/SslController.php.html#105\">App\\Http\\Controllers\\SslController::renewAll<\/a>"],[0,2,"<a href=\"Http\/Controllers\/SslController.php.html#134\">App\\Http\\Controllers\\SslController::toggle<\/a>"],[0,3,"<a href=\"Http\/Controllers\/SslController.php.html#145\">App\\Http\\Controllers\\SslController::destroy<\/a>"],[0,2,"<a href=\"Http\/Controllers\/SslController.php.html#163\">App\\Http\\Controllers\\SslController::deploy<\/a>"],[0,1,"<a href=\"Http\/Controllers\/SyncController.php.html#12\">App\\Http\\Controllers\\SyncController::index<\/a>"],[0,2,"<a href=\"Http\/Controllers\/SyncController.php.html#17\">App\\Http\\Controllers\\SyncController::sync<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#11\">App\\Http\\Controllers\\TenantController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#18\">App\\Http\\Controllers\\TenantController::create<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#23\">App\\Http\\Controllers\\TenantController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#36\">App\\Http\\Controllers\\TenantController::show<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#43\">App\\Http\\Controllers\\TenantController::edit<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#50\">App\\Http\\Controllers\\TenantController::update<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#63\">App\\Http\\Controllers\\TenantController::destroy<\/a>"],[0,1,"<a href=\"Http\/Controllers\/TenantController.php.html#70\">App\\Http\\Controllers\\TenantController::switch<\/a>"],[0,1,"<a href=\"Http\/Controllers\/UpstreamsController.php.html#16\">App\\Http\\Controllers\\UpstreamsController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/UpstreamsController.php.html#29\">App\\Http\\Controllers\\UpstreamsController::create<\/a>"],[0,2,"<a href=\"Http\/Controllers\/UpstreamsController.php.html#36\">App\\Http\\Controllers\\UpstreamsController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/UpstreamsController.php.html#53\">App\\Http\\Controllers\\UpstreamsController::edit<\/a>"],[0,2,"<a href=\"Http\/Controllers\/UpstreamsController.php.html#62\">App\\Http\\Controllers\\UpstreamsController::update<\/a>"],[0,2,"<a href=\"Http\/Controllers\/UpstreamsController.php.html#77\">App\\Http\\Controllers\\UpstreamsController::destroy<\/a>"],[0,1,"<a href=\"Http\/Controllers\/WebhookController.php.html#11\">App\\Http\\Controllers\\WebhookController::index<\/a>"],[0,1,"<a href=\"Http\/Controllers\/WebhookController.php.html#18\">App\\Http\\Controllers\\WebhookController::create<\/a>"],[0,1,"<a href=\"Http\/Controllers\/WebhookController.php.html#23\">App\\Http\\Controllers\\WebhookController::store<\/a>"],[0,1,"<a href=\"Http\/Controllers\/WebhookController.php.html#39\">App\\Http\\Controllers\\WebhookController::show<\/a>"],[0,1,"<a href=\"Http\/Controllers\/WebhookController.php.html#46\">App\\Http\\Controllers\\WebhookController::edit<\/a>"],[0,1,"<a href=\"Http\/Controllers\/WebhookController.php.html#53\">App\\Http\\Controllers\\WebhookController::update<\/a>"],[0,1,"<a href=\"Http\/Controllers\/WebhookController.php.html#68\">App\\Http\\Controllers\\WebhookController::destroy<\/a>"],[0,4,"<a href=\"Http\/Middleware\/GeoBlock.php.html#12\">App\\Http\\Middleware\\GeoBlock::handle<\/a>"],[0,1,"<a href=\"Http\/Middleware\/HandleInertiaRequests.php.html#12\">App\\Http\\Middleware\\HandleInertiaRequests::version<\/a>"],[0,1,"<a href=\"Http\/Middleware\/HandleInertiaRequests.php.html#17\">App\\Http\\Middleware\\HandleInertiaRequests::share<\/a>"],[0,4,"<a href=\"Http\/Middleware\/IpFilter.php.html#12\">App\\Http\\Middleware\\IpFilter::handle<\/a>"],[0,1,"<a href=\"Http\/Middleware\/MeasureResponseTime.php.html#12\">App\\Http\\Middleware\\MeasureResponseTime::__construct<\/a>"],[0,1,"<a href=\"Http\/Middleware\/MeasureResponseTime.php.html#14\">App\\Http\\Middleware\\MeasureResponseTime::handle<\/a>"],[0,2,"<a href=\"Http\/Middleware\/RateLimiter.php.html#12\">App\\Http\\Middleware\\RateLimiter::handle<\/a>"],[0,4,"<a href=\"Http\/Middleware\/TenantScope.php.html#11\">App\\Http\\Middleware\\TenantScope::handle<\/a>"],[0,1,"<a href=\"Http\/Middleware\/WafMiddleware.php.html#12\">App\\Http\\Middleware\\WafMiddleware::__construct<\/a>"],[0,2,"<a href=\"Http\/Middleware\/WafMiddleware.php.html#14\">App\\Http\\Middleware\\WafMiddleware::handle<\/a>"],[0,1,"<a href=\"Http\/Requests\/Auth\/LoginRequest.php.html#17\">App\\Http\\Requests\\Auth\\LoginRequest::authorize<\/a>"],[0,1,"<a href=\"Http\/Requests\/Auth\/LoginRequest.php.html#27\">App\\Http\\Requests\\Auth\\LoginRequest::rules<\/a>"],[0,2,"<a href=\"Http\/Requests\/Auth\/LoginRequest.php.html#40\">App\\Http\\Requests\\Auth\\LoginRequest::authenticate<\/a>"],[0,2,"<a href=\"Http\/Requests\/Auth\/LoginRequest.php.html#60\">App\\Http\\Requests\\Auth\\LoginRequest::ensureIsNotRateLimited<\/a>"],[0,1,"<a href=\"Http\/Requests\/Auth\/LoginRequest.php.html#81\">App\\Http\\Requests\\Auth\\LoginRequest::throttleKey<\/a>"],[0,1,"<a href=\"Http\/Requests\/DomainRequest.php.html#9\">App\\Http\\Requests\\DomainRequest::authorize<\/a>"],[0,1,"<a href=\"Http\/Requests\/DomainRequest.php.html#14\">App\\Http\\Requests\\DomainRequest::rules<\/a>"],[0,1,"<a href=\"Http\/Requests\/DomainRequest.php.html#26\">App\\Http\\Requests\\DomainRequest::messages<\/a>"],[0,1,"<a href=\"Http\/Requests\/RedirectRequest.php.html#9\">App\\Http\\Requests\\RedirectRequest::authorize<\/a>"],[0,1,"<a href=\"Http\/Requests\/RedirectRequest.php.html#14\">App\\Http\\Requests\\RedirectRequest::rules<\/a>"],[0,1,"<a href=\"Http\/Requests\/RedirectRequest.php.html#28\">App\\Http\\Requests\\RedirectRequest::messages<\/a>"],[0,3,"<a href=\"Http\/Requests\/RedirectRequest.php.html#43\">App\\Http\\Requests\\RedirectRequest::prepareForValidation<\/a>"],[0,1,"<a href=\"Http\/Requests\/RouteRequest.php.html#9\">App\\Http\\Requests\\RouteRequest::authorize<\/a>"],[0,1,"<a href=\"Http\/Requests\/RouteRequest.php.html#14\">App\\Http\\Requests\\RouteRequest::rules<\/a>"],[0,1,"<a href=\"Http\/Requests\/RouteRequest.php.html#30\">App\\Http\\Requests\\RouteRequest::messages<\/a>"],[0,3,"<a href=\"Http\/Requests\/RouteRequest.php.html#47\">App\\Http\\Requests\\RouteRequest::prepareForValidation<\/a>"],[0,1,"<a href=\"Http\/Requests\/UpstreamRequest.php.html#9\">App\\Http\\Requests\\UpstreamRequest::authorize<\/a>"],[0,1,"<a href=\"Http\/Requests\/UpstreamRequest.php.html#14\">App\\Http\\Requests\\UpstreamRequest::rules<\/a>"],[0,1,"<a href=\"Http\/Requests\/UpstreamRequest.php.html#36\">App\\Http\\Requests\\UpstreamRequest::messages<\/a>"],[0,3,"<a href=\"Http\/Requests\/UpstreamRequest.php.html#52\">App\\Http\\Requests\\UpstreamRequest::prepareForValidation<\/a>"],[0,1,"<a href=\"Http\/Resources\/V1\/DomainResource.php.html#9\">App\\Http\\Resources\\V1\\DomainResource::toArray<\/a>"],[0,1,"<a href=\"Http\/Resources\/V1\/ProxyRuleResource.php.html#9\">App\\Http\\Resources\\V1\\ProxyRuleResource::toArray<\/a>"],[0,1,"<a href=\"Http\/Resources\/V1\/TenantResource.php.html#9\">App\\Http\\Resources\\V1\\TenantResource::toArray<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#13\">App\\Infra\\SecretsStore::store<\/a>"],[0,3,"<a href=\"Infra\/SecretsStore.php.html#23\">App\\Infra\\SecretsStore::retrieve<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#40\">App\\Infra\\SecretsStore::forget<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#45\">App\\Infra\\SecretsStore::exists<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#50\">App\\Infra\\SecretsStore::storeDnsToken<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#55\">App\\Infra\\SecretsStore::getDnsToken<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#60\">App\\Infra\\SecretsStore::storeApiKey<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#65\">App\\Infra\\SecretsStore::getApiKey<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#70\">App\\Infra\\SecretsStore::storeCertificate<\/a>"],[0,2,"<a href=\"Infra\/SecretsStore.php.html#75\">App\\Infra\\SecretsStore::getCertificate<\/a>"],[0,3,"<a href=\"Infra\/SecretsStore.php.html#81\">App\\Infra\\SecretsStore::clearAll<\/a>"],[0,1,"<a href=\"Infra\/SecretsStore.php.html#95\">App\\Infra\\SecretsStore::listKeys<\/a>"],[0,1,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#12\">App\\Infra\\Traefik\\TraefikProvider::__construct<\/a>"],[0,1,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#16\">App\\Infra\\Traefik\\TraefikProvider::make<\/a>"],[0,2,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#22\">App\\Infra\\Traefik\\TraefikProvider::syncAll<\/a>"],[0,15,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#33\">App\\Infra\\Traefik\\TraefikProvider::writeDomain<\/a>"],[0,7,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#146\">App\\Infra\\Traefik\\TraefikProvider::writeRedirects<\/a>"],[0,1,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#208\">App\\Infra\\Traefik\\TraefikProvider::upstreamUrl<\/a>"],[0,1,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#213\">App\\Infra\\Traefik\\TraefikProvider::routerName<\/a>"],[0,1,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#218\">App\\Infra\\Traefik\\TraefikProvider::serviceName<\/a>"],[0,1,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#223\">App\\Infra\\Traefik\\TraefikProvider::mwName<\/a>"],[0,6,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#228\">App\\Infra\\Traefik\\TraefikProvider::toYaml<\/a>"],[0,6,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#254\">App\\Infra\\Traefik\\TraefikProvider::yamlScalar<\/a>"],[0,1,"<a href=\"Infra\/Traefik\/TraefikProvider.php.html#266\">App\\Infra\\Traefik\\TraefikProvider::isAssoc<\/a>"],[0,1,"<a href=\"Jobs\/CreateSslCertificateJob.php.html#19\">App\\Jobs\\CreateSslCertificateJob::__construct<\/a>"],[0,6,"<a href=\"Jobs\/CreateSslCertificateJob.php.html#23\">App\\Jobs\\CreateSslCertificateJob::handle<\/a>"],[0,1,"<a href=\"Jobs\/CreateSslCertificateJob.php.html#94\">App\\Jobs\\CreateSslCertificateJob::failed<\/a>"],[0,1,"<a href=\"Listeners\/BroadcastSyncProgress.php.html#9\">App\\Listeners\\BroadcastSyncProgress::handle<\/a>"],[0,1,"<a href=\"Listeners\/DispatchWebhook.php.html#10\">App\\Listeners\\DispatchWebhook::__construct<\/a>"],[0,1,"<a href=\"Listeners\/DispatchWebhook.php.html#14\">App\\Listeners\\DispatchWebhook::handle<\/a>"],[0,1,"<a href=\"Listeners\/DispatchWebhook.php.html#22\">App\\Listeners\\DispatchWebhook::getEventType<\/a>"],[0,1,"<a href=\"Listeners\/DispatchWebhook.php.html#34\">App\\Listeners\\DispatchWebhook::getPayload<\/a>"],[0,1,"<a href=\"Models\/CertificateEvent.php.html#25\">App\\Models\\CertificateEvent::domain<\/a>"],[0,3,"<a href=\"Models\/DeploymentLog.php.html#30\">App\\Models\\DeploymentLog::getDurationAttribute<\/a>"],[0,1,"<a href=\"Models\/DeploymentLog.php.html#39\">App\\Models\\DeploymentLog::getIsRunningAttribute<\/a>"],[0,1,"<a href=\"Models\/DeploymentLog.php.html#44\">App\\Models\\DeploymentLog::getIsSuccessAttribute<\/a>"],[0,1,"<a href=\"Models\/DeploymentLog.php.html#49\">App\\Models\\DeploymentLog::getIsFailedAttribute<\/a>"],[0,1,"<a href=\"Models\/DeploymentLog.php.html#54\">App\\Models\\DeploymentLog::markAsRunning<\/a>"],[0,2,"<a href=\"Models\/DeploymentLog.php.html#62\">App\\Models\\DeploymentLog::markAsSuccess<\/a>"],[0,2,"<a href=\"Models\/DeploymentLog.php.html#74\">App\\Models\\DeploymentLog::markAsFailed<\/a>"],[0,1,"<a href=\"Models\/Domain.php.html#30\">App\\Models\\Domain::proxyRules<\/a>"],[0,1,"<a href=\"Models\/Domain.php.html#35\">App\\Models\\Domain::sslCertificates<\/a>"],[0,1,"<a href=\"Models\/Domain.php.html#40\">App\\Models\\Domain::redirectRules<\/a>"],[0,1,"<a href=\"Models\/Domain.php.html#45\">App\\Models\\Domain::getActiveProxyRulesAttribute<\/a>"],[0,1,"<a href=\"Models\/Domain.php.html#50\">App\\Models\\Domain::getCurrentCertificateAttribute<\/a>"],[0,7,"<a href=\"Models\/Domain.php.html#58\">App\\Models\\Domain::getStatusAttribute<\/a>"],[0,1,"<a href=\"Models\/Domain.php.html#71\">App\\Models\\Domain::tenant<\/a>"],[0,1,"<a href=\"Models\/ProxyRule.php.html#33\">App\\Models\\ProxyRule::domain<\/a>"],[0,1,"<a href=\"Models\/ProxyRule.php.html#38\">App\\Models\\ProxyRule::tenant<\/a>"],[0,2,"<a href=\"Models\/ProxyRule.php.html#43\">App\\Models\\ProxyRule::getFullSourceAttribute<\/a>"],[0,1,"<a href=\"Models\/ProxyRule.php.html#49\">App\\Models\\ProxyRule::getFullTargetAttribute<\/a>"],[0,3,"<a href=\"Models\/ProxyRule.php.html#54\">App\\Models\\ProxyRule::generateNginxConfig<\/a>"],[0,1,"<a href=\"Models\/RedirectRule.php.html#33\">App\\Models\\RedirectRule::domain<\/a>"],[0,1,"<a href=\"Models\/RedirectRule.php.html#38\">App\\Models\\RedirectRule::getRedirectTypeTextAttribute<\/a>"],[0,9,"<a href=\"Models\/RedirectRule.php.html#50\">App\\Models\\RedirectRule::generateNginxConfig<\/a>"],[0,1,"<a href=\"Models\/RouteRule.php.html#33\">App\\Models\\RouteRule::domain<\/a>"],[0,1,"<a href=\"Models\/RouteRule.php.html#38\">App\\Models\\RouteRule::upstream<\/a>"],[0,1,"<a href=\"Models\/SslCertificate.php.html#41\">App\\Models\\SslCertificate::domain<\/a>"],[0,1,"<a href=\"Models\/SslCertificate.php.html#46\">App\\Models\\SslCertificate::tenant<\/a>"],[0,2,"<a href=\"Models\/SslCertificate.php.html#51\">App\\Models\\SslCertificate::getDaysUntilExpiryAttribute<\/a>"],[0,2,"<a href=\"Models\/SslCertificate.php.html#58\">App\\Models\\SslCertificate::getIsExpiringAttribute<\/a>"],[0,1,"<a href=\"Models\/SslCertificate.php.html#63\">App\\Models\\SslCertificate::getIsExpiredAttribute<\/a>"],[0,2,"<a href=\"Models\/SslCertificate.php.html#68\">App\\Models\\SslCertificate::getAllDomainsAttribute<\/a>"],[0,1,"<a href=\"Models\/SslCertificate.php.html#79\">App\\Models\\SslCertificate::generateTraefikConfig<\/a>"],[0,6,"<a href=\"Models\/SslCertificate.php.html#103\">App\\Models\\SslCertificate::updateStatus<\/a>"],[0,1,"<a href=\"Models\/Tenant.php.html#25\">App\\Models\\Tenant::domains<\/a>"],[0,1,"<a href=\"Models\/Tenant.php.html#30\">App\\Models\\Tenant::proxyRules<\/a>"],[0,1,"<a href=\"Models\/Tenant.php.html#35\">App\\Models\\Tenant::upstreams<\/a>"],[0,1,"<a href=\"Models\/Tenant.php.html#40\">App\\Models\\Tenant::sslCertificates<\/a>"],[0,1,"<a href=\"Models\/Upstream.php.html#44\">App\\Models\\Upstream::domain<\/a>"],[0,1,"<a href=\"Models\/Upstream.php.html#49\">App\\Models\\Upstream::routeRules<\/a>"],[0,1,"<a href=\"Models\/Upstream.php.html#54\">App\\Models\\Upstream::tenant<\/a>"],[0,1,"<a href=\"Models\/User.php.html#45\">App\\Models\\User::casts<\/a>"],[0,1,"<a href=\"Models\/User.php.html#52\">App\\Models\\User::tenants<\/a>"],[0,1,"<a href=\"Models\/User.php.html#57\">App\\Models\\User::currentTenant<\/a>"],[0,1,"<a href=\"Models\/Webhook.php.html#26\">App\\Models\\Webhook::tenant<\/a>"],[0,1,"<a href=\"Models\/WebhookEvent.php.html#25\">App\\Models\\WebhookEvent::webhook<\/a>"],[66.66666666666666,1,"<a href=\"Providers\/AppServiceProvider.php.html#16\">App\\Providers\\AppServiceProvider::register<\/a>"],[100,1,"<a href=\"Providers\/AppServiceProvider.php.html#26\">App\\Providers\\AppServiceProvider::boot<\/a>"],[0,1,"<a href=\"Providers\/EventServiceProvider.php.html#38\">App\\Providers\\EventServiceProvider::boot<\/a>"],[36.36363636363637,1,"<a href=\"Providers\/NetPilotServiceProvider.php.html#16\">App\\Providers\\NetPilotServiceProvider::register<\/a>"],[100,1,"<a href=\"Providers\/NetPilotServiceProvider.php.html#37\">App\\Providers\\NetPilotServiceProvider::boot<\/a>"],[0,1,"<a href=\"Providers\/RouteServiceProvider.php.html#13\">App\\Providers\\RouteServiceProvider::boot<\/a>"],[0,2,"<a href=\"Providers\/RouteServiceProvider.php.html#27\">App\\Providers\\RouteServiceProvider::configureRateLimiting<\/a>"],[0,1,"<a href=\"Services\/AlertingService.php.html#11\">App\\Services\\AlertingService::__construct<\/a>"],[0,3,"<a href=\"Services\/AlertingService.php.html#15\">App\\Services\\AlertingService::checkThresholds<\/a>"],[0,1,"<a href=\"Services\/AlertingService.php.html#47\">App\\Services\\AlertingService::triggerAlert<\/a>"],[0,1,"<a href=\"Services\/AnalyticsService.php.html#10\">App\\Services\\AnalyticsService::recordRequest<\/a>"],[0,1,"<a href=\"Services\/AnalyticsService.php.html#23\">App\\Services\\AnalyticsService::recordEvent<\/a>"],[0,1,"<a href=\"Services\/AnalyticsService.php.html#33\">App\\Services\\AnalyticsService::getRequestStats<\/a>"],[0,1,"<a href=\"Services\/CacheService.php.html#9\">App\\Services\\CacheService::get<\/a>"],[0,1,"<a href=\"Services\/CacheService.php.html#14\">App\\Services\\CacheService::forget<\/a>"],[0,1,"<a href=\"Services\/CacheService.php.html#19\">App\\Services\\CacheService::cacheProxyConfig<\/a>"],[0,1,"<a href=\"Services\/CacheService.php.html#24\">App\\Services\\CacheService::getProxyConfig<\/a>"],[0,1,"<a href=\"Services\/CacheService.php.html#29\">App\\Services\\CacheService::cacheSslCertificate<\/a>"],[0,1,"<a href=\"Services\/CacheService.php.html#34\">App\\Services\\CacheService::getSslCertificate<\/a>"],[0,2,"<a href=\"Services\/CircuitBreaker.php.html#13\">App\\Services\\CircuitBreaker::isAvailable<\/a>"],[0,2,"<a href=\"Services\/CircuitBreaker.php.html#25\">App\\Services\\CircuitBreaker::recordFailure<\/a>"],[0,1,"<a href=\"Services\/CircuitBreaker.php.html#36\">App\\Services\\CircuitBreaker::recordSuccess<\/a>"],[100,1,"<a href=\"Services\/DnsService.php.html#7\">App\\Services\\DnsService::__construct<\/a>"],[100,1,"<a href=\"Services\/DnsService.php.html#12\">App\\Services\\DnsService::createRecord<\/a>"],[100,1,"<a href=\"Services\/DnsService.php.html#18\">App\\Services\\DnsService::deleteRecord<\/a>"],[100,1,"<a href=\"Services\/DnsService.php.html#24\">App\\Services\\DnsService::verifyDnsChallenge<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#20\">App\\Services\\LetsEncryptService::__construct<\/a>"],[0,7,"<a href=\"Services\/LetsEncryptService.php.html#29\">App\\Services\\LetsEncryptService::issueCertificate<\/a>"],[0,2,"<a href=\"Services\/LetsEncryptService.php.html#144\">App\\Services\\LetsEncryptService::issueWildcardCertificate<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#166\">App\\Services\\LetsEncryptService::createDnsChallenge<\/a>"],[0,2,"<a href=\"Services\/LetsEncryptService.php.html#183\">App\\Services\\LetsEncryptService::logSslPhase<\/a>"],[0,3,"<a href=\"Services\/LetsEncryptService.php.html#201\">App\\Services\\LetsEncryptService::validateDomain<\/a>"],[0,4,"<a href=\"Services\/LetsEncryptService.php.html#213\">App\\Services\\LetsEncryptService::checkPorts<\/a>"],[0,4,"<a href=\"Services\/LetsEncryptService.php.html#230\">App\\Services\\LetsEncryptService::prepareEnvironment<\/a>"],[0,3,"<a href=\"Services\/LetsEncryptService.php.html#246\">App\\Services\\LetsEncryptService::applyCertificateToServer<\/a>"],[0,6,"<a href=\"Services\/LetsEncryptService.php.html#261\">App\\Services\\LetsEncryptService::issueCertificateWithCertbot<\/a>"],[0,2,"<a href=\"Services\/LetsEncryptService.php.html#328\">App\\Services\\LetsEncryptService::createDnsCredentialsFile<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#343\">App\\Services\\LetsEncryptService::simulateCertificateIssuance<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#350\">App\\Services\\LetsEncryptService::simulateCertificateRenewal<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#356\">App\\Services\\LetsEncryptService::simulateCertificateRevocation<\/a>"],[0,2,"<a href=\"Services\/LetsEncryptService.php.html#362\">App\\Services\\LetsEncryptService::generateMockCertificateFiles<\/a>"],[0,7,"<a href=\"Services\/LetsEncryptService.php.html#385\">App\\Services\\LetsEncryptService::removeMockCertificateFiles<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#406\">App\\Services\\LetsEncryptService::generateMockCertificateContent<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#419\">App\\Services\\LetsEncryptService::generateMockPrivateKeyContent<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#427\">App\\Services\\LetsEncryptService::generateMockChainContent<\/a>"],[0,6,"<a href=\"Services\/LetsEncryptService.php.html#439\">App\\Services\\LetsEncryptService::checkCertificateStatus<\/a>"],[0,1,"<a href=\"Services\/LetsEncryptService.php.html#472\">App\\Services\\LetsEncryptService::getAcmeChallengePath<\/a>"],[0,3,"<a href=\"Services\/LetsEncryptService.php.html#477\">App\\Services\\LetsEncryptService::cleanupExpiredCertificates<\/a>"],[0,5,"<a href=\"Services\/LetsEncryptService.php.html#502\">App\\Services\\LetsEncryptService::renewCertificate<\/a>"],[0,6,"<a href=\"Services\/LetsEncryptService.php.html#573\">App\\Services\\LetsEncryptService::renewCertificateWithCertbot<\/a>"],[0,4,"<a href=\"Services\/LetsEncryptService.php.html#627\">App\\Services\\LetsEncryptService::revokeCertificate<\/a>"],[0,2,"<a href=\"Services\/LetsEncryptService.php.html#678\">App\\Services\\LetsEncryptService::revokeCertificateWithCertbot<\/a>"],[0,3,"<a href=\"Services\/LetsEncryptService.php.html#698\">App\\Services\\LetsEncryptService::cleanupRevokedCertificate<\/a>"],[0,1,"<a href=\"Services\/MetricsService.php.html#11\">App\\Services\\MetricsService::__construct<\/a>"],[0,1,"<a href=\"Services\/MetricsService.php.html#16\">App\\Services\\MetricsService::incrementRequestCount<\/a>"],[0,1,"<a href=\"Services\/MetricsService.php.html#26\">App\\Services\\MetricsService::observeResponseTime<\/a>"],[0,2,"<a href=\"Services\/MetricsService.php.html#37\">App\\Services\\MetricsService::setUpstreamStatus<\/a>"],[0,2,"<a href=\"Services\/MetricsService.php.html#47\">App\\Services\\MetricsService::setSslCertificateStatus<\/a>"],[0,3,"<a href=\"Services\/MetricsService.php.html#57\">App\\Services\\MetricsService::checkForAnomalies<\/a>"],[0,2,"<a href=\"Services\/MetricsService.php.html#77\">App\\Services\\MetricsService::calculateErrorRate<\/a>"],[0,1,"<a href=\"Services\/MetricsService.php.html#91\">App\\Services\\MetricsService::countSlowResponses<\/a>"],[100,1,"<a href=\"Services\/MonitoringIntegrationService.php.html#7\">App\\Services\\MonitoringIntegrationService::__construct<\/a>"],[100,1,"<a href=\"Services\/MonitoringIntegrationService.php.html#12\">App\\Services\\MonitoringIntegrationService::sendMetrics<\/a>"],[100,1,"<a href=\"Services\/MonitoringIntegrationService.php.html#18\">App\\Services\\MonitoringIntegrationService::createAlert<\/a>"],[0,1,"<a href=\"Services\/NginxService.php.html#9\">App\\Services\\NginxService::__construct<\/a>"],[0,2,"<a href=\"Services\/NginxService.php.html#11\">App\\Services\\NginxService::applyDomain<\/a>"],[0,4,"<a href=\"Services\/NginxService.php.html#59\">App\\Services\\NginxService::deployConfiguration<\/a>"],[100,1,"<a href=\"Services\/NotificationService.php.html#7\">App\\Services\\NotificationService::__construct<\/a>"],[100,1,"<a href=\"Services\/NotificationService.php.html#12\">App\\Services\\NotificationService::send<\/a>"],[100,1,"<a href=\"Services\/NotificationService.php.html#21\">App\\Services\\NotificationService::testConnection<\/a>"],[0,1,"<a href=\"Services\/ReconcilerService.php.html#28\">App\\Services\\ReconcilerService::__construct<\/a>"],[0,4,"<a href=\"Services\/ReconcilerService.php.html#43\">App\\Services\\ReconcilerService::reconcileAll<\/a>"],[0,6,"<a href=\"Services\/ReconcilerService.php.html#111\">App\\Services\\ReconcilerService::reconcileDomains<\/a>"],[0,5,"<a href=\"Services\/ReconcilerService.php.html#156\">App\\Services\\ReconcilerService::reconcileUpstreams<\/a>"],[0,5,"<a href=\"Services\/ReconcilerService.php.html#194\">App\\Services\\ReconcilerService::reconcileRoutes<\/a>"],[0,4,"<a href=\"Services\/ReconcilerService.php.html#240\">App\\Services\\ReconcilerService::reconcileRedirects<\/a>"],[0,6,"<a href=\"Services\/ReconcilerService.php.html#276\">App\\Services\\ReconcilerService::reconcileCertificates<\/a>"],[0,4,"<a href=\"Services\/ReconcilerService.php.html#321\">App\\Services\\ReconcilerService::reconcileTraefik<\/a>"],[0,7,"<a href=\"Services\/ReconcilerService.php.html#356\">App\\Services\\ReconcilerService::verifyConfigurations<\/a>"],[0,2,"<a href=\"Services\/ReconcilerService.php.html#397\">App\\Services\\ReconcilerService::applyDomainConfiguration<\/a>"],[0,3,"<a href=\"Services\/ReconcilerService.php.html#411\">App\\Services\\ReconcilerService::checkUpstreamHealth<\/a>"],[0,4,"<a href=\"Services\/ReconcilerService.php.html#439\">App\\Services\\ReconcilerService::validateRedirectPattern<\/a>"],[0,2,"<a href=\"Services\/ReconcilerService.php.html#457\">App\\Services\\ReconcilerService::triggerExpirationAlerts<\/a>"],[0,3,"<a href=\"Services\/ReconcilerService.php.html#478\">App\\Services\\ReconcilerService::validateRoute<\/a>"],[0,2,"<a href=\"Services\/ReconcilerService.php.html#488\">App\\Services\\ReconcilerService::validateRedirect<\/a>"],[0,2,"<a href=\"Services\/ReconcilerService.php.html#499\">App\\Services\\ReconcilerService::getStatus<\/a>"],[0,5,"<a href=\"Services\/SystemCommandService.php.html#13\">App\\Services\\SystemCommandService::execute<\/a>"],[0,3,"<a href=\"Services\/TraefikService.php.html#18\">App\\Services\\TraefikService::__construct<\/a>"],[0,2,"<a href=\"Services\/TraefikService.php.html#35\">App\\Services\\TraefikService::applyDomain<\/a>"],[0,4,"<a href=\"Services\/TraefikService.php.html#65\">App\\Services\\TraefikService::generateConfiguration<\/a>"],[0,3,"<a href=\"Services\/TraefikService.php.html#147\">App\\Services\\TraefikService::deployConfiguration<\/a>"],[0,5,"<a href=\"Services\/TraefikService.php.html#183\">App\\Services\\TraefikService::applyConfiguration<\/a>"],[0,3,"<a href=\"Services\/TraefikService.php.html#267\">App\\Services\\TraefikService::reloadTraefikViaApi<\/a>"],[0,2,"<a href=\"Services\/TraefikService.php.html#305\">App\\Services\\TraefikService::getConfigPreview<\/a>"],[0,8,"<a href=\"Services\/TraefikService.php.html#312\">App\\Services\\TraefikService::buildDynamicConfig<\/a>"],[0,3,"<a href=\"Services\/TraefikService.php.html#362\">App\\Services\\TraefikService::resolveTargetScheme<\/a>"],[0,1,"<a href=\"Services\/WafInspectionResult.php.html#7\">App\\Services\\WafInspectionResult::__construct<\/a>"],[0,1,"<a href=\"Services\/WafInspectionResult.php.html#12\">App\\Services\\WafInspectionResult::isBlocked<\/a>"],[0,1,"<a href=\"Services\/WafInspectionResult.php.html#17\">App\\Services\\WafInspectionResult::getReason<\/a>"],[0,1,"<a href=\"Services\/WafService.php.html#9\">App\\Services\\WafService::inspectRequest<\/a>"],[0,3,"<a href=\"Services\/WebhookDispatcherService.php.html#12\">App\\Services\\WebhookDispatcherService::dispatch<\/a>"],[0,2,"<a href=\"Services\/WebhookDispatcherService.php.html#32\">App\\Services\\WebhookDispatcherService::generateSignature<\/a>"],[0,1,"<a href=\"Services\/WebhookDispatcherService.php.html#40\">App\\Services\\WebhookDispatcherService::logEvent<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>

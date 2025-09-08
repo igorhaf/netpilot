@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Exceptions\CertificateException;
 use App\Models\SslCertificate;
 use App\Models\DeploymentLog;
 use App\Models\Domain;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
+use App\Services\MetricsService;
+use App\Services\NginxService;
+use App\Services\TraefikService;
 
 class LetsEncryptService
 {
@@ -15,7 +19,8 @@ class LetsEncryptService
 
     public function __construct(
         private NginxService $nginx,
-        private TraefikService $traefik
+        private TraefikService $traefik,
+        private MetricsService $metrics
     ) {
         $this->acmePath = config('letsencrypt.acme_path', '/etc/letsencrypt');
         $this->certificatesPath = config('letsencrypt.certificates_path', '/etc/letsencrypt/live');
@@ -44,7 +49,7 @@ class LetsEncryptService
             $this->logSslPhase($certificate, 'domain_validation', 'running', 'Iniciando validação do domínio...');
             
             if (!$this->validateDomain($certificate->domain_name)) {
-                throw new \Exception("Domínio {$certificate->domain_name} não é válido ou não está acessível");
+                throw CertificateException::invalidDomain($certificate->domain_name);
             }
             
             $this->logSslPhase($certificate, 'domain_validation', 'success', 'Domínio validado com sucesso');
@@ -53,7 +58,7 @@ class LetsEncryptService
             $this->logSslPhase($certificate, 'port_check', 'running', 'Verificando disponibilidade das portas 80 e 443...');
             
             if (!$this->checkPorts($certificate->domain_name)) {
-                throw new \Exception("Portas 80 e/ou 443 não estão disponíveis para {$certificate->domain_name}");
+                throw CertificateException::portsUnavailable($certificate->domain_name);
             }
             
             $this->logSslPhase($certificate, 'port_check', 'success', 'Portas verificadas e disponíveis');
@@ -89,7 +94,7 @@ class LetsEncryptService
             $verificationResult = $this->verifyCertificateApplication($certificate);
             
             if (!$verificationResult['valid']) {
-                throw new \Exception('Falha na verificação final: ' . $verificationResult['error']);
+                throw CertificateException::verificationFailed($verificationResult['error']);
             }
             
             $this->logSslPhase($certificate, 'final_verification', 'success', 'Verificação final concluída com sucesso');
@@ -107,6 +112,9 @@ class LetsEncryptService
 
             // Log de sucesso principal
             $mainLog->markAsSuccess("Certificado SSL emitido e aplicado com sucesso para {$certificate->domain_name}");
+
+            $this->metrics->incrementRequestCount('ssl_issue');
+            $this->metrics->setSslCertificateStatus($certificate->id, true);
 
             return [
                 'success' => true,
@@ -126,8 +134,50 @@ class LetsEncryptService
                 'last_error' => $e->getMessage(),
             ]);
 
+            $this->metrics->incrementRequestCount('ssl_issue_error');
+            $this->metrics->setSslCertificateStatus($certificate->id, false);
+
             throw $e;
         }
+    }
+
+    public function issueWildcardCertificate(
+        string $domain,
+        string $dnsProvider,
+        array $dnsConfig
+    ): array {
+        // Validate domain is wildcard
+        if (!str_starts_with($domain, '*.')) {
+            throw new \InvalidArgumentException('Domain must be wildcard format (*.example.com)');
+        }
+
+        // Use DNS-01 challenge
+        $challenge = $this->createDnsChallenge($domain, $dnsProvider, $dnsConfig);
+        
+        // Issue certificate
+        return $this->issueCertificate([
+            'domains' => [$domain, substr($domain, 2)], // Include base domain
+            'challenge' => 'dns-01',
+            'dns_provider' => $dnsProvider,
+            'dns_config' => $dnsConfig
+        ]);
+    }
+
+    private function createDnsChallenge(
+        string $domain,
+        string $provider,
+        array $config
+    ): string {
+        $dns = new DnsService($provider, $config);
+        $challenge = $this->generateChallengeToken();
+        
+        $dns->createRecord(
+            '_acme-challenge.'.substr($domain, 2),
+            'TXT',
+            $challenge
+        );
+        
+        return $challenge;
     }
 
     private function logSslPhase(SslCertificate $certificate, string $phase, string $status, string $message): void
@@ -151,6 +201,9 @@ class LetsEncryptService
     private function validateDomain(string $domainName): bool
     {
         if (app()->environment('production')) {
+            if (!filter_var($domainName, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+                throw CertificateException::invalidDomain($domainName);
+            }
             return gethostbyname($domainName) !== $domainName;
         }
         sleep(1);
@@ -164,7 +217,7 @@ class LetsEncryptService
             foreach ($ports as $port) {
                 $connection = @fsockopen($domainName, $port, $errno, $errstr, 5);
                 if (!$connection) {
-                    return false;
+                    throw CertificateException::portsUnavailable($domainName);
                 }
                 fclose($connection);
             }
@@ -184,7 +237,7 @@ class LetsEncryptService
         
         if (app()->environment('production')) {
             if (!is_writable($this->certificatesPath)) {
-                throw new \Exception("Diretório {$this->certificatesPath} não tem permissão de escrita");
+                throw CertificateException::writePermission($this->certificatesPath);
             }
         }
         sleep(1);
@@ -214,17 +267,49 @@ class LetsEncryptService
         $domainsParam = '-d ' . implode(' -d ', $allDomains);
         $email = config('letsencrypt.email', 'admin@' . $domainName);
         
-        $command = sprintf(
-            'certbot certonly --standalone --non-interactive --agree-tos --email %s %s --cert-name %s',
-            escapeshellarg($email),
-            $domainsParam,
-            escapeshellarg($domainName)
-        );
+        $cmd = [
+            config('letsencrypt.certbot_path'),
+            'certonly',
+            '--non-interactive',
+            '--agree-tos',
+            '--email', $email,
+            '--domain', $domainName,
+        ];
+
+        // Challenge method
+        $challengeMethod = config('letsencrypt.challenge_method');
+        
+        if ($challengeMethod === 'dns') {
+            $provider = config('letsencrypt.dns_provider');
+            $cmd = array_merge($cmd, [
+                '--dns-' . $provider,
+                '--dns-' . $provider . '-credentials',
+                $this->createDnsCredentialsFile($provider),
+                '--dns-' . $provider . '-propagation-seconds', 60
+            ]);
+        } else {
+            $cmd[] = '--' . $challengeMethod;
+            if ($challengeMethod === 'webroot') {
+                $cmd[] = '--webroot-path=' . config('letsencrypt.webroot_path');
+            }
+        }
+
+        // Staging mode
+        if (config('letsencrypt.staging')) {
+            $cmd[] = '--staging';
+        }
+
+        // Wildcard support
+        if (str_starts_with($certificate->domain_name, '*.')) {
+            $cmd[] = '--server=https://acme-v02.api.letsencrypt.org/directory';
+        }
+
+        $command = implode(' ', $cmd);
 
         $result = Process::run($command);
         
         if (!$result->successful()) {
-            throw new \Exception('Certbot failed: ' . $result->errorOutput());
+            throw CertificateException::certbotFailed($result->errorOutput());
         }
 
         $certPath = "/etc/letsencrypt/live/{$domainName}";
@@ -238,6 +323,21 @@ class LetsEncryptService
             'stdout' => $result->output(),
             'stderr' => $result->errorOutput(),
         ];
+    }
+
+    private function createDnsCredentialsFile(string $provider): string
+    {
+        $creds = config('letsencrypt.dns_credentials.' . $provider);
+        $content = '';
+        
+        foreach ($creds as $key => $value) {
+            $content .= "{$key} = {$value}\n";
+        }
+        
+        $path = storage_path('app/letsencrypt/dns-credentials.ini');
+        file_put_contents($path, $content);
+        
+        return $path;
     }
 
     private function simulateCertificateIssuance(SslCertificate $certificate): array
@@ -425,7 +525,7 @@ class LetsEncryptService
             if (app()->environment('production')) {
                 $result = $this->renewCertificateWithCertbot($certificate);
             } else {
-                $result = $this->simulateCertificateRenewal($certificate);
+                $this->simulateCertificateRenewal($certificate);
             }
             
             $this->logSslPhase($certificate, 'renewal_execution', 'success', 'Renovação executada');
@@ -434,7 +534,7 @@ class LetsEncryptService
             
             $verificationResult = $this->verifyCertificateApplication($certificate);
             if (!$verificationResult['valid']) {
-                throw new \Exception('Falha na verificação da renovação: ' . $verificationResult['error']);
+                throw CertificateException::verificationFailed($verificationResult['error']);
             }
             
             $this->logSslPhase($certificate, 'renewal_verification', 'success', 'Renovação verificada');
@@ -474,15 +574,47 @@ class LetsEncryptService
     {
         $domainName = $certificate->domain_name;
         
-        $command = sprintf(
-            'certbot renew --cert-name %s --non-interactive',
-            escapeshellarg($domainName)
-        );
+        $cmd = [
+            config('letsencrypt.certbot_path'),
+            'renew',
+            '--cert-name', $domainName,
+            '--non-interactive',
+        ];
+
+        // Challenge method
+        $challengeMethod = config('letsencrypt.challenge_method');
+        
+        if ($challengeMethod === 'dns') {
+            $provider = config('letsencrypt.dns_provider');
+            $cmd = array_merge($cmd, [
+                '--dns-' . $provider,
+                '--dns-' . $provider . '-credentials',
+                $this->createDnsCredentialsFile($provider),
+                '--dns-' . $provider . '-propagation-seconds', 60
+            ]);
+        } else {
+            $cmd[] = '--' . $challengeMethod;
+            if ($challengeMethod === 'webroot') {
+                $cmd[] = '--webroot-path=' . config('letsencrypt.webroot_path');
+            }
+        }
+
+        // Staging mode
+        if (config('letsencrypt.staging')) {
+            $cmd[] = '--staging';
+        }
+
+        // Wildcard support
+        if (str_starts_with($certificate->domain_name, '*.')) {
+            $cmd[] = '--server=https://acme-v02.api.letsencrypt.org/directory';
+        }
+
+        $command = implode(' ', $cmd);
 
         $result = Process::run($command);
         
         if (!$result->successful()) {
-            throw new \Exception('Certbot renewal failed: ' . $result->errorOutput());
+            throw CertificateException::certbotFailed($result->errorOutput());
         }
 
         return [
@@ -547,15 +679,19 @@ class LetsEncryptService
     {
         $domainName = $certificate->domain_name;
         
-        $command = sprintf(
-            'certbot revoke --cert-path %s --non-interactive',
-            escapeshellarg($certificate->certificate_path)
-        );
+        $cmd = [
+            config('letsencrypt.certbot_path'),
+            'revoke',
+            '--cert-path', $certificate->certificate_path,
+            '--non-interactive',
+        ];
+
+        $command = implode(' ', $cmd);
 
         $result = Process::run($command);
         
         if (!$result->successful()) {
-            throw new \Exception('Certbot revocation failed: ' . $result->errorOutput());
+            throw CertificateException::certbotFailed($result->errorOutput());
         }
     }
 

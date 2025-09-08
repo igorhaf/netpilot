@@ -10,6 +10,8 @@ use App\Http\Controllers\RedirectsController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\UpstreamsController;
 use App\Http\Controllers\RoutesController;
+use App\Http\Controllers\TenantController;
+use App\Http\Controllers\WafController;
 
 require __DIR__.'/auth.php';
 
@@ -48,4 +50,16 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Logs
     Route::get('/logs', [LogsController::class, 'index'])->name('logs.index');
     Route::post('/logs/clear', [LogsController::class, 'clear'])->name('logs.clear');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Tenant management routes
+    Route::resource('tenants', \App\Http\Controllers\TenantController::class);
+    
+    // Tenant switching
+    Route::post('/tenants/{tenant}/switch', [\App\Http\Controllers\TenantController::class, 'switch'])
+        ->name('tenants.switch');
+    
+    // WAF Management
+    Route::resource('waf', \App\Http\Controllers\WafController::class);
 });

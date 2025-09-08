@@ -1,12 +1,10 @@
 <?php
 
 return [
-    'enabled' => env('PROXY_ENABLED', false),
-    'proxy_network' => env('PROXY_NETWORK', 'proxy'),
-    'dynamic_dir' => env('PROXY_DYNAMIC_DIR', base_path('docker/traefik/dynamic')),
-    'challenge' => env('TRAEFIK_CHALLENGE', 'HTTP01'),
-    'dns_provider' => env('TRAEFIK_DNS_PROVIDER'),
-    'acme_email' => env('TRAEFIK_ACME_EMAIL'),
-    'acme_ca' => env('TRAEFIK_ACME_CA_SERVER', 'https://acme-v02.api.letsencrypt.org/directory'),
-    'api_url' => env('TRAEFIK_API_URL'),
+    'traefik' => [
+        'dynamic_dir' => env('TRAEFIK_DYNAMIC_DIR', base_path('docker/traefik/dynamic')),
+        'config_dir' => storage_path('app/traefik'),
+        'config_file' => 'netpilot-proxy.yml',
+        'auto_reload' => env('TRAEFIK_AUTO_RELOAD', true),
+    ],
 ];

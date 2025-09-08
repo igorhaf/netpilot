@@ -196,6 +196,30 @@ Renovar: 30 dias antes da expiração
 
 ---
 
+## 📣 **Alert Notifications**
+
+NetPilot supports multiple notification channels:
+
+1. **Email Notifications**
+   - Configure SMTP settings in `.env`
+   - Supports multiple recipients
+
+2. **Slack Webhooks**
+   - Set `SLACK_WEBHOOK_URL` in `.env`
+   - Customizable channel (#alerts by default)
+
+3. **SMS Alerts**
+   - Currently supports Twilio
+   - Requires `TWILIO_SID`, `TWILIO_TOKEN`, `TWILIO_FROM_NUMBER`
+
+### Configuring Alerts
+
+Alerts can be configured via:
+- Web interface: Settings → Notifications
+- API: `POST /api/v1/notifications`
+
+---
+
 ## ⚡ **Comandos Artisan**
 
 ### **Renovação de Certificados SSL**

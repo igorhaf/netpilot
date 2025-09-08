@@ -2,9 +2,14 @@
 
 namespace App\Services;
 
+use App\Exceptions\ProxyException;
 use App\Models\Domain;
 use App\Models\ProxyRule;
 use Illuminate\Support\Facades\Storage;
+use App\Services\MetricsService;
+use App\Services\CacheService;
+use App\Services\CircuitBreakerService;
+use App\Services\SystemCommandService;
 
 class TraefikService
 {
@@ -12,11 +17,16 @@ class TraefikService
     private string $configFile;
     private string $traefikDynamicDir;
 
-    public function __construct(private SystemCommandService $cmd) 
+    public function __construct(
+        private SystemCommandService $cmd,
+        private MetricsService $metrics,
+        private CacheService $cache,
+        private CircuitBreakerService $circuitBreaker
+    ) 
     {
-        $this->configDir = storage_path('app/traefik');
-        $this->configFile = $this->configDir . '/netpilot-proxy.yml';
-        $this->traefikDynamicDir = config('netpilot.dynamic_dir', base_path('traefik/dynamic'));
+        $this->configDir = config('netpilot.traefik.config_dir', storage_path('app/traefik'));
+        $this->configFile = $this->configDir . '/' . config('netpilot.traefik.config_file', 'netpilot-proxy.yml');
+        $this->traefikDynamicDir = config('netpilot.traefik.dynamic_dir', base_path('traefik/dynamic'));
         
         // Criar diretório se não existir
         if (!is_dir($this->configDir)) {
@@ -68,6 +78,10 @@ class TraefikService
                 'traefik_dynamic_dir' => $this->traefikDynamicDir
             ]);
             
+            if ($cached = $this->cache->getProxyConfig()) {
+                return $cached;
+            }
+            
             $yaml = $this->buildDynamicConfig();
             
             \Log::info("📝 YAML gerado", [
@@ -85,7 +99,7 @@ class TraefikService
             ]);
             
             if (!$saved) {
-                throw new \Exception('Falha ao salvar arquivo de configuração localmente');
+                throw ProxyException::fileSaveFailed();
             }
 
             // Verificar se realmente foi salvo
@@ -98,6 +112,10 @@ class TraefikService
                 'file_exists' => $fileExists,
                 'storage_path' => $storagePath
             ]);
+
+            $this->metrics->incrementRequestCount('traefik_generate_config');
+
+            $this->cache->cacheProxyConfig($yaml);
 
             return [
                 'success' => true,
@@ -115,6 +133,7 @@ class TraefikService
             ];
 
         } catch (\Exception $e) {
+            $this->metrics->incrementRequestCount('traefik_generate_config_error');
             \Log::error("❌ Erro em generateConfiguration", [
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
@@ -139,7 +158,7 @@ class TraefikService
             $result = $this->generateConfiguration();
             
             if (!$result['success']) {
-                throw new \Exception($result['message']);
+                throw new ProxyException($result['message']);
             }
 
             // Log da operação
@@ -175,7 +194,7 @@ class TraefikService
             
             // Verificar se arquivo existe
             if (!Storage::exists('traefik/netpilot-proxy.yml')) {
-                throw new \Exception('Arquivo de configuração não encontrado. Execute generateConfiguration() primeiro.');
+                throw ProxyException::fileNotFound();
             }
 
             // Ler conteúdo
@@ -199,7 +218,7 @@ class TraefikService
             $copyResult = copy($localPath, $traefikConfigFile);
             
             if (!$copyResult) {
-                throw new \Exception('Falha ao copiar arquivo para diretório Traefik');
+                throw ProxyException::fileCopyFailed();
             }
             
             \Log::info("✅ Arquivo copiado para Traefik", [
@@ -254,37 +273,39 @@ class TraefikService
      */
     private function reloadTraefikViaApi(): array
     {
-        try {
-            // Since Traefik is configured with file watch, we just need to ensure the file is copied
-            // The configuration will be automatically reloaded
-            \Log::info("🌐 Traefik configured with file watch - configuration will auto-reload");
-            
-            // Verify that the dynamic config file exists
-            $dynamicFile = $this->traefikDynamicDir . '/netpilot-proxy.yml';
-            if (file_exists($dynamicFile)) {
+        return $this->circuitBreaker->execute('traefik', function() {
+            try {
+                // Since Traefik is configured with file watch, we just need to ensure the file is copied
+                // The configuration will be automatically reloaded
+                \Log::info("🌐 Traefik configured with file watch - configuration will auto-reload");
+                
+                // Verify that the dynamic config file exists
+                $dynamicFile = $this->traefikDynamicDir . '/netpilot-proxy.yml';
+                if (file_exists($dynamicFile)) {
+                    return [
+                        'success' => true,
+                        'message' => 'Configuration file deployed - Traefik will auto-reload',
+                        'file' => $dynamicFile,
+                        'note' => 'Traefik is configured with --providers.file.watch=true'
+                    ];
+                }
+                
                 return [
-                    'success' => true,
-                    'message' => 'Configuration file deployed - Traefik will auto-reload',
-                    'file' => $dynamicFile,
-                    'note' => 'Traefik is configured with --providers.file.watch=true'
+                    'success' => false,
+                    'error' => 'Configuration file not found at ' . $dynamicFile
+                ];
+                
+            } catch (\Exception $e) {
+                \Log::error("❌ Erro ao acessar API Traefik", [
+                    'error' => $e->getMessage()
+                ]);
+                
+                return [
+                    'success' => false,
+                    'error' => 'Erro ao acessar API Traefik: ' . $e->getMessage()
                 ];
             }
-            
-            return [
-                'success' => false,
-                'error' => 'Configuration file not found at ' . $dynamicFile
-            ];
-            
-        } catch (\Exception $e) {
-            \Log::error("❌ Erro ao acessar API Traefik", [
-                'error' => $e->getMessage()
-            ]);
-            
-            return [
-                'success' => false,
-                'error' => 'Erro ao acessar API Traefik: ' . $e->getMessage()
-            ];
-        }
+        });
     }
 
     /**

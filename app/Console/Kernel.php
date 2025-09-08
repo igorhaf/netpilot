@@ -12,6 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Health check every 5 minutes for active upstreams
+        $schedule->command('upstream:health --all')
+            ->everyFiveMinutes()
+            ->appendOutputTo(storage_path('logs/upstream-health.log'));
+
         // Renovar certificados SSL diariamente às 2:00 AM
         $schedule->command('proxy:renew')
             ->dailyAt('02:00')
@@ -39,6 +44,16 @@ class Kernel extends ConsoleKernel
         $schedule->command('logs:cleanup')
             ->weekly()
             ->withoutOverlapping();
+
+        // Alert monitoring
+        $schedule->command('alerts:monitor')
+            ->everyFiveMinutes()
+            ->runInBackground();
+
+        // Metrics monitoring
+        $schedule->command('metrics:monitor')
+            ->everyFiveMinutes()
+            ->runInBackground();
     }
 
     /**

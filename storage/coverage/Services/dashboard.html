@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for /var/www/html/app/Services</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../_css/bootstrap.min.css?v=11.0.10" rel="stylesheet" type="text/css">
+  <link href="../_css/nv.d3.min.css?v=11.0.10" rel="stylesheet" type="text/css">
+  <link href="../_css/style.css?v=11.0.10" rel="stylesheet" type="text/css">
+  <link href="../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../index.html">/var/www/html/app</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Services</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="AlertingService.php.html#9">App\Services\AlertingService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AnalyticsService.php.html#8">App\Services\AnalyticsService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CacheService.php.html#7">App\Services\CacheService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CircuitBreaker.php.html#8">App\Services\CircuitBreaker</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#15">App\Services\LetsEncryptService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#9">App\Services\MetricsService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NginxService.php.html#7">App\Services\NginxService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#20">App\Services\ReconcilerService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemCommandService.php.html#8">App\Services\SystemCommandService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#12">App\Services\TraefikService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WafInspectionResult.php.html#5">App\Services\WafInspectionResult</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WafService.php.html#7">App\Services\WafService</a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WebhookDispatcherService.php.html#10">App\Services\WebhookDispatcherService</a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="LetsEncryptService.php.html#15">App\Services\LetsEncryptService</a></td><td class="text-right">6480</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#20">App\Services\ReconcilerService</a></td><td class="text-right">3660</td></tr>
+       <tr><td><a href="TraefikService.php.html#12">App\Services\TraefikService</a></td><td class="text-right">1122</td></tr>
+       <tr><td><a href="MetricsService.php.html#9">App\Services\MetricsService</a></td><td class="text-right">182</td></tr>
+       <tr><td><a href="NginxService.php.html#7">App\Services\NginxService</a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="WebhookDispatcherService.php.html#10">App\Services\WebhookDispatcherService</a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="AlertingService.php.html#9">App\Services\AlertingService</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="CircuitBreaker.php.html#8">App\Services\CircuitBreaker</a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="SystemCommandService.php.html#8">App\Services\SystemCommandService</a></td><td class="text-right">30</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="AlertingService.php.html#11"><abbr title="App\Services\AlertingService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AlertingService.php.html#15"><abbr title="App\Services\AlertingService::checkThresholds">checkThresholds</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AlertingService.php.html#47"><abbr title="App\Services\AlertingService::triggerAlert">triggerAlert</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AnalyticsService.php.html#10"><abbr title="App\Services\AnalyticsService::recordRequest">recordRequest</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AnalyticsService.php.html#23"><abbr title="App\Services\AnalyticsService::recordEvent">recordEvent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="AnalyticsService.php.html#33"><abbr title="App\Services\AnalyticsService::getRequestStats">getRequestStats</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CacheService.php.html#9"><abbr title="App\Services\CacheService::get">get</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CacheService.php.html#14"><abbr title="App\Services\CacheService::forget">forget</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CacheService.php.html#19"><abbr title="App\Services\CacheService::cacheProxyConfig">cacheProxyConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CacheService.php.html#24"><abbr title="App\Services\CacheService::getProxyConfig">getProxyConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CacheService.php.html#29"><abbr title="App\Services\CacheService::cacheSslCertificate">cacheSslCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CacheService.php.html#34"><abbr title="App\Services\CacheService::getSslCertificate">getSslCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CircuitBreaker.php.html#13"><abbr title="App\Services\CircuitBreaker::isAvailable">isAvailable</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CircuitBreaker.php.html#25"><abbr title="App\Services\CircuitBreaker::recordFailure">recordFailure</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="CircuitBreaker.php.html#36"><abbr title="App\Services\CircuitBreaker::recordSuccess">recordSuccess</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#20"><abbr title="App\Services\LetsEncryptService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#29"><abbr title="App\Services\LetsEncryptService::issueCertificate">issueCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#144"><abbr title="App\Services\LetsEncryptService::issueWildcardCertificate">issueWildcardCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#166"><abbr title="App\Services\LetsEncryptService::createDnsChallenge">createDnsChallenge</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#183"><abbr title="App\Services\LetsEncryptService::logSslPhase">logSslPhase</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#201"><abbr title="App\Services\LetsEncryptService::validateDomain">validateDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#213"><abbr title="App\Services\LetsEncryptService::checkPorts">checkPorts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#230"><abbr title="App\Services\LetsEncryptService::prepareEnvironment">prepareEnvironment</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#246"><abbr title="App\Services\LetsEncryptService::applyCertificateToServer">applyCertificateToServer</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#261"><abbr title="App\Services\LetsEncryptService::issueCertificateWithCertbot">issueCertificateWithCertbot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#328"><abbr title="App\Services\LetsEncryptService::createDnsCredentialsFile">createDnsCredentialsFile</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#343"><abbr title="App\Services\LetsEncryptService::simulateCertificateIssuance">simulateCertificateIssuance</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#350"><abbr title="App\Services\LetsEncryptService::simulateCertificateRenewal">simulateCertificateRenewal</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#356"><abbr title="App\Services\LetsEncryptService::simulateCertificateRevocation">simulateCertificateRevocation</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#362"><abbr title="App\Services\LetsEncryptService::generateMockCertificateFiles">generateMockCertificateFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#385"><abbr title="App\Services\LetsEncryptService::removeMockCertificateFiles">removeMockCertificateFiles</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#406"><abbr title="App\Services\LetsEncryptService::generateMockCertificateContent">generateMockCertificateContent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#419"><abbr title="App\Services\LetsEncryptService::generateMockPrivateKeyContent">generateMockPrivateKeyContent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#427"><abbr title="App\Services\LetsEncryptService::generateMockChainContent">generateMockChainContent</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#439"><abbr title="App\Services\LetsEncryptService::checkCertificateStatus">checkCertificateStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#472"><abbr title="App\Services\LetsEncryptService::getAcmeChallengePath">getAcmeChallengePath</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#477"><abbr title="App\Services\LetsEncryptService::cleanupExpiredCertificates">cleanupExpiredCertificates</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#502"><abbr title="App\Services\LetsEncryptService::renewCertificate">renewCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#573"><abbr title="App\Services\LetsEncryptService::renewCertificateWithCertbot">renewCertificateWithCertbot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#627"><abbr title="App\Services\LetsEncryptService::revokeCertificate">revokeCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#678"><abbr title="App\Services\LetsEncryptService::revokeCertificateWithCertbot">revokeCertificateWithCertbot</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#698"><abbr title="App\Services\LetsEncryptService::cleanupRevokedCertificate">cleanupRevokedCertificate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#11"><abbr title="App\Services\MetricsService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#16"><abbr title="App\Services\MetricsService::incrementRequestCount">incrementRequestCount</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#26"><abbr title="App\Services\MetricsService::observeResponseTime">observeResponseTime</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#37"><abbr title="App\Services\MetricsService::setUpstreamStatus">setUpstreamStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#47"><abbr title="App\Services\MetricsService::setSslCertificateStatus">setSslCertificateStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#57"><abbr title="App\Services\MetricsService::checkForAnomalies">checkForAnomalies</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#77"><abbr title="App\Services\MetricsService::calculateErrorRate">calculateErrorRate</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MetricsService.php.html#91"><abbr title="App\Services\MetricsService::countSlowResponses">countSlowResponses</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NginxService.php.html#9"><abbr title="App\Services\NginxService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NginxService.php.html#11"><abbr title="App\Services\NginxService::applyDomain">applyDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="NginxService.php.html#59"><abbr title="App\Services\NginxService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#28"><abbr title="App\Services\ReconcilerService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#43"><abbr title="App\Services\ReconcilerService::reconcileAll">reconcileAll</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#111"><abbr title="App\Services\ReconcilerService::reconcileDomains">reconcileDomains</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#156"><abbr title="App\Services\ReconcilerService::reconcileUpstreams">reconcileUpstreams</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#194"><abbr title="App\Services\ReconcilerService::reconcileRoutes">reconcileRoutes</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#240"><abbr title="App\Services\ReconcilerService::reconcileRedirects">reconcileRedirects</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#276"><abbr title="App\Services\ReconcilerService::reconcileCertificates">reconcileCertificates</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#321"><abbr title="App\Services\ReconcilerService::reconcileTraefik">reconcileTraefik</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#356"><abbr title="App\Services\ReconcilerService::verifyConfigurations">verifyConfigurations</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#397"><abbr title="App\Services\ReconcilerService::applyDomainConfiguration">applyDomainConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#411"><abbr title="App\Services\ReconcilerService::checkUpstreamHealth">checkUpstreamHealth</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#439"><abbr title="App\Services\ReconcilerService::validateRedirectPattern">validateRedirectPattern</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#457"><abbr title="App\Services\ReconcilerService::triggerExpirationAlerts">triggerExpirationAlerts</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#478"><abbr title="App\Services\ReconcilerService::validateRoute">validateRoute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#488"><abbr title="App\Services\ReconcilerService::validateRedirect">validateRedirect</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#499"><abbr title="App\Services\ReconcilerService::getStatus">getStatus</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SystemCommandService.php.html#13"><abbr title="App\Services\SystemCommandService::execute">execute</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#18"><abbr title="App\Services\TraefikService::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#35"><abbr title="App\Services\TraefikService::applyDomain">applyDomain</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#65"><abbr title="App\Services\TraefikService::generateConfiguration">generateConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#147"><abbr title="App\Services\TraefikService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#183"><abbr title="App\Services\TraefikService::applyConfiguration">applyConfiguration</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#267"><abbr title="App\Services\TraefikService::reloadTraefikViaApi">reloadTraefikViaApi</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#305"><abbr title="App\Services\TraefikService::getConfigPreview">getConfigPreview</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#312"><abbr title="App\Services\TraefikService::buildDynamicConfig">buildDynamicConfig</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="TraefikService.php.html#362"><abbr title="App\Services\TraefikService::resolveTargetScheme">resolveTargetScheme</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WafInspectionResult.php.html#7"><abbr title="App\Services\WafInspectionResult::__construct">__construct</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WafInspectionResult.php.html#12"><abbr title="App\Services\WafInspectionResult::isBlocked">isBlocked</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WafInspectionResult.php.html#17"><abbr title="App\Services\WafInspectionResult::getReason">getReason</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WafService.php.html#9"><abbr title="App\Services\WafService::inspectRequest">inspectRequest</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WebhookDispatcherService.php.html#12"><abbr title="App\Services\WebhookDispatcherService::dispatch">dispatch</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WebhookDispatcherService.php.html#32"><abbr title="App\Services\WebhookDispatcherService::generateSignature">generateSignature</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="WebhookDispatcherService.php.html#40"><abbr title="App\Services\WebhookDispatcherService::logEvent">logEvent</abbr></a></td><td class="text-right">0%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="TraefikService.php.html#312"><abbr title="App\Services\TraefikService::buildDynamicConfig">buildDynamicConfig</abbr></a></td><td class="text-right">72</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#29"><abbr title="App\Services\LetsEncryptService::issueCertificate">issueCertificate</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#385"><abbr title="App\Services\LetsEncryptService::removeMockCertificateFiles">removeMockCertificateFiles</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#356"><abbr title="App\Services\ReconcilerService::verifyConfigurations">verifyConfigurations</abbr></a></td><td class="text-right">56</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#261"><abbr title="App\Services\LetsEncryptService::issueCertificateWithCertbot">issueCertificateWithCertbot</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#439"><abbr title="App\Services\LetsEncryptService::checkCertificateStatus">checkCertificateStatus</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#573"><abbr title="App\Services\LetsEncryptService::renewCertificateWithCertbot">renewCertificateWithCertbot</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#111"><abbr title="App\Services\ReconcilerService::reconcileDomains">reconcileDomains</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#276"><abbr title="App\Services\ReconcilerService::reconcileCertificates">reconcileCertificates</abbr></a></td><td class="text-right">42</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#502"><abbr title="App\Services\LetsEncryptService::renewCertificate">renewCertificate</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#156"><abbr title="App\Services\ReconcilerService::reconcileUpstreams">reconcileUpstreams</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#194"><abbr title="App\Services\ReconcilerService::reconcileRoutes">reconcileRoutes</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="SystemCommandService.php.html#13"><abbr title="App\Services\SystemCommandService::execute">execute</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="TraefikService.php.html#183"><abbr title="App\Services\TraefikService::applyConfiguration">applyConfiguration</abbr></a></td><td class="text-right">30</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#213"><abbr title="App\Services\LetsEncryptService::checkPorts">checkPorts</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#230"><abbr title="App\Services\LetsEncryptService::prepareEnvironment">prepareEnvironment</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#627"><abbr title="App\Services\LetsEncryptService::revokeCertificate">revokeCertificate</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="NginxService.php.html#59"><abbr title="App\Services\NginxService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#43"><abbr title="App\Services\ReconcilerService::reconcileAll">reconcileAll</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#240"><abbr title="App\Services\ReconcilerService::reconcileRedirects">reconcileRedirects</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#321"><abbr title="App\Services\ReconcilerService::reconcileTraefik">reconcileTraefik</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#439"><abbr title="App\Services\ReconcilerService::validateRedirectPattern">validateRedirectPattern</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="TraefikService.php.html#65"><abbr title="App\Services\TraefikService::generateConfiguration">generateConfiguration</abbr></a></td><td class="text-right">20</td></tr>
+       <tr><td><a href="AlertingService.php.html#15"><abbr title="App\Services\AlertingService::checkThresholds">checkThresholds</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#201"><abbr title="App\Services\LetsEncryptService::validateDomain">validateDomain</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#246"><abbr title="App\Services\LetsEncryptService::applyCertificateToServer">applyCertificateToServer</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#477"><abbr title="App\Services\LetsEncryptService::cleanupExpiredCertificates">cleanupExpiredCertificates</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#698"><abbr title="App\Services\LetsEncryptService::cleanupRevokedCertificate">cleanupRevokedCertificate</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="MetricsService.php.html#57"><abbr title="App\Services\MetricsService::checkForAnomalies">checkForAnomalies</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#411"><abbr title="App\Services\ReconcilerService::checkUpstreamHealth">checkUpstreamHealth</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#478"><abbr title="App\Services\ReconcilerService::validateRoute">validateRoute</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="TraefikService.php.html#18"><abbr title="App\Services\TraefikService::__construct">__construct</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="TraefikService.php.html#147"><abbr title="App\Services\TraefikService::deployConfiguration">deployConfiguration</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="TraefikService.php.html#267"><abbr title="App\Services\TraefikService::reloadTraefikViaApi">reloadTraefikViaApi</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="TraefikService.php.html#362"><abbr title="App\Services\TraefikService::resolveTargetScheme">resolveTargetScheme</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="WebhookDispatcherService.php.html#12"><abbr title="App\Services\WebhookDispatcherService::dispatch">dispatch</abbr></a></td><td class="text-right">12</td></tr>
+       <tr><td><a href="CircuitBreaker.php.html#13"><abbr title="App\Services\CircuitBreaker::isAvailable">isAvailable</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="CircuitBreaker.php.html#25"><abbr title="App\Services\CircuitBreaker::recordFailure">recordFailure</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#144"><abbr title="App\Services\LetsEncryptService::issueWildcardCertificate">issueWildcardCertificate</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#183"><abbr title="App\Services\LetsEncryptService::logSslPhase">logSslPhase</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#328"><abbr title="App\Services\LetsEncryptService::createDnsCredentialsFile">createDnsCredentialsFile</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#362"><abbr title="App\Services\LetsEncryptService::generateMockCertificateFiles">generateMockCertificateFiles</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="LetsEncryptService.php.html#678"><abbr title="App\Services\LetsEncryptService::revokeCertificateWithCertbot">revokeCertificateWithCertbot</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="MetricsService.php.html#37"><abbr title="App\Services\MetricsService::setUpstreamStatus">setUpstreamStatus</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="MetricsService.php.html#47"><abbr title="App\Services\MetricsService::setSslCertificateStatus">setSslCertificateStatus</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="MetricsService.php.html#77"><abbr title="App\Services\MetricsService::calculateErrorRate">calculateErrorRate</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="NginxService.php.html#11"><abbr title="App\Services\NginxService::applyDomain">applyDomain</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#397"><abbr title="App\Services\ReconcilerService::applyDomainConfiguration">applyDomainConfiguration</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#457"><abbr title="App\Services\ReconcilerService::triggerExpirationAlerts">triggerExpirationAlerts</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#488"><abbr title="App\Services\ReconcilerService::validateRedirect">validateRedirect</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="ReconcilerService.php.html#499"><abbr title="App\Services\ReconcilerService::getStatus">getStatus</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="TraefikService.php.html#35"><abbr title="App\Services\TraefikService::applyDomain">applyDomain</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="TraefikService.php.html#305"><abbr title="App\Services\TraefikService::getConfigPreview">getConfigPreview</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="WebhookDispatcherService.php.html#32"><abbr title="App\Services\WebhookDispatcherService::generateSignature">generateSignature</abbr></a></td><td class="text-right">6</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 11.0.10</a> using <a href="https://www.php.net/" target="_top">PHP 8.4.12</a> and <a href="https://phpunit.de/">PHPUnit 11.5.34</a> at Mon Sep 8 16:51:37 UTC 2025.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../_js/jquery.min.js?v=11.0.10" type="text/javascript"></script>
+  <script src="../_js/d3.min.js?v=11.0.10" type="text/javascript"></script>
+  <script src="../_js/nv.d3.min.js?v=11.0.10" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([13,0,0,0,0,0,0,0,0,0,0,3], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([86,0,0,0,0,0,0,0,0,0,0,10], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[0,5,"<a href=\"AlertingService.php.html#9\">App\\Services\\AlertingService<\/a>"],[0,3,"<a href=\"AnalyticsService.php.html#8\">App\\Services\\AnalyticsService<\/a>"],[0,6,"<a href=\"CacheService.php.html#7\">App\\Services\\CacheService<\/a>"],[0,5,"<a href=\"CircuitBreaker.php.html#8\">App\\Services\\CircuitBreaker<\/a>"],[100,4,"<a href=\"DnsService.php.html#5\">App\\Services\\DnsService<\/a>"],[0,80,"<a href=\"LetsEncryptService.php.html#15\">App\\Services\\LetsEncryptService<\/a>"],[0,13,"<a href=\"MetricsService.php.html#9\">App\\Services\\MetricsService<\/a>"],[100,3,"<a href=\"MonitoringIntegrationService.php.html#5\">App\\Services\\MonitoringIntegrationService<\/a>"],[0,7,"<a href=\"NginxService.php.html#7\">App\\Services\\NginxService<\/a>"],[100,3,"<a href=\"NotificationService.php.html#5\">App\\Services\\NotificationService<\/a>"],[0,60,"<a href=\"ReconcilerService.php.html#20\">App\\Services\\ReconcilerService<\/a>"],[0,5,"<a href=\"SystemCommandService.php.html#8\">App\\Services\\SystemCommandService<\/a>"],[0,33,"<a href=\"TraefikService.php.html#12\">App\\Services\\TraefikService<\/a>"],[0,3,"<a href=\"WafInspectionResult.php.html#5\">App\\Services\\WafInspectionResult<\/a>"],[0,1,"<a href=\"WafService.php.html#7\">App\\Services\\WafService<\/a>"],[0,6,"<a href=\"WebhookDispatcherService.php.html#10\">App\\Services\\WebhookDispatcherService<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[0,1,"<a href=\"AlertingService.php.html#11\">App\\Services\\AlertingService::__construct<\/a>"],[0,3,"<a href=\"AlertingService.php.html#15\">App\\Services\\AlertingService::checkThresholds<\/a>"],[0,1,"<a href=\"AlertingService.php.html#47\">App\\Services\\AlertingService::triggerAlert<\/a>"],[0,1,"<a href=\"AnalyticsService.php.html#10\">App\\Services\\AnalyticsService::recordRequest<\/a>"],[0,1,"<a href=\"AnalyticsService.php.html#23\">App\\Services\\AnalyticsService::recordEvent<\/a>"],[0,1,"<a href=\"AnalyticsService.php.html#33\">App\\Services\\AnalyticsService::getRequestStats<\/a>"],[0,1,"<a href=\"CacheService.php.html#9\">App\\Services\\CacheService::get<\/a>"],[0,1,"<a href=\"CacheService.php.html#14\">App\\Services\\CacheService::forget<\/a>"],[0,1,"<a href=\"CacheService.php.html#19\">App\\Services\\CacheService::cacheProxyConfig<\/a>"],[0,1,"<a href=\"CacheService.php.html#24\">App\\Services\\CacheService::getProxyConfig<\/a>"],[0,1,"<a href=\"CacheService.php.html#29\">App\\Services\\CacheService::cacheSslCertificate<\/a>"],[0,1,"<a href=\"CacheService.php.html#34\">App\\Services\\CacheService::getSslCertificate<\/a>"],[0,2,"<a href=\"CircuitBreaker.php.html#13\">App\\Services\\CircuitBreaker::isAvailable<\/a>"],[0,2,"<a href=\"CircuitBreaker.php.html#25\">App\\Services\\CircuitBreaker::recordFailure<\/a>"],[0,1,"<a href=\"CircuitBreaker.php.html#36\">App\\Services\\CircuitBreaker::recordSuccess<\/a>"],[100,1,"<a href=\"DnsService.php.html#7\">App\\Services\\DnsService::__construct<\/a>"],[100,1,"<a href=\"DnsService.php.html#12\">App\\Services\\DnsService::createRecord<\/a>"],[100,1,"<a href=\"DnsService.php.html#18\">App\\Services\\DnsService::deleteRecord<\/a>"],[100,1,"<a href=\"DnsService.php.html#24\">App\\Services\\DnsService::verifyDnsChallenge<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#20\">App\\Services\\LetsEncryptService::__construct<\/a>"],[0,7,"<a href=\"LetsEncryptService.php.html#29\">App\\Services\\LetsEncryptService::issueCertificate<\/a>"],[0,2,"<a href=\"LetsEncryptService.php.html#144\">App\\Services\\LetsEncryptService::issueWildcardCertificate<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#166\">App\\Services\\LetsEncryptService::createDnsChallenge<\/a>"],[0,2,"<a href=\"LetsEncryptService.php.html#183\">App\\Services\\LetsEncryptService::logSslPhase<\/a>"],[0,3,"<a href=\"LetsEncryptService.php.html#201\">App\\Services\\LetsEncryptService::validateDomain<\/a>"],[0,4,"<a href=\"LetsEncryptService.php.html#213\">App\\Services\\LetsEncryptService::checkPorts<\/a>"],[0,4,"<a href=\"LetsEncryptService.php.html#230\">App\\Services\\LetsEncryptService::prepareEnvironment<\/a>"],[0,3,"<a href=\"LetsEncryptService.php.html#246\">App\\Services\\LetsEncryptService::applyCertificateToServer<\/a>"],[0,6,"<a href=\"LetsEncryptService.php.html#261\">App\\Services\\LetsEncryptService::issueCertificateWithCertbot<\/a>"],[0,2,"<a href=\"LetsEncryptService.php.html#328\">App\\Services\\LetsEncryptService::createDnsCredentialsFile<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#343\">App\\Services\\LetsEncryptService::simulateCertificateIssuance<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#350\">App\\Services\\LetsEncryptService::simulateCertificateRenewal<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#356\">App\\Services\\LetsEncryptService::simulateCertificateRevocation<\/a>"],[0,2,"<a href=\"LetsEncryptService.php.html#362\">App\\Services\\LetsEncryptService::generateMockCertificateFiles<\/a>"],[0,7,"<a href=\"LetsEncryptService.php.html#385\">App\\Services\\LetsEncryptService::removeMockCertificateFiles<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#406\">App\\Services\\LetsEncryptService::generateMockCertificateContent<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#419\">App\\Services\\LetsEncryptService::generateMockPrivateKeyContent<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#427\">App\\Services\\LetsEncryptService::generateMockChainContent<\/a>"],[0,6,"<a href=\"LetsEncryptService.php.html#439\">App\\Services\\LetsEncryptService::checkCertificateStatus<\/a>"],[0,1,"<a href=\"LetsEncryptService.php.html#472\">App\\Services\\LetsEncryptService::getAcmeChallengePath<\/a>"],[0,3,"<a href=\"LetsEncryptService.php.html#477\">App\\Services\\LetsEncryptService::cleanupExpiredCertificates<\/a>"],[0,5,"<a href=\"LetsEncryptService.php.html#502\">App\\Services\\LetsEncryptService::renewCertificate<\/a>"],[0,6,"<a href=\"LetsEncryptService.php.html#573\">App\\Services\\LetsEncryptService::renewCertificateWithCertbot<\/a>"],[0,4,"<a href=\"LetsEncryptService.php.html#627\">App\\Services\\LetsEncryptService::revokeCertificate<\/a>"],[0,2,"<a href=\"LetsEncryptService.php.html#678\">App\\Services\\LetsEncryptService::revokeCertificateWithCertbot<\/a>"],[0,3,"<a href=\"LetsEncryptService.php.html#698\">App\\Services\\LetsEncryptService::cleanupRevokedCertificate<\/a>"],[0,1,"<a href=\"MetricsService.php.html#11\">App\\Services\\MetricsService::__construct<\/a>"],[0,1,"<a href=\"MetricsService.php.html#16\">App\\Services\\MetricsService::incrementRequestCount<\/a>"],[0,1,"<a href=\"MetricsService.php.html#26\">App\\Services\\MetricsService::observeResponseTime<\/a>"],[0,2,"<a href=\"MetricsService.php.html#37\">App\\Services\\MetricsService::setUpstreamStatus<\/a>"],[0,2,"<a href=\"MetricsService.php.html#47\">App\\Services\\MetricsService::setSslCertificateStatus<\/a>"],[0,3,"<a href=\"MetricsService.php.html#57\">App\\Services\\MetricsService::checkForAnomalies<\/a>"],[0,2,"<a href=\"MetricsService.php.html#77\">App\\Services\\MetricsService::calculateErrorRate<\/a>"],[0,1,"<a href=\"MetricsService.php.html#91\">App\\Services\\MetricsService::countSlowResponses<\/a>"],[100,1,"<a href=\"MonitoringIntegrationService.php.html#7\">App\\Services\\MonitoringIntegrationService::__construct<\/a>"],[100,1,"<a href=\"MonitoringIntegrationService.php.html#12\">App\\Services\\MonitoringIntegrationService::sendMetrics<\/a>"],[100,1,"<a href=\"MonitoringIntegrationService.php.html#18\">App\\Services\\MonitoringIntegrationService::createAlert<\/a>"],[0,1,"<a href=\"NginxService.php.html#9\">App\\Services\\NginxService::__construct<\/a>"],[0,2,"<a href=\"NginxService.php.html#11\">App\\Services\\NginxService::applyDomain<\/a>"],[0,4,"<a href=\"NginxService.php.html#59\">App\\Services\\NginxService::deployConfiguration<\/a>"],[100,1,"<a href=\"NotificationService.php.html#7\">App\\Services\\NotificationService::__construct<\/a>"],[100,1,"<a href=\"NotificationService.php.html#12\">App\\Services\\NotificationService::send<\/a>"],[100,1,"<a href=\"NotificationService.php.html#21\">App\\Services\\NotificationService::testConnection<\/a>"],[0,1,"<a href=\"ReconcilerService.php.html#28\">App\\Services\\ReconcilerService::__construct<\/a>"],[0,4,"<a href=\"ReconcilerService.php.html#43\">App\\Services\\ReconcilerService::reconcileAll<\/a>"],[0,6,"<a href=\"ReconcilerService.php.html#111\">App\\Services\\ReconcilerService::reconcileDomains<\/a>"],[0,5,"<a href=\"ReconcilerService.php.html#156\">App\\Services\\ReconcilerService::reconcileUpstreams<\/a>"],[0,5,"<a href=\"ReconcilerService.php.html#194\">App\\Services\\ReconcilerService::reconcileRoutes<\/a>"],[0,4,"<a href=\"ReconcilerService.php.html#240\">App\\Services\\ReconcilerService::reconcileRedirects<\/a>"],[0,6,"<a href=\"ReconcilerService.php.html#276\">App\\Services\\ReconcilerService::reconcileCertificates<\/a>"],[0,4,"<a href=\"ReconcilerService.php.html#321\">App\\Services\\ReconcilerService::reconcileTraefik<\/a>"],[0,7,"<a href=\"ReconcilerService.php.html#356\">App\\Services\\ReconcilerService::verifyConfigurations<\/a>"],[0,2,"<a href=\"ReconcilerService.php.html#397\">App\\Services\\ReconcilerService::applyDomainConfiguration<\/a>"],[0,3,"<a href=\"ReconcilerService.php.html#411\">App\\Services\\ReconcilerService::checkUpstreamHealth<\/a>"],[0,4,"<a href=\"ReconcilerService.php.html#439\">App\\Services\\ReconcilerService::validateRedirectPattern<\/a>"],[0,2,"<a href=\"ReconcilerService.php.html#457\">App\\Services\\ReconcilerService::triggerExpirationAlerts<\/a>"],[0,3,"<a href=\"ReconcilerService.php.html#478\">App\\Services\\ReconcilerService::validateRoute<\/a>"],[0,2,"<a href=\"ReconcilerService.php.html#488\">App\\Services\\ReconcilerService::validateRedirect<\/a>"],[0,2,"<a href=\"ReconcilerService.php.html#499\">App\\Services\\ReconcilerService::getStatus<\/a>"],[0,5,"<a href=\"SystemCommandService.php.html#13\">App\\Services\\SystemCommandService::execute<\/a>"],[0,3,"<a href=\"TraefikService.php.html#18\">App\\Services\\TraefikService::__construct<\/a>"],[0,2,"<a href=\"TraefikService.php.html#35\">App\\Services\\TraefikService::applyDomain<\/a>"],[0,4,"<a href=\"TraefikService.php.html#65\">App\\Services\\TraefikService::generateConfiguration<\/a>"],[0,3,"<a href=\"TraefikService.php.html#147\">App\\Services\\TraefikService::deployConfiguration<\/a>"],[0,5,"<a href=\"TraefikService.php.html#183\">App\\Services\\TraefikService::applyConfiguration<\/a>"],[0,3,"<a href=\"TraefikService.php.html#267\">App\\Services\\TraefikService::reloadTraefikViaApi<\/a>"],[0,2,"<a href=\"TraefikService.php.html#305\">App\\Services\\TraefikService::getConfigPreview<\/a>"],[0,8,"<a href=\"TraefikService.php.html#312\">App\\Services\\TraefikService::buildDynamicConfig<\/a>"],[0,3,"<a href=\"TraefikService.php.html#362\">App\\Services\\TraefikService::resolveTargetScheme<\/a>"],[0,1,"<a href=\"WafInspectionResult.php.html#7\">App\\Services\\WafInspectionResult::__construct<\/a>"],[0,1,"<a href=\"WafInspectionResult.php.html#12\">App\\Services\\WafInspectionResult::isBlocked<\/a>"],[0,1,"<a href=\"WafInspectionResult.php.html#17\">App\\Services\\WafInspectionResult::getReason<\/a>"],[0,1,"<a href=\"WafService.php.html#9\">App\\Services\\WafService::inspectRequest<\/a>"],[0,3,"<a href=\"WebhookDispatcherService.php.html#12\">App\\Services\\WebhookDispatcherService::dispatch<\/a>"],[0,2,"<a href=\"WebhookDispatcherService.php.html#32\">App\\Services\\WebhookDispatcherService::generateSignature<\/a>"],[0,1,"<a href=\"WebhookDispatcherService.php.html#40\">App\\Services\\WebhookDispatcherService::logEvent<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>

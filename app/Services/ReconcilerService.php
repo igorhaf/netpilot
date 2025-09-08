@@ -15,6 +15,7 @@ use App\Infra\Traefik\TraefikProvider;
 use Carbon\Carbon;
 use Symfony\Component\Yaml\Yaml;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\ReconciliationException;
 
 class ReconcilerService
 {
@@ -203,9 +204,7 @@ class ReconcilerService
             foreach ($routes as $route) {
                 try {
                     // Validate route has required relationships
-                    if (!$route->domain || !$route->upstream) {
-                        throw new \Exception("Route {$route->id} missing domain or upstream");
-                    }
+                    $this->validateRoute($route);
 
                     // Ensure upstream is active
                     if (!$route->upstream->is_active) {
@@ -248,10 +247,7 @@ class ReconcilerService
             foreach ($redirects as $redirect) {
                 try {
                     // Validate redirect pattern
-                    if (!$this->validateRedirectPattern($redirect)) {
-                        throw new \Exception("Invalid pattern for redirect {$redirect->id}");
-                    }
-
+                    $this->validateRedirect($redirect);
                     $validated++;
 
                 } catch (\Exception $e) {
@@ -474,6 +470,27 @@ class ReconcilerService
             // Dispatch event for notification
             event(new \App\Events\SslCertificateExpiring($cert));
         }
+    }
+
+    /**
+     * Validate route
+     */
+    private function validateRoute(RouteRule $route): void
+    {
+        if (!$route->domain || !$route->upstream) {
+            throw ReconciliationException::invalidRoute($route->id);
+        }
+    }
+
+    /**
+     * Validate redirect
+     */
+    private function validateRedirect(RedirectRule $redirect): bool
+    {
+        if (!$this->validateRedirectPattern($redirect)) {
+            throw ReconciliationException::invalidRedirectPattern($redirect->id);
+        }
+        return true;
     }
 
     /**

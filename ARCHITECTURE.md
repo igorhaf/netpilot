@@ -122,6 +122,26 @@ Web Interface (Logs Page)
 - Models serve as repositories with relationships
 - Active Record pattern for data persistence
 
+## Resilience Patterns
+
+### Circuit Breaker
+- Monitors for failures in external service calls
+- Opens circuit after failure threshold reached
+- Automatically resets after timeout period
+- Integrated with:
+  - Traefik configuration reloads
+  - SSL certificate operations
+  - DNS provider API calls
+
+### Retry Policies
+- Exponential backoff for transient failures
+- Configurable max attempts
+- Jitter to avoid thundering herds
+
+### Bulkhead Isolation
+- Separate connection pools for critical services
+- Limits impact of one failed service on others
+
 ## Configuration Management
 
 ### Environment Variables
