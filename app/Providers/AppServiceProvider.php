@@ -8,6 +8,7 @@ use Prometheus\Storage\InMemory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use App\Services\CloudflareWafService;
+use App\Services\CircuitBreakerService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,14 @@ class AppServiceProvider extends ServiceProvider
             return new CloudflareWafService(
                 config('services.cloudflare.api_key'),
                 config('services.cloudflare.zone_id')
+            );
+        });
+
+        $this->app->bind(CircuitBreakerService::class, function ($app) {
+            return new CircuitBreakerService(
+                'default-service', // Default service name
+                3, // failureThreshold
+                60 // resetTimeout
             );
         });
     }

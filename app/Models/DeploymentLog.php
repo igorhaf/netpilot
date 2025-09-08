@@ -10,6 +10,7 @@ class DeploymentLog extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'type',
         'action',
         'status',
@@ -19,6 +20,10 @@ class DeploymentLog extends Model
         'started_at',
         'completed_at',
         'duration',
+    ];
+
+    protected $attributes = [
+        'tenant_id' => 1,
     ];
 
     protected $casts = [

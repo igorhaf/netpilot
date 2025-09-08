@@ -21,6 +21,10 @@ class Domain extends Model
         'dns_records',
     ];
 
+    protected $attributes = [
+        'tenant_id' => 1,
+    ];
+
     protected $casts = [
         'is_active' => 'boolean',
         'auto_ssl' => 'boolean',

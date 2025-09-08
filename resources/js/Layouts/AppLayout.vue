@@ -254,12 +254,12 @@ const LogsIcon = {
 
 // Navegação (usando apenas rotas existentes)
 const navigation = [
-  { name: 'Dashboard', href: route('dashboard'), active: '', icon: DashboardIcon },
-  { name: 'Domínios', href: route('domains.index'), active: 'domains.*', icon: GlobeIcon },
-  { name: 'Proxy Reverso', href: route('proxy.index'), active: 'proxy.*', icon: ProxyIcon },
-  { name: 'Certificados SSL', href: route('ssl.index'), active: 'ssl.*', icon: SSLIcon },
-  { name: 'Redirects', href: route('redirects.index'), active: 'redirects.*', icon: RedirectIcon },
-  { name: 'Logs', href: route('logs.index'), active: 'logs.*', icon: LogsIcon },
+  { name: 'Dashboard', href: '/', active: 'dashboard', icon: DashboardIcon },
+  { name: 'Domínios', href: '/domains', active: 'domains.*', icon: GlobeIcon },
+  { name: 'Proxy Reverso', href: '/proxy', active: 'proxy.*', icon: ProxyIcon },
+  { name: 'Certificados SSL', href: '/ssl', active: 'ssl.*', icon: SSLIcon },
+  { name: 'Redirects', href: '/redirects', active: 'redirects.*', icon: RedirectIcon },
+  { name: 'Logs', href: '/logs', active: 'logs.*', icon: LogsIcon },
 ];
 
 // Lifecycle hooks

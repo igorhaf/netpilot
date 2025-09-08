@@ -3,31 +3,11 @@ import '../css/app.css';
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { Ziggy } from './ziggy';
+import { route, ZiggyVue } from 'ziggy-js';
 
-// Criar função route localmente
-const route = (name, params, absolute) => {
-  if (!Ziggy.routes[name]) {
-    throw new Error(`Route [${name}] not found.`);
-  }
-
-  let url = Ziggy.routes[name].uri;
-
-  if (params) {
-    Object.keys(params).forEach(key => {
-      url = url.replace(`{${key}}`, params[key]);
-    });
-  }
-
-  if (absolute) {
-    return `${Ziggy.url}/${url}`.replace(/\/+/g, '/');
-  }
-
-  return `/${url}`;
-};
-
-// Tornar route globalmente disponível
-window.route = route;
+// Expor Ziggy e route globalmente
 window.Ziggy = Ziggy;
+window.route = route;
 
 createInertiaApp({
   resolve: async (name) => {
@@ -42,11 +22,8 @@ createInertiaApp({
   },
   setup({ el, App, props, plugin }) {
     const app = createApp({ render: () => h(App, props) })
-      .use(plugin);
-
-    // Expor helpers globalmente para uso em templates/script-setup
-    app.config.globalProperties.route = route;
-    app.config.globalProperties.Ziggy = Ziggy;
+      .use(plugin)
+      .use(ZiggyVue, Ziggy);
 
     app.mount(el);
   },
