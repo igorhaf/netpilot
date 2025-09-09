@@ -1,6 +1,6 @@
 <template>
   <AppLayout title="Redirects">
-    <div class="space-y-6">
+    <PageLayout>
       <!-- Header com ações -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -174,7 +174,7 @@
           </Table>
         </div>
       </Card>
-    </div>
+    </PageLayout>
   </AppLayout>
 </template>
 
@@ -182,6 +182,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageLayout from '@/Components/PageLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Card from '@/Components/ui/Card.vue';
 import Badge from '@/Components/ui/Badge.vue';

@@ -1,6 +1,6 @@
 <template>
   <AppLayout title="Novo Domínio">
-    <div class="p-6">
+    <div class="space-y-6">
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center gap-3 mb-4">
@@ -20,7 +20,7 @@
       </div>
 
       <!-- Form -->
-      <Card class="max-w-4xl">
+      <Card class="w-full">
         <form @submit.prevent="submitForm" class="p-6 space-y-6">
           <!-- Domain Name -->
           <div>

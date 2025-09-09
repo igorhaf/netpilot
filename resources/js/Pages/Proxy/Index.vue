@@ -1,6 +1,6 @@
 <template>
   <AppLayout title="Proxy Reverso">
-    <div class="p-6">
+    <PageLayout>
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
@@ -216,7 +216,7 @@
           />
         </div>
       </Card>
-    </div>
+    </PageLayout>
   </AppLayout>
 </template>
 
@@ -224,6 +224,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageLayout from '@/Components/PageLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Card from '@/Components/ui/Card.vue';
