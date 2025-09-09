@@ -1,0 +1,17 @@
+http:
+  routers:
+    meadadigital.com-http:
+      rule: Host(`meadadigital.com`)
+      entryPoints: [web]
+      service: meadadigital.com-svc
+    meadadigital.com-https:
+      rule: Host(`meadadigital.com`)
+      entryPoints: [websecure]
+      service: meadadigital.com-svc
+      tls:
+        certResolver: letsencrypt
+  services:
+    meadadigital.com-svc:
+      loadBalancer:
+        servers:
+          - url: 'http://laravel.test:80'

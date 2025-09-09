@@ -1,440 +1,159 @@
 # NetPilot - Proxy Reverso e Gerenciamento SSL
 
-NetPilot é um sistema completo de gerenciamento de proxy reverso e certificados SSL, construído com Laravel 11 e Vue.js 3. Automatiza a configuração do Traefik e Nginx, gerencia certificados Let's Encrypt e fornece uma interface web intuitiva.
+NetPilot é um sistema completo de gerenciamento de proxy reverso e certificados SSL, construído com Laravel 11 e Vue.js 3. Automatiza a configuração do Traefik, gerencia certificados Let's Encrypt e fornece uma interface web intuitiva.
 
 ## 🚀 Recursos Principais
 
-- **Gerenciamento de Domínios**: Criação e configuração de domínios com DNS
-- **Proxy Reverso**: Regras de proxy com Traefik e Nginx
+- **Gerenciamento de Domínios**: Criação e configuração de domínios
 - **SSL Automático**: Certificados Let's Encrypt com renovação automática
-- **Redirecionamentos**: Regras de redirect com padrões flexíveis
-- **Upstreams**: Configuração de serviços backend com balanceamento
-- **Rotas Avançadas**: Roteamento baseado em paths e métodos HTTP
-- **Logs Detalhados**: Monitoramento completo de operações
+- **Proxy Reverso**: Regras de proxy com Traefik
 - **Interface Web**: Dashboard Vue.js 3 com Inertia.js
 
-## 📋 Requisitos do Sistema
+## 📋 Requisitos
 
-- **Docker** e **Docker Compose**
-- **PHP 8.2+** com extensões: pdo, mysql, redis, zip, gd
-- **MySQL 8.0+** ou **PostgreSQL 14+**
-- **Node.js 18+** e **NPM**
-- **Portas disponíveis**: 80, 443, 8080 (Traefik), 8484 (Laravel)
+- **Docker** (será instalado automaticamente se não estiver presente)
+- **Portas 80, 443, 8080, 8484** disponíveis
 
-## 🛠️ Instalação Completa
+## ⚡ Instalação Rápida
 
-### 1. Preparação do Servidor
+### Método 1: Script Automatizado (Recomendado)
 
 ```bash
-# Atualizar sistema
-sudo apt update && sudo apt upgrade -y
-
-# Instalar dependências básicas
-sudo apt install -y curl wget git unzip
-
-# Instalar Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-
-# Instalar Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-```
-
-### 2. Clone e Preparação do Projeto
-
-```bash
-# Clonar repositório
+# Clone o repositório
 git clone https://github.com/seu-usuario/netpilot.git
 cd netpilot
 
-# Criar diretórios necessários
-mkdir -p traefik/dynamic
-mkdir -p storage/certs
-mkdir -p storage/letsencrypt
-
-# Criar arquivo ACME com permissões corretas
-touch traefik/acme.json
-chmod 600 traefik/acme.json
-
-# Permissões dos diretórios dinâmicos
-chmod -R 755 traefik/dynamic/
+# Execute o script de instalação
+bash install.sh
 ```
 
-### 3. Configuração do Ambiente (.env)
+### Método 2: Manual com Sail
 
 ```bash
-# Copiar arquivo de exemplo
+# Clone e prepare
+git clone https://github.com/seu-usuario/netpilot.git
+cd netpilot
+
+# Instale dependências
+docker run --rm -u "$(id -u):$(id -g)" -v $(pwd):/var/www/html -w /var/www/html laravelsail/php84-composer:latest composer install
+
+# Configure e inicie
 cp .env.example .env
-
-# Editar .env com suas configurações
-nano .env
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate --force
+./vendor/bin/sail npm install && ./vendor/bin/sail npm run build
 ```
 
-**Configuração essencial do .env:**
+## 🌐 Configuração de Domínio
 
-```env
-APP_NAME=NetPilot
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=http://seu-dominio.com:8484
+1. **Configure DNS**: Aponte seu domínio para o IP do servidor
+2. **Abra portas**: 80 e 443 no firewall
+3. **Acesse**: http://localhost:8484 (ou IP do servidor:8484)
+4. **Crie domínio**: Na interface web, vá em "Domínios" → "Criar" → Marque "Auto SSL"
 
-# Database
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-DB_DATABASE=netpilot
-DB_USERNAME=sail
-DB_PASSWORD=password
+### Exemplo via interface:
+- Nome: `exemplo.com`
+- Ativo: ✅
+- Auto SSL: ✅
+- Salvar
 
-# NetPilot Proxy
-PROXY_ENABLED=true
-EDGE_PROVIDER=traefik
-TRAEFIK_ACME_EMAIL=seu-email@exemplo.com
-TRAEFIK_ACME_CA_SERVER=https://acme-v02.api.letsencrypt.org/directory
-TRAEFIK_CHALLENGE=HTTP01
-PROXY_DYNAMIC_DIR=/var/www/html/traefik/dynamic
-TRAEFIK_DYNAMIC_DIR=/var/www/html/traefik/dynamic
+O certificado será gerado automaticamente em ~1 minuto.
 
-# Let's Encrypt
-LETSENCRYPT_EMAIL=seu-email@exemplo.com
-LETSENCRYPT_CHALLENGE=webroot
-LETSENCRYPT_STAGING=false
-LETSENCRYPT_WEBROOT=/var/www/html/public
-LETSENCRYPT_CERTS_PATH=/var/www/html/storage/certs
-LETSENCRYPT_ACME_PATH=/var/www/html/storage/letsencrypt
-
-# Queue
-QUEUE_CONNECTION=database
-BROADCAST_DRIVER=log
-
-# Cache
-CACHE_DRIVER=redis
-SESSION_DRIVER=redis
-```
-
-### 4. Instalação via Laravel Sail
+## ⚙️ Comandos Úteis
 
 ```bash
-# Instalar dependências do Composer
-docker run --rm \
-    -u "$(id -u):$(id -g)" \
-    -v $(pwd):/var/www/html \
-    -w /var/www/html \
-    laravelsail/php84-composer:latest \
-    composer install --optimize-autoloader --no-dev
-
-# Gerar chave da aplicação
-./vendor/bin/sail artisan key:generate
-
-# Subir os containers
+# Iniciar sistema
 ./vendor/bin/sail up -d
 
-# Executar migrações
-./vendor/bin/sail artisan migrate --force
+# Parar sistema
+./vendor/bin/sail down
 
-# Instalar dependências do frontend
-./vendor/bin/sail npm install
+# Ver logs
+./vendor/bin/sail logs -f
 
-# Compilar assets
-./vendor/bin/sail npm run build
+# Worker de queue (para SSL automático)
+./vendor/bin/sail artisan queue:work
 
-# Limpar e otimizar cache
-./vendor/bin/sail artisan config:clear
-./vendor/bin/sail artisan cache:clear
-./vendor/bin/sail artisan view:clear
-./vendor/bin/sail artisan optimize
-```
-
-### 5. Configuração DNS
-
-**Configure seus domínios para apontar para o IP do servidor:**
-
-```bash
-# Verificar IP público do servidor
-curl -s ifconfig.me
-
-# Criar registros DNS A/AAAA:
-# exemplo.com -> SEU_IP_PUBLICO
-# *.exemplo.com -> SEU_IP_PUBLICO (para subdomínios)
-```
-
-### 6. Configuração de Firewall
-
-```bash
-# Permitir portas necessárias
-sudo ufw allow 22/tcp      # SSH
-sudo ufw allow 80/tcp      # HTTP (ACME Challenge)
-sudo ufw allow 443/tcp     # HTTPS
-sudo ufw allow 8080/tcp    # Traefik Dashboard
-sudo ufw allow 8484/tcp    # Laravel (opcional, para acesso direto)
-
-# Ativar firewall
-sudo ufw --force enable
-```
-
-## ⚙️ Configuração SSL Automática
-
-### 1. Verificar Traefik
-
-```bash
-# Verificar se Traefik está rodando
-./vendor/bin/sail ps
-
-# Verificar logs do Traefik
-docker logs netpilot-traefik --tail 50
-
-# Verificar permissões do ACME
-ls -la traefik/acme.json
-```
-
-### 2. Configurar Domínio para SSL
-
-```bash
-# Via interface web em http://seu-servidor:8484
-# OU via linha de comando:
-
-./vendor/bin/sail artisan tinker
-```
-
-```php
-// Criar domínio
-$domain = App\Models\Domain::create([
-    'name' => 'exemplo.com',
-    'is_active' => true,
-    'auto_ssl' => true
-]);
-
-// Aplicar configuração Traefik
-app(App\Services\TraefikService::class)->applyDomain($domain);
-
-// Solicitar certificado SSL
-App\Jobs\CreateSslCertificateJob::dispatch($domain->sslCertificates()->create([
-    'domain_name' => 'exemplo.com',
-    'status' => 'pending'
-]));
-```
-
-### 3. Verificar Certificado
-
-```bash
-# Testar HTTPS
-curl -Iv https://seu-dominio.com
-
-# Verificar detalhes do certificado
-openssl s_client -servername seu-dominio.com -connect seu-dominio.com:443 -showcerts </dev/null | openssl x509 -noout -text
-```
-
-## 🔄 Comandos de Manutenção
-
-### Worker de Queue (Obrigatório)
-
-```bash
-# Iniciar worker permanentemente (use supervisord em produção)
-./vendor/bin/sail artisan queue:work --verbose --tries=3 --timeout=90
-
-# OU via supervisor (recomendado)
-sudo apt install supervisor
-sudo nano /etc/supervisor/conf.d/netpilot-worker.conf
-```
-
-**Configuração do Supervisor:**
-
-```ini
-[program:netpilot-worker]
-process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/html/artisan queue:work --sleep=3 --tries=3 --max-time=3600
-directory=/var/www/html
-autostart=true
-autorestart=true
-stopasgroup=true
-killasgroup=true
-user=sail
-numprocs=1
-redirect_stderr=true
-stdout_logfile=/var/www/html/storage/logs/worker.log
-stopwaitsecs=3600
-```
-
-### Comandos Úteis
-
-```bash
-# Sincronizar configurações do proxy
+# Sincronizar configurações
 ./vendor/bin/sail artisan proxy:sync
 
-# Verificar status dos certificados SSL
-./vendor/bin/sail artisan ssl:check
-
-# Renovar certificados próximos do vencimento
-./vendor/bin/sail artisan ssl:renew
-
-# Limpar logs antigos
-./vendor/bin/sail artisan logs:cleanup
-
-# Verificar status do sistema
-./vendor/bin/sail artisan system:status
-
-# Backup da configuração
-./vendor/bin/sail artisan config:backup
-
-# Restaurar configuração
-./vendor/bin/sail artisan config:restore backup.json
+# Verificar certificados
+curl -Iv https://seu-dominio.com
 ```
 
-### Cron Jobs
+## 🔄 Manutenção
+
+### Worker de Queue (SSL Automático)
 
 ```bash
-# Editar crontab
-crontab -e
+# Para SSL funcionar automaticamente, mantenha um worker rodando:
+./vendor/bin/sail artisan queue:work --verbose
+```
 
-# Adicionar linha:
-* * * * * cd /caminho/para/netpilot && ./vendor/bin/sail artisan schedule:run >> /dev/null 2>&1
+### Comandos Principais
+
+```bash
+# Renovar certificados
+./vendor/bin/sail artisan ssl:renew
+
+# Limpar logs antigos  
+./vendor/bin/sail artisan logs:cleanup
+
+# Status do sistema
+./vendor/bin/sail artisan system:status
 ```
 
 ## 🐛 Troubleshooting
 
-### Problema: Certificado SSL não é emitido
+### SSL não funciona
 
 ```bash
-# 1. Verificar logs do Traefik
-docker logs netpilot-traefik | grep -E "acme|challenge|certificate"
-
-# 2. Verificar permissões do acme.json
-chmod 600 traefik/acme.json
-docker restart netpilot-traefik
-
-# 3. Verificar conectividade HTTP
-curl -I http://seu-dominio.com
-
-# 4. Verificar DNS
+# Verificar DNS
 dig +short A seu-dominio.com
 
-# 5. Forçar nova solicitação
-./vendor/bin/sail artisan ssl:issue seu-dominio.com --force
+# Verificar logs
+docker logs netpilot-traefik | tail -20
+
+# Forçar nova tentativa
+./vendor/bin/sail artisan proxy:sync
 ```
 
-### Problema: Jobs ficam travados
+### Jobs travados
 
 ```bash
-# Verificar jobs falhados
-./vendor/bin/sail artisan queue:failed
-
-# Reprocessar jobs falhados
-./vendor/bin/sail artisan queue:retry all
-
-# Limpar jobs travados
-./vendor/bin/sail artisan queue:clear
-
 # Reiniciar worker
 ./vendor/bin/sail artisan queue:restart
+
+# Limpar queue
+./vendor/bin/sail artisan queue:clear
 ```
 
-### Problema: Traefik não carrega configuração
+## 📊 Logs
 
 ```bash
-# Verificar arquivos dinâmicos
-ls -la traefik/dynamic/
+# Ver logs em tempo real
+./vendor/bin/sail logs -f
 
-# Verificar sintaxe YAML
-./vendor/bin/sail artisan proxy:validate
-
-# Forçar regeneração
-./vendor/bin/sail artisan proxy:sync --force
-
-# Reiniciar Traefik
-docker restart netpilot-traefik
+# Logs específicos
+docker logs netpilot-traefik -f    # Traefik
+./vendor/bin/sail logs laravel.test # Laravel
 ```
 
-### Problema: Permissões de arquivo
-
-```bash
-# Corrigir permissões dos diretórios
-sudo chown -R $USER:$USER .
-chmod -R 755 storage/
-chmod -R 755 traefik/dynamic/
-chmod 600 traefik/acme.json
-
-# Corrigir permissões do Laravel
-./vendor/bin/sail artisan storage:link
-chmod -R 775 storage/
-chmod -R 775 bootstrap/cache/
-```
-
-## 📊 Monitoramento
-
-### Logs Importantes
-
-```bash
-# Logs do Laravel
-./vendor/bin/sail artisan log:tail
-
-# Logs do Traefik
-docker logs netpilot-traefik -f
-
-# Logs do Worker
-tail -f storage/logs/worker.log
-
-# Logs do MySQL
-docker logs netpilot-mysql-1 -f
-
-# Status dos containers
-./vendor/bin/sail ps
-```
-
-### Métricas de Sistema
-
-```bash
-# Uso de CPU e memória
-docker stats
-
-# Espaço em disco
-df -h
-
-# Processos do sistema
-htop
-
-# Conectividade de rede
-netstat -tulpn | grep -E "(80|443|8080|8484)"
-```
-
-## 🔒 Segurança
-
-### Configurações de Segurança
-
-```bash
-# Configurar fail2ban para SSH
-sudo apt install fail2ban
-sudo systemctl enable fail2ban
-
-# Configurar backup automático
-./vendor/bin/sail artisan backup:run
-
-# Monitorar logs de acesso
-tail -f /var/log/nginx/access.log
-```
-
-### Atualizações
+## 🔄 Atualizar Sistema
 
 ```bash
 # Atualizar código
 git pull origin main
 
-# Atualizar dependências
-./vendor/bin/sail composer update --no-dev
+# Rebuild containers
+./vendor/bin/sail down
+./vendor/bin/sail up -d --build
 
-# Executar migrações
+# Aplicar mudanças
 ./vendor/bin/sail artisan migrate --force
-
-# Compilar assets
 ./vendor/bin/sail npm run build
-
-# Limpar cache
-./vendor/bin/sail artisan optimize:clear
 ./vendor/bin/sail artisan optimize
-
-# Reiniciar services
-./vendor/bin/sail artisan queue:restart
 ```
 
 ## 📚 Documentação Adicional
