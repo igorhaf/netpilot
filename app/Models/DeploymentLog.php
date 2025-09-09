@@ -19,7 +19,6 @@ class DeploymentLog extends Model
         'error',
         'started_at',
         'completed_at',
-        'duration',
     ];
 
     protected $attributes = [
@@ -66,25 +65,19 @@ class DeploymentLog extends Model
 
     public function markAsSuccess(string $output = null): void
     {
-        $duration = $this->started_at ? now()->diffInSeconds($this->started_at) : null;
-        
         $this->update([
             'status' => 'success',
             'output' => $output,
             'completed_at' => now(),
-            'duration' => $duration,
         ]);
     }
 
     public function markAsFailed(string $error): void
     {
-        $duration = $this->started_at ? now()->diffInSeconds($this->started_at) : null;
-        
         $this->update([
             'status' => 'failed',
             'error' => $error,
             'completed_at' => now(),
-            'duration' => $duration,
         ]);
     }
 }

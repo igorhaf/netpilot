@@ -1,0 +1,17 @@
+http:
+  routers:
+    framily-space-http:
+      rule: Host(`framily.space`)
+      entryPoints: [web]
+      service: framily-space-svc
+    framily-space-https:
+      rule: Host(`framily.space`)
+      entryPoints: [websecure]
+      service: framily-space-svc
+      tls:
+        certResolver: letsencrypt
+  services:
+    framily-space-svc:
+      loadBalancer:
+        servers:
+          - url: 'http://laravel.test:80'

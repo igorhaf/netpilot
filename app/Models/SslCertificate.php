@@ -30,6 +30,10 @@ class SslCertificate extends Model
         'last_error',
     ];
 
+    protected $attributes = [
+        'tenant_id' => 1,
+    ];
+
     protected $casts = [
         'san_domains' => 'array',
         'issued_at' => 'datetime',
@@ -48,20 +52,22 @@ class SslCertificate extends Model
         return $this->belongsTo(Tenant::class);
     }
 
-    public function getDaysUntilExpiryAttribute(): int
+    public function getDaysUntilExpiryAttribute(): ?int
     {
-        if (!$this->expires_at) return 0;
+        if (!$this->expires_at) return null;
 
         return Carbon::now()->diffInDays($this->expires_at, false);
     }
 
     public function getIsExpiringAttribute(): bool
     {
+        if ($this->days_until_expiry === null) return false;
         return $this->days_until_expiry <= $this->renewal_days_before && $this->days_until_expiry > 0;
     }
 
     public function getIsExpiredAttribute(): bool
     {
+        if ($this->days_until_expiry === null) return false;
         return $this->days_until_expiry <= 0;
     }
 

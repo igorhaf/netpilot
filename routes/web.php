@@ -16,7 +16,7 @@ use App\Http\Controllers\WafController;
 require __DIR__.'/auth.php';
 
 // Protected routes - require authentication
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Sync

@@ -59,33 +59,36 @@ class LogsController extends Controller
         ]);
     }
 
-    public function clear()
+    public function clear(Request $request)
     {
         try {
-            // Limpar logs que não estão executando
-            $deletedCount = DeploymentLog::where('status', '!=', 'running')->delete();
+            $forceAll = $request->boolean('force_all', false);
             
-            // Limpar logs "running" que estão travados há mais de 1 hora
-            $stuckLogsCount = DeploymentLog::where('status', 'running')
-                ->where('started_at', '<', now()->subHour())
-                ->delete();
-            
-            // Limpar logs "running" sem started_at (logs órfãos)
-            $orphanLogsCount = DeploymentLog::where('status', 'running')
-                ->whereNull('started_at')
-                ->delete();
-            
-            $totalDeleted = $deletedCount + $stuckLogsCount + $orphanLogsCount;
+            if ($forceAll) {
+                // Limpar TODOS os logs quando force_all=true
+                $totalDeleted = DeploymentLog::count();
+                DeploymentLog::truncate();
+                $message = "Todos os logs foram limpos! {$totalDeleted} registros removidos.";
+            } else {
+                // Limpar logs concluídos (success, failed, pending)
+                $completedCount = DeploymentLog::whereIn('status', ['success', 'failed', 'pending'])->delete();
+                
+                // Limpar logs "running" que estão há mais de 5 minutos (provavelmente travados)
+                $stuckCount = DeploymentLog::where('status', 'running')
+                    ->where(function($q) {
+                        $q->where('started_at', '<', now()->subMinutes(5))
+                          ->orWhereNull('started_at');
+                    })
+                    ->delete();
+                
+                $totalDeleted = $completedCount + $stuckCount;
+                $message = "Logs limpos com sucesso! {$totalDeleted} registros removidos ({$completedCount} concluídos, {$stuckCount} travados).";
+            }
             
             return response()->json([
                 'success' => true,
-                'message' => "Logs limpos com sucesso! {$totalDeleted} registros removidos.",
-                'details' => [
-                    'completed_logs' => $deletedCount,
-                    'stuck_running_logs' => $stuckLogsCount,
-                    'orphan_logs' => $orphanLogsCount,
-                    'total' => $totalDeleted
-                ]
+                'message' => $message,
+                'total_deleted' => $totalDeleted
             ]);
         } catch (\Exception $e) {
             return response()->json([

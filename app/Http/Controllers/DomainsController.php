@@ -64,9 +64,9 @@ class DomainsController extends Controller
 
                 $shouldRunSync = app()->environment('local', 'testing') || config('queue.default') === 'sync';
                 if ($shouldRunSync) {
-                    \App\Jobs\CreateSslCertificateJob::dispatchSync($sslCertificate);
+                    \App\Jobs\CreateSslCertificateJob::dispatchSync($sslCertificate->id);
                 } else {
-                    \App\Jobs\CreateSslCertificateJob::dispatch($sslCertificate);
+                    \App\Jobs\CreateSslCertificateJob::dispatch($sslCertificate->id);
                 }
 
                 return redirect()->route('domains.index')

@@ -41,29 +41,39 @@ class TraefikService
 
     public function applyDomain(Domain $domain, ?array $sslPaths = null): array
     {
-        // Exemplo: atualizar arquivo dinâmico do Traefik e recarregar
-        $configFile = "/etc/traefik/dynamic/{$domain->name}.yml";
-        $yaml = sprintf("http:\n  routers:\n    %s-https:\n      rule: Host(`%s`)\n      entryPoints: [https]\n      service: %s-svc\n      tls:\n        certResolver: letsencrypt\n  services:\n    %s-svc:\n      loadBalancer:\n        servers:\n          - url: 'http://127.0.0.1:8080'\n", $domain->name, $domain->name, $domain->name, $domain->name);
-
-        $commands = [];
-        $commands[] = [
-            'action' => 'traefik_write_dynamic',
-            'cmd' => sprintf("bash -lc 'cat > %s <<EOF\n%s\nEOF'", $configFile, addslashes($yaml)),
-        ];
-
-        $commands[] = [
-            'action' => 'traefik_reload',
-            'cmd' => 'systemctl reload traefik',
-        ];
-
-        $results = [];
-        foreach ($commands as $c) {
-            $results[] = $this->cmd->execute('traefik', $c['action'], $c['cmd'], [
-                'domain' => $domain->name,
-            ]);
+        // Gerar configuração dinâmica para Traefik e salvar no diretório observado
+        $dynamicDir = config('netpilot.traefik.dynamic_dir', base_path('docker/traefik/dynamic'));
+        if (!is_dir($dynamicDir)) {
+            mkdir($dynamicDir, 0755, true);
         }
 
-        return $results;
+        $configFile = rtrim($dynamicDir, '/')."/{$domain->name}.yml";
+
+        // Usar entryPoints padronizados do Traefik: web e websecure
+        // Forçar TLS com o resolver configurado no traefik.yml (le_http01)
+        $yaml = sprintf(
+            "http:\n  routers:\n    %s-http:\n      rule: Host(`%s`)\n      entryPoints: [web]\n      service: %s-svc\n    %s-https:\n      rule: Host(`%s`)\n      entryPoints: [websecure]\n      service: %s-svc\n      tls:\n        certResolver: letsencrypt\n  services:\n    %s-svc:\n      loadBalancer:\n        servers:\n          - url: 'http://laravel.test:80'\n",
+            $domain->name,
+            $domain->name,
+            $domain->name,
+            $domain->name,
+            $domain->name,
+            $domain->name,
+            $domain->name
+        );
+
+        file_put_contents($configFile, $yaml);
+
+        // Registrar operação (sem reload via systemctl; Traefik está com watch habilitado)
+        $this->cmd->execute('traefik', 'config_written', 'echo "Traefik dynamic config written"', [
+            'domain' => $domain->name,
+            'file' => $configFile,
+        ]);
+
+        return [
+            'success' => true,
+            'file' => $configFile,
+        ];
     }
 
     /**

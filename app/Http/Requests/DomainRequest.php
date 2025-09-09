@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class DomainRequest extends FormRequest
 {
@@ -14,7 +15,13 @@ class DomainRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:domains,name,' . ($this->domain?->id ?? ''),
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('domains', 'name')
+                    ->ignore($this->domain?->id),
+            ],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
             'auto_ssl' => 'boolean',
