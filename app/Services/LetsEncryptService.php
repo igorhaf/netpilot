@@ -727,6 +727,12 @@ class LetsEncryptService
     {
         $this->removeMockCertificateFiles($certificate);
         
+        // Remover arquivos físicos do certificado
+        $this->removeCertificateFiles($certificate->domain_name);
+        
+        // Limpar cache ACME do Traefik
+        $this->cleanAcmeCache($certificate->domain_name);
+        
         if (app()->environment('production')) {
             $configPath = "/etc/nginx/sites-available/{$certificate->domain_name}";
             if (File::exists($configPath)) {
@@ -807,52 +813,6 @@ class LetsEncryptService
         }
     }
 
-    /**
-     * Revoga um certificado SSL ativo
-     */
-    public function revokeCertificate(SslCertificate $certificate): array
-    {
-        \Log::info("🔥 Revogando certificado SSL para {$certificate->domain_name}", [
-            'certificate_id' => $certificate->id,
-            'status' => $certificate->status,
-        ]);
-
-        try {
-            // Marcar certificado como revogado no banco
-            $certificate->update([
-                'status' => 'revoked',
-                'revoked_at' => now(),
-            ]);
-
-            // Remover arquivos físicos do certificado
-            $this->removeCertificateFiles($certificate->domain_name);
-
-            // Remover do acme.json do Traefik (limpar cache)
-            $this->cleanAcmeCache($certificate->domain_name);
-
-            $this->logStep('success', "Certificado SSL revogado para {$certificate->domain_name}", $certificate->id);
-
-            return [
-                'success' => true,
-                'message' => "Certificado SSL revogado com sucesso",
-                'certificate_id' => $certificate->id,
-            ];
-
-        } catch (\Exception $e) {
-            \Log::error("❌ Erro ao revogar certificado: " . $e->getMessage(), [
-                'certificate_id' => $certificate->id,
-                'domain' => $certificate->domain_name,
-            ]);
-
-            $this->logStep('error', "Erro ao revogar certificado: " . $e->getMessage(), $certificate->id);
-
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-                'certificate_id' => $certificate->id,
-            ];
-        }
-    }
 
     /**
      * Remove arquivos físicos do certificado
