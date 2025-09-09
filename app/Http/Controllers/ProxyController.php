@@ -86,6 +86,15 @@ class ProxyController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // Garantir tenant_id obrigatório (sem default no banco)
+        $domain = Domain::findOrFail($validated['domain_id']);
+        $validated['tenant_id'] = $domain->tenant_id ?? 1;
+
+        // Normalizar headers
+        if (!isset($validated['headers'])) {
+            $validated['headers'] = [];
+        }
+
         $proxyRule = ProxyRule::create($validated);
 
         // 🚀 DEPLOY AUTOMÁTICO PARA TRAEFIK
