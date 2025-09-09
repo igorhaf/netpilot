@@ -113,6 +113,24 @@ class DomainsController extends Controller
     public function destroy(Domain $domain)
     {
         $domainId = $domain->id;
+        $domainName = $domain->name;
+        
+        // Remover configuração dinâmica do Traefik
+        try {
+            app(\App\Services\TraefikService::class)->removeDomain($domain);
+        } catch (\Exception $e) {
+            \Log::warning("Erro ao remover configuração Traefik para {$domainName}: " . $e->getMessage());
+        }
+
+        // Revogar certificados SSL ativos
+        foreach ($domain->sslCertificates()->where('status', 'valid')->get() as $certificate) {
+            try {
+                app(\App\Services\LetsEncryptService::class)->revokeCertificate($certificate);
+            } catch (\Exception $e) {
+                \Log::warning("Erro ao revogar certificado SSL para {$domainName}: " . $e->getMessage());
+            }
+        }
+
         $domain->delete();
 
         // Log de remoção
@@ -122,12 +140,13 @@ class DomainsController extends Controller
             'status' => 'success',
             'payload' => [
                 'domain_id' => $domainId,
+                'domain_name' => $domainName,
             ],
             'started_at' => now(),
             'completed_at' => now(),
         ]);
 
         return redirect()->route('domains.index')
-            ->with('success', 'Domínio removido com sucesso!');
+            ->with('success', 'Domínio e SSL removidos com sucesso!');
     }
 }

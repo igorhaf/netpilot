@@ -806,4 +806,104 @@ class LetsEncryptService
             ];
         }
     }
+
+    /**
+     * Revoga um certificado SSL ativo
+     */
+    public function revokeCertificate(SslCertificate $certificate): array
+    {
+        \Log::info("🔥 Revogando certificado SSL para {$certificate->domain_name}", [
+            'certificate_id' => $certificate->id,
+            'status' => $certificate->status,
+        ]);
+
+        try {
+            // Marcar certificado como revogado no banco
+            $certificate->update([
+                'status' => 'revoked',
+                'revoked_at' => now(),
+            ]);
+
+            // Remover arquivos físicos do certificado
+            $this->removeCertificateFiles($certificate->domain_name);
+
+            // Remover do acme.json do Traefik (limpar cache)
+            $this->cleanAcmeCache($certificate->domain_name);
+
+            $this->logStep('success', "Certificado SSL revogado para {$certificate->domain_name}", $certificate->id);
+
+            return [
+                'success' => true,
+                'message' => "Certificado SSL revogado com sucesso",
+                'certificate_id' => $certificate->id,
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error("❌ Erro ao revogar certificado: " . $e->getMessage(), [
+                'certificate_id' => $certificate->id,
+                'domain' => $certificate->domain_name,
+            ]);
+
+            $this->logStep('error', "Erro ao revogar certificado: " . $e->getMessage(), $certificate->id);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'certificate_id' => $certificate->id,
+            ];
+        }
+    }
+
+    /**
+     * Remove arquivos físicos do certificado
+     */
+    private function removeCertificateFiles(string $domainName): void
+    {
+        $domainPath = $this->certificatesPath . '/' . $domainName;
+        
+        if (File::exists($domainPath)) {
+            File::deleteDirectory($domainPath);
+            \Log::info("🗑️ Arquivos de certificado removidos: {$domainPath}");
+        }
+    }
+
+    /**
+     * Limpa o cache ACME do Traefik removendo o domínio do acme.json
+     */
+    private function cleanAcmeCache(string $domainName): void
+    {
+        $acmeFile = base_path('traefik/acme.json');
+        
+        if (!file_exists($acmeFile)) {
+            return;
+        }
+
+        try {
+            $acmeData = json_decode(file_get_contents($acmeFile), true);
+            
+            if (isset($acmeData['letsencrypt']['Certificates'])) {
+                $certificates = $acmeData['letsencrypt']['Certificates'];
+                
+                // Filtrar certificados removendo o domínio específico
+                $filteredCerts = array_filter($certificates, function($cert) use ($domainName) {
+                    if (isset($cert['domain']['main']) && $cert['domain']['main'] === $domainName) {
+                        return false;
+                    }
+                    if (isset($cert['domain']['sans']) && in_array($domainName, $cert['domain']['sans'])) {
+                        return false;
+                    }
+                    return true;
+                });
+
+                $acmeData['letsencrypt']['Certificates'] = array_values($filteredCerts);
+                
+                file_put_contents($acmeFile, json_encode($acmeData, JSON_PRETTY_PRINT));
+                chmod($acmeFile, 0600);
+                
+                \Log::info("🧹 Cache ACME limpo para {$domainName}");
+            }
+        } catch (\Exception $e) {
+            \Log::warning("⚠️ Erro ao limpar cache ACME: " . $e->getMessage());
+        }
+    }
 }

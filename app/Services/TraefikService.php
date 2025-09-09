@@ -77,6 +77,34 @@ class TraefikService
     }
 
     /**
+     * Remove configuração dinâmica do domínio
+     */
+    public function removeDomain(\App\Models\Domain $domain): array
+    {
+        $configFile = $this->traefikDynamicDir . '/' . $domain->name . '.yml';
+        
+        \Log::info("🗑️ Removendo configuração Traefik para {$domain->name}", [
+            'config_file' => $configFile,
+        ]);
+
+        if (file_exists($configFile)) {
+            if (unlink($configFile)) {
+                \Log::info("✅ Arquivo de configuração removido: {$configFile}");
+            } else {
+                \Log::error("❌ Falha ao remover arquivo: {$configFile}");
+                throw new \Exception("Não foi possível remover a configuração do Traefik");
+            }
+        } else {
+            \Log::info("ℹ️ Arquivo de configuração não existe: {$configFile}");
+        }
+
+        return [
+            'success' => true,
+            'removed_file' => $configFile,
+        ];
+    }
+
+    /**
      * Gera arquivo de configuração do Traefik localmente (sem reload)
      */
     public function generateConfiguration(): array
