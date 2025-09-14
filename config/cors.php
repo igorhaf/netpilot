@@ -17,7 +17,7 @@ return [
     // Configure via ENV for safety. Example:
     // CORS_ALLOWED_ORIGINS="http://meadadigital.com,https://meadadigital.com"
     'allowed_origins' => array_filter(
-        array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', 'http://meadadigital.com')))
+        array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', 'http://netpilot.meadadigital.com,https://netpilot.meadadigital.com')))
     ),
 
     // Optional: regex patterns for origins (kept empty)
