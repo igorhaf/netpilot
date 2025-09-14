@@ -14,6 +14,7 @@ class RouteRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'tenant_id' => 'required|exists:tenants,id',
             'domain_id' => 'required|exists:domains,id',
             'upstream_id' => 'required|exists:upstreams,id',
             'path_pattern' => 'required|string|max:255',

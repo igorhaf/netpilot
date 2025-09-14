@@ -154,8 +154,8 @@ class TraefikProvider
                 $router['middlewares'] = $mwList;
             }
 
-            // Add TLS configuration if auto_tls is enabled
-            if ($domain->auto_tls) {
+            // Add TLS configuration if auto_ssl is enabled
+            if ($domain->auto_ssl) {
                 $router['entryPoints'] = ['websecure'];
                 $router['tls'] = [
                     'certResolver' => 'letsencrypt',

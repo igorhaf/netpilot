@@ -11,6 +11,7 @@ class RouteRule extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'domain_id',
         'upstream_id',
         'path_pattern',
@@ -19,7 +20,8 @@ class RouteRule extends Model
         'is_active',
         'strip_prefix',
         'preserve_host',
-        'timeout'
+        'timeout',
+        'description'
     ];
 
     protected $casts = [

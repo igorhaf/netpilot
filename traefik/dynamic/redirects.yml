@@ -1,5 +1,14 @@
 http:
   routers:
+    redirect_3:
+      rule: "Host(`meadadigital.com`) && PathPrefix(`www.meadadigital.com`)"
+      service: noop
+      entryPoints:
+        - web
+        - websecure
+      priority: 100
+      middlewares:
+        - redirect_df2ee95c37652294c6358b1701e64ab1
   services:
     noop:
       loadBalancer:
@@ -7,3 +16,8 @@ http:
           - 
             url: "http://127.0.0.1:1"
   middlewares:
+    redirect_df2ee95c37652294c6358b1701e64ab1:
+      redirectRegex:
+        regex: ".*"
+        replacement: "https://meadadigital.com${query}"
+        permanent: true

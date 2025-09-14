@@ -1,26 +1,26 @@
 http:
   routers:
-    r_meadadigital_com_1_http:
-      rule: "Host(`meadadigital.com`) && PathPrefix(`/`) && Method(`GET`)"
+    r_framily_space_2_http:
+      rule: "Host(`framily.space`) && PathPrefix(`/`) && Method(`GET`)"
       service: api@internal
       entryPoints:
         - web
       priority: 100
       middlewares:
-        - m_https_meadadigital_com_1
-    r_meadadigital_com_1:
-      rule: "Host(`meadadigital.com`) && PathPrefix(`/`) && Method(`GET`)"
-      service: s_meadadigital_com_1
+        - m_https_framily_space_2
+    r_framily_space_2:
+      rule: "Host(`framily.space`) && PathPrefix(`/`) && Method(`GET`)"
+      service: s_framily_space_2
       entryPoints:
         - websecure
       priority: 100
       middlewares:
-        - m_https_meadadigital_com_1
-        - m_www_meadadigital_com_1
+        - m_https_framily_space_2
+        - m_www_framily_space_2
       tls:
         certResolver: letsencrypt
   services:
-    s_meadadigital_com_1:
+    s_framily_space_2:
       loadBalancer:
         servers:
           - 
@@ -29,11 +29,11 @@ http:
           path: /health
           interval: 30s
   middlewares:
-    m_https_meadadigital_com_1:
+    m_https_framily_space_2:
       redirectScheme:
         scheme: https
         permanent: true
-    m_www_meadadigital_com_1:
+    m_www_framily_space_2:
       redirectRegex:
         regex: "^https?://www\.(.*)"
         replacement: "https://${1}"

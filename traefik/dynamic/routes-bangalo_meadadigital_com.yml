@@ -1,28 +1,40 @@
 http:
   routers:
-    r_bangalo_meadadigital_com_1:
-      rule: "Host(`bangalo.meadadigital.com`) && PathPrefix(`/`)"
-      service: s_bangalo_meadadigital_com_1
+    r_bangalo_meadadigital_com_4_http:
+      rule: "Host(`bangalo.meadadigital.com`) && PathPrefix(`/`) && Method(`GET`)"
+      service: api@internal
       entryPoints:
         - web
       priority: 100
       middlewares:
-        - mw_bangalo_meadadigital_com_1_https
-    r_bangalo_meadadigital_com_1_https:
-      rule: "Host(`bangalo.meadadigital.com`) && PathPrefix(`/`)"
-      service: s_bangalo_meadadigital_com_1
+        - m_https_bangalo_meadadigital_com_4
+    r_bangalo_meadadigital_com_4:
+      rule: "Host(`bangalo.meadadigital.com`) && PathPrefix(`/`) && Method(`GET`)"
+      service: s_bangalo_meadadigital_com_4
       entryPoints:
         - websecure
       priority: 100
+      middlewares:
+        - m_https_bangalo_meadadigital_com_4
+        - m_www_bangalo_meadadigital_com_4
       tls:
         certResolver: letsencrypt
   services:
-    s_bangalo_meadadigital_com_1:
+    s_bangalo_meadadigital_com_4:
       loadBalancer:
         servers:
-          - url: "http://172.17.0.1:8989"
+          - 
+            url: "http://localhost:8989"
+        healthCheck:
+          path: /health
+          interval: 30s
   middlewares:
-    mw_bangalo_meadadigital_com_1_https:
+    m_https_bangalo_meadadigital_com_4:
       redirectScheme:
         scheme: https
+        permanent: true
+    m_www_bangalo_meadadigital_com_4:
+      redirectRegex:
+        regex: "^https?://www\.(.*)"
+        replacement: "https://${1}"
         permanent: true

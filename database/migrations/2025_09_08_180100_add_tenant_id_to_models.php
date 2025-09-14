@@ -32,6 +32,16 @@ return new class extends Migration
         Schema::table('deployment_logs', function (Blueprint $table) {
             $table->foreignId('tenant_id')->after('id')->constrained()->cascadeOnDelete();
         });
+
+        // Add tenant_id to route_rules
+        Schema::table('route_rules', function (Blueprint $table) {
+            $table->foreignId('tenant_id')->after('id')->constrained()->cascadeOnDelete();
+        });
+
+        // Add tenant_id to redirect_rules
+        Schema::table('redirect_rules', function (Blueprint $table) {
+            $table->foreignId('tenant_id')->after('id')->constrained()->cascadeOnDelete();
+        });
     }
 
     public function down()
@@ -57,6 +67,16 @@ return new class extends Migration
         });
 
         Schema::table('deployment_logs', function (Blueprint $table) {
+            $table->dropForeign(['tenant_id']);
+            $table->dropColumn('tenant_id');
+        });
+
+        Schema::table('route_rules', function (Blueprint $table) {
+            $table->dropForeign(['tenant_id']);
+            $table->dropColumn('tenant_id');
+        });
+
+        Schema::table('redirect_rules', function (Blueprint $table) {
             $table->dropForeign(['tenant_id']);
             $table->dropColumn('tenant_id');
         });

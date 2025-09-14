@@ -11,15 +11,18 @@ class RedirectRule extends Model
     use HasFactory;
 
     protected $fillable = [
+        'tenant_id',
         'domain_id',
         'source_pattern',
         'target_url',
         'redirect_type',
+        'status_code',
         'priority',
         'is_active',
         'preserve_query',
         'conditions',
         'nginx_config',
+        'description',
     ];
 
     protected $casts = [

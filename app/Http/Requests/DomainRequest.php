@@ -15,10 +15,12 @@ class DomainRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'tenant_id' => 'required|exists:tenants,id',
             'name' => [
                 'required',
                 'string',
                 'max:255',
+                'regex:/^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/',
                 Rule::unique('domains', 'name')
                     ->ignore($this->domain?->id),
             ],
@@ -40,9 +42,12 @@ class DomainRequest extends FormRequest
     {
         return [
             'name.required' => 'O nome do domínio é obrigatório',
+            'name.regex' => 'O nome do domínio deve ter um formato válido (ex: example.com)',
             'name.unique' => 'Este domínio já existe no sistema',
             'name.max' => 'O nome do domínio não pode ter mais de 255 caracteres',
             'description.max' => 'A descrição não pode ter mais de 1000 caracteres',
+            'tenant_id.required' => 'O tenant é obrigatório',
+            'tenant_id.exists' => 'O tenant selecionado não existe',
         ];
     }
 }

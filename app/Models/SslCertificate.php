@@ -31,7 +31,7 @@ class SslCertificate extends Model
     ];
 
     protected $attributes = [
-        'tenant_id' => 1,
+        // No default tenant_id - must be explicitly set
     ];
 
     protected $casts = [

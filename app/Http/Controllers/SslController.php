@@ -55,6 +55,7 @@ class SslController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'tenant_id' => 'required|exists:tenants,id',
             'domain_id' => 'required|exists:domains,id',
             'domain_name' => 'required|string|max:255',
             'san_domains' => 'nullable|array',
@@ -69,6 +70,10 @@ class SslController extends Controller
         try {
             $this->letsEncryptService->issueCertificate($certificate);
 
+            if ($request->expectsJson()) {
+                return response()->json($certificate, 201);
+            }
+
             return redirect()->route('ssl.index')
                 ->with('success', 'Certificado SSL solicitado com sucesso!');
         } catch (\Exception $e) {
@@ -76,6 +81,10 @@ class SslController extends Controller
                 'status' => 'failed',
                 'last_error' => $e->getMessage()
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Erro ao solicitar certificado: ' . $e->getMessage()], 500);
+            }
 
             return redirect()->route('ssl.index')
                 ->with('error', 'Erro ao solicitar certificado: ' . $e->getMessage());

@@ -33,7 +33,7 @@ class UpstreamsController extends Controller
         ]);
     }
 
-    public function store(UpstreamRequest $request): RedirectResponse
+    public function store(UpstreamRequest $request)
     {
         $validated = $request->validated();
         $upstream = Upstream::create($validated);
@@ -42,9 +42,16 @@ class UpstreamsController extends Controller
         try {
             TraefikProvider::make()->syncAll();
         } catch (\Throwable $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Upstream created but sync failed: ' . $e->getMessage()], 500);
+            }
             // swallow errors but flash message
             return redirect()->route('upstreams.index')
                 ->with('error', 'Upstream created but sync failed: ' . $e->getMessage());
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json($upstream, 201);
         }
 
         return redirect()->route('upstreams.index')->with('success', 'Upstream created.');

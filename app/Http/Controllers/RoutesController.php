@@ -35,7 +35,7 @@ class RoutesController extends Controller
         ]);
     }
 
-    public function store(RouteRequest $request): RedirectResponse
+    public function store(RouteRequest $request)
     {
         $validated = $request->validated();
         $route = RouteRule::create($validated);
@@ -43,8 +43,15 @@ class RoutesController extends Controller
         try {
             TraefikProvider::make()->syncAll();
         } catch (\Throwable $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Route created but sync failed: ' . $e->getMessage()], 500);
+            }
             return redirect()->route('routes.index')
                 ->with('error', 'Route created but sync failed: ' . $e->getMessage());
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json($route, 201);
         }
 
         return redirect()->route('routes.index')->with('success', 'Route created.');

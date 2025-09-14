@@ -17,6 +17,7 @@ class UpstreamRequest extends FormRequest
         $domainId = $this->input('domain_id');
 
         return [
+            'tenant_id' => 'required|exists:tenants,id',
             'domain_id' => 'required|exists:domains,id',
             'name' => [
                 'required',

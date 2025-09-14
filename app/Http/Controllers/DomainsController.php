@@ -36,8 +36,13 @@ class DomainsController extends Controller
 
         $domain = Domain::create($data);
 
+        if ($request->expectsJson()) {
+            return response()->json($domain, 201);
+        }
+
         // Log de criação de domínio
         \App\Models\DeploymentLog::create([
+            'tenant_id' => $domain->tenant_id,
             'type' => 'domain',
             'action' => 'create',
             'status' => 'success',
@@ -93,8 +98,13 @@ class DomainsController extends Controller
         $validated = $request->validated();
         $domain->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json($domain, 200);
+        }
+
         // Log de atualização
         \App\Models\DeploymentLog::create([
+            'tenant_id' => $domain->tenant_id,
             'type' => 'domain',
             'action' => 'update',
             'status' => 'success',
@@ -110,7 +120,7 @@ class DomainsController extends Controller
             ->with('success', 'Domínio atualizado com sucesso!');
     }
 
-    public function destroy(Domain $domain)
+    public function destroy(Request $request, Domain $domain)
     {
         $domainId = $domain->id;
         $domainName = $domain->name;
@@ -135,6 +145,7 @@ class DomainsController extends Controller
 
         // Log de remoção
         \App\Models\DeploymentLog::create([
+            'tenant_id' => $domain->tenant_id,
             'type' => 'domain',
             'action' => 'delete',
             'status' => 'success',
@@ -145,6 +156,10 @@ class DomainsController extends Controller
             'started_at' => now(),
             'completed_at' => now(),
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Domínio e SSL removidos com sucesso!'], 204);
+        }
 
         return redirect()->route('domains.index')
             ->with('success', 'Domínio e SSL removidos com sucesso!');

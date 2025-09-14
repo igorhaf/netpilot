@@ -14,7 +14,7 @@ class SyncController extends Controller
         return Inertia::render('Sync');
     }
 
-    public function sync()
+    public function sync(Request $request)
     {
         try {
             $useCase = new SyncProxyConfig();
@@ -22,12 +22,20 @@ class SyncController extends Controller
             
             $message = 'Proxy configuration synced successfully. Generated ' . count($files) . ' configuration files.';
             
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'files' => count($files)], 200);
+            }
+            
             return redirect()->back()->with('success', $message);
         } catch (\Exception $e) {
             Log::error('Proxy sync failed: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
             ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Failed to sync proxy configuration: ' . $e->getMessage()], 500);
+            }
             
             return redirect()->back()->with('error', 'Failed to sync proxy configuration: ' . $e->getMessage());
         }
