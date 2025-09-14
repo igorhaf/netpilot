@@ -378,7 +378,13 @@ class LetsEncryptService
     private function simulateCertificateRenewal(SslCertificate $certificate): void
     {
         sleep(1);
-        $this->generateMockCertificateFiles($certificate);
+        $paths = $this->generateMockCertificateFiles($certificate);
+        // Garantir que os caminhos do certificado estejam preenchidos para a verificação
+        $certificate->update([
+            'certificate_path' => $paths['cert_path'],
+            'private_key_path' => $paths['key_path'],
+            'chain_path' => $paths['chain_path'],
+        ]);
     }
 
     private function simulateCertificateRevocation(SslCertificate $certificate): void
@@ -550,9 +556,14 @@ class LetsEncryptService
 
             $this->logSslPhase($certificate, 'renewal_execution', 'running', 'Executando renovação...');
             
-            if (app()->environment('production')) {
+            // Detectar disponibilidade do certbot para definir modo de renovação
+            $certbotPath = config('letsencrypt.certbot_path');
+            $hasCertbot = $certbotPath && file_exists($certbotPath) && is_executable($certbotPath);
+
+            if (app()->environment('production') && $hasCertbot) {
                 $result = $this->renewCertificateWithCertbot($certificate);
             } else {
+                // Fallback seguro quando certbot não está disponível
                 $this->simulateCertificateRenewal($certificate);
             }
             

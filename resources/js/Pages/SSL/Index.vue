@@ -92,31 +92,6 @@
         </Card>
       </div>
 
-      <!-- Debug Info -->
-      <Card class="p-4 mb-6 bg-yellow-50 border-yellow-200">
-        <div class="text-sm">
-          <h3 class="font-medium text-yellow-800 mb-2">Debug Info - SSL</h3>
-          <div class="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <strong>Certificates Total:</strong> {{ certificates.total }}<br>
-              <strong>Certificates Count:</strong> {{ certificates.data.length }}<br>
-              <strong>Current Page:</strong> {{ certificates.current_page }}<br>
-              <strong>Last Page:</strong> {{ certificates.last_page }}
-            </div>
-            <div>
-              <strong>Stats Total:</strong> {{ stats.total }}<br>
-              <strong>Stats Valid:</strong> {{ stats.valid }}<br>
-              <strong>Stats Expiring:</strong> {{ stats.expiring }}<br>
-              <strong>Stats Expired:</strong> {{ stats.expired }}
-            </div>
-          </div>
-          <div class="mt-2">
-            <strong>Sample Certificates:</strong>
-            <pre class="text-xs bg-white p-2 rounded mt-1 overflow-auto">{{ JSON.stringify(certificates.data.slice(0, 2), null, 2) }}</pre>
-          </div>
-        </div>
-      </Card>
-
       <!-- Filters -->
       <Card class="p-4 mb-6">
         <div class="flex flex-col sm:flex-row gap-4">

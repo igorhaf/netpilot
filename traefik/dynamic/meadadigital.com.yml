@@ -9,7 +9,7 @@ http:
       entryPoints: [websecure]
       service: meadadigital.com-svc
       tls:
-        certResolver: letsencrypt
+        certResolver: le
   services:
     meadadigital.com-svc:
       loadBalancer:

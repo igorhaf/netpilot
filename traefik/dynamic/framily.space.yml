@@ -9,7 +9,7 @@ http:
       entryPoints: [websecure]
       service: framily-space-svc
       tls:
-        certResolver: letsencrypt
+        certResolver: le
   services:
     framily-space-svc:
       loadBalancer:

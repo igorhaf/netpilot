@@ -17,6 +17,7 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
+        user: "0:0"
         volumes:
             - '.:/var/www/html'
         networks:
@@ -100,6 +101,8 @@ services:
     traefik:
         image: traefik:v3.0
         container_name: netpilot-traefik
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
         command:
             - '--api.dashboard=true'
             - '--api.insecure=true'
@@ -107,9 +110,9 @@ services:
             - '--providers.file.watch=true'
             - '--entrypoints.web.address=:80'
             - '--entrypoints.websecure.address=:443'
-            - '--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-admin@example.com}'
-            - '--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme.json'
-            - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+            - '--certificatesresolvers.le.acme.email=${TRAEFIK_ACME_EMAIL:-admin@example.com}'
+            - '--certificatesresolvers.le.acme.storage=/etc/traefik/acme.json'
+            - '--certificatesresolvers.le.acme.httpchallenge.entrypoint=web'
         ports:
             - '80:80'
             - '443:443'
