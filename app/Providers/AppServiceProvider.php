@@ -7,6 +7,7 @@ use Prometheus\CollectorRegistry;
 use Prometheus\Storage\InMemory;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\URL;
 use App\Services\CloudflareWafService;
 use App\Services\CircuitBreakerService;
 
@@ -42,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS URLs when APP_FORCE_HTTPS is enabled
+        if (config('app.force_https', false)) {
+            URL::forceScheme('https');
+        }
+
         // Add request context to all logs
         Log::shareContext([
             'request_id' => Request::header('X-Request-ID') ?? uniqid(),

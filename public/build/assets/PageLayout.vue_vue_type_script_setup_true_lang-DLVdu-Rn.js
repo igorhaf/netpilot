@@ -1,0 +1,1 @@
+import{m as s,c as a,o,a as t,B as c}from"./app-DPCJlmDy.js";const n={class:"mx-auto max-w-7xl"},r={class:"space-y-6"},d=s({__name:"PageLayout",setup(_){return(e,l)=>(o(),a("div",n,[t("div",r,[c(e.$slots,"default")])]))}});export{d as _};

@@ -20,25 +20,17 @@ class Upstream extends Model
         'is_active',
         'health_check_path',
         'health_check_interval',
-        'description',
-        'last_checked_at',
-        'is_healthy',
-        'timeout_ms'
+        'description'
     ];
 
     protected $attributes = [
-        'is_healthy' => true,
-        'timeout_ms' => 1000,
         'health_check_interval' => 30
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'weight' => 'integer',
-        'health_check_interval' => 'integer',
-        'last_checked_at' => 'datetime',
-        'is_healthy' => 'boolean',
-        'timeout_ms' => 'integer'
+        'health_check_interval' => 'integer'
     ];
 
     public function domain(): BelongsTo

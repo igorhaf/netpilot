@@ -22,7 +22,7 @@ class TraefikProvider
     public function syncAll(): array
     {
         $written = [];
-        $domains = Domain::query()->get();
+        $domains = Domain::query()->where('is_active', true)->get();
         foreach ($domains as $domain) {
             $written[] = $this->writeDomain($domain);
         }
@@ -33,7 +33,7 @@ class TraefikProvider
     public function writeDomain(Domain $domain): string
     {
         if (!is_dir($this->dynamicDir)) {
-            @mkdir($this->dynamicDir, 0775, true);
+            @mkdir($this->dynamicDir, 0777, true);
         }
 
         $routers = [];
@@ -104,12 +104,47 @@ class TraefikProvider
                 $mwList[] = $mwName;
             }
 
-            if ($domain->auto_tls) {
+            // Force HTTPS redirect if enabled in domain settings
+            if ($domain->force_https ?? true) {
                 $mwName = $this->mwName($domain->name, $route->id, 'https');
                 $middlewares[$mwName] = [
                     'redirectScheme' => [
                         'scheme' => 'https',
                         'permanent' => true
+                    ]
+                ];
+                $mwList[] = $mwName;
+            }
+
+            // Add WWW redirect middleware if enabled
+            if ($domain->www_redirect ?? false) {
+                $mwName = $this->mwName($domain->name, $route->id, 'www');
+                if ($domain->www_redirect_type === 'www_to_non_www') {
+                    $middlewares[$mwName] = [
+                        'redirectRegex' => [
+                            'regex' => '^https?://www\\.(.*)',
+                            'replacement' => 'https://${1}',
+                            'permanent' => true
+                        ]
+                    ];
+                } else {
+                    $middlewares[$mwName] = [
+                        'redirectRegex' => [
+                            'regex' => '^https?://(?!www\\.)(.*)$',
+                            'replacement' => 'https://www.${1}',
+                            'permanent' => true
+                        ]
+                    ];
+                }
+                $mwList[] = $mwName;
+            }
+
+            // Add security headers if configured
+            if (!empty($domain->security_headers)) {
+                $mwName = $this->mwName($domain->name, $route->id, 'security');
+                $middlewares[$mwName] = [
+                    'headers' => [
+                        'customRequestHeaders' => $domain->security_headers
                     ]
                 ];
                 $mwList[] = $mwName;
@@ -124,6 +159,18 @@ class TraefikProvider
                 $router['entryPoints'] = ['websecure'];
                 $router['tls'] = [
                     'certResolver' => 'letsencrypt',
+                ];
+            }
+
+            // Create HTTP to HTTPS redirect router if force_https is enabled
+            if ($domain->force_https ?? true) {
+                $httpRouterName = $this->routerName($domain->name, $route->id) . '_http';
+                $routers[$httpRouterName] = [
+                    'rule' => $match,
+                    'service' => 'api@internal', // Dummy service for redirect
+                    'entryPoints' => ['web'],
+                    'priority' => (int)$route->priority,
+                    'middlewares' => [$this->mwName($domain->name, $route->id, 'https')]
                 ];
             }
 
@@ -146,7 +193,7 @@ class TraefikProvider
     public function writeRedirects(): string
     {
         if (!is_dir($this->dynamicDir)) {
-            @mkdir($this->dynamicDir, 0775, true);
+            @mkdir($this->dynamicDir, 0777, true);
         }
 
         $routers = [];
@@ -182,13 +229,12 @@ class TraefikProvider
                 ]
             ];
 
-            $routerName = 'redirect_' . md5($domain->name . '|' . ($redirect->source_pattern ?? ''));
-            $routers[$routerName] = [
+            $routers['redirect_' . $redirect->id] = [
                 'rule' => $match,
                 'service' => 'noop',
-                'entryPoints' => ['web'],
+                'entryPoints' => ['web', 'websecure'],
+                'priority' => $redirect->priority,
                 'middlewares' => [$mwName],
-                'priority' => (int)$redirect->priority,
             ];
         }
 
@@ -201,7 +247,18 @@ class TraefikProvider
         ]);
 
         $file = rtrim($this->dynamicDir, '/') . '/redirects.yml';
-        file_put_contents($file, $yaml);
+        
+        // Ensure directory exists and is writable
+        if (!is_dir($this->dynamicDir)) {
+            @mkdir($this->dynamicDir, 0777, true);
+        }
+        
+        // Use error suppression and check result
+        $result = @file_put_contents($file, $yaml);
+        if ($result === false) {
+            throw new \Exception("Failed to write redirects file to: {$file}");
+        }
+        
         return $file;
     }
 

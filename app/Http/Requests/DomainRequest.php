@@ -27,6 +27,12 @@ class DomainRequest extends FormRequest
             'auto_ssl' => 'boolean',
             'dns_records' => 'nullable|array',
             'dns_records.*' => 'string|max:255',
+            'force_https' => 'boolean',
+            'block_external_access' => 'boolean',
+            'internal_bind_ip' => 'nullable|string|ip',
+            'security_headers' => 'nullable|array',
+            'www_redirect' => 'boolean',
+            'www_redirect_type' => 'nullable|string|in:www_to_non_www,non_www_to_www',
         ];
     }
 

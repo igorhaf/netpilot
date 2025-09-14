@@ -1,0 +1,15 @@
+http:
+  routers:
+    r_netpilot_meadadigital_com_1:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/`)"
+      service: s_netpilot_meadadigital_com_1
+      entryPoints:
+        - web
+      priority: 100
+  services:
+    s_netpilot_meadadigital_com_1:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://laravel.test:80"
+  middlewares:

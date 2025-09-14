@@ -59,10 +59,10 @@
 
 
 
-          <!-- Configurações -->
+          <!-- Configurações Básicas -->
           <div class="space-y-6">
             <div>
-              <h3 class="text-lg font-medium text-text mb-4">Configurações do Domínio</h3>
+              <h3 class="text-lg font-medium text-text mb-4">Configurações Básicas</h3>
               <div class="space-y-4">
                 <div class="flex items-start gap-3">
                   <input
@@ -101,6 +101,104 @@
             </div>
           </div>
 
+          <!-- Configurações de Segurança -->
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-lg font-medium text-text mb-4">Configurações de Segurança</h3>
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                  <input
+                    v-model="form.force_https"
+                    id="force_https"
+                    type="checkbox"
+                    class="w-5 h-5 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2 mt-0.5"
+                  />
+                  <div>
+                    <label for="force_https" class="text-sm font-medium text-text cursor-pointer">
+                      Forçar HTTPS (Redirecionamento HTTP → HTTPS)
+                    </label>
+                    <p class="text-xs text-text-muted mt-1">
+                      Redireciona automaticamente todo tráfego HTTP para HTTPS (recomendado)
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                  <input
+                    v-model="form.block_external_access"
+                    id="block_external_access"
+                    type="checkbox"
+                    class="w-5 h-5 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2 mt-0.5"
+                  />
+                  <div>
+                    <label for="block_external_access" class="text-sm font-medium text-text cursor-pointer">
+                      Bloquear Acesso Externo Direto
+                    </label>
+                    <p class="text-xs text-text-muted mt-1">
+                      Impede acesso direto às portas da aplicação (ex: localhost:8484) de IPs externos
+                    </p>
+                  </div>
+                </div>
+
+                <div v-if="form.block_external_access" class="ml-8">
+                  <label for="internal_bind_ip" class="block text-sm font-medium text-text mb-2">
+                    IP de Bind Interno
+                  </label>
+                  <select
+                    id="internal_bind_ip"
+                    v-model="form.internal_bind_ip"
+                    class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  >
+                    <option value="127.0.0.1">127.0.0.1 (Localhost apenas)</option>
+                    <option value="0.0.0.0">0.0.0.0 (Todos os IPs)</option>
+                  </select>
+                  <p class="mt-1 text-xs text-text-muted">
+                    127.0.0.1 = Acesso apenas local | 0.0.0.0 = Acesso de qualquer IP
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configurações de Redirecionamento -->
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-lg font-medium text-text mb-4">Redirecionamento WWW</h3>
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                  <input
+                    v-model="form.www_redirect"
+                    id="www_redirect"
+                    type="checkbox"
+                    class="w-5 h-5 text-accent bg-elevated border-border rounded focus:ring-accent focus:ring-2 mt-0.5"
+                  />
+                  <div>
+                    <label for="www_redirect" class="text-sm font-medium text-text cursor-pointer">
+                      Ativar Redirecionamento WWW
+                    </label>
+                    <p class="text-xs text-text-muted mt-1">
+                      Redireciona entre www.dominio.com e dominio.com
+                    </p>
+                  </div>
+                </div>
+
+                <div v-if="form.www_redirect" class="ml-8">
+                  <label for="www_redirect_type" class="block text-sm font-medium text-text mb-2">
+                    Tipo de Redirecionamento
+                  </label>
+                  <select
+                    id="www_redirect_type"
+                    v-model="form.www_redirect_type"
+                    class="w-full px-3 py-2 bg-elevated border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  >
+                    <option value="www_to_non_www">www.dominio.com → dominio.com</option>
+                    <option value="non_www_to_www">dominio.com → www.dominio.com</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Preview -->
           <div v-if="form.name" class="p-4 bg-elevated/50 rounded-lg border border-border">
             <h3 class="text-sm font-medium text-text mb-3">Preview do Domínio</h3>
@@ -116,6 +214,8 @@
               <div class="flex items-center gap-4 text-xs text-text-muted pl-4">
                 <span>Status: {{ form.is_active ? '✅ Ativo' : '❌ Inativo' }}</span>
                 <span>SSL: {{ form.auto_ssl ? '🔒 Let\'s Encrypt' : '🔓 Desabilitado' }}</span>
+                <span v-if="form.force_https">🔒 HTTPS Forçado</span>
+                <span v-if="form.block_external_access">🛡️ Acesso Protegido</span>
               </div>
             </div>
           </div>
@@ -176,6 +276,11 @@ const form = reactive({
   description: '',
   is_active: true,
   auto_ssl: true,
+  force_https: true,
+  block_external_access: false,
+  internal_bind_ip: '127.0.0.1',
+  www_redirect: false,
+  www_redirect_type: 'www_to_non_www',
 });
 
 // Methods

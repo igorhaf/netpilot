@@ -1,0 +1,28 @@
+http:
+  routers:
+    r_bangalo_meadadigital_com_1:
+      rule: "Host(`bangalo.meadadigital.com`) && PathPrefix(`/`)"
+      service: s_bangalo_meadadigital_com_1
+      entryPoints:
+        - web
+      priority: 100
+      middlewares:
+        - mw_bangalo_meadadigital_com_1_https
+    r_bangalo_meadadigital_com_1_https:
+      rule: "Host(`bangalo.meadadigital.com`) && PathPrefix(`/`)"
+      service: s_bangalo_meadadigital_com_1
+      entryPoints:
+        - websecure
+      priority: 100
+      tls:
+        certResolver: letsencrypt
+  services:
+    s_bangalo_meadadigital_com_1:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:8989"
+  middlewares:
+    mw_bangalo_meadadigital_com_1_https:
+      redirectScheme:
+        scheme: https
+        permanent: true

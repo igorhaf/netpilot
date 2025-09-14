@@ -8,6 +8,7 @@ class Kernel extends HttpKernel
 {
     protected $middleware = [
         \App\Http\Middleware\TrustProxies::class,
+        \App\Http\Middleware\ForceHttps::class,
         \App\Http\Middleware\IpFilter::class,
         \App\Http\Middleware\GeoBlock::class,
         \App\Http\Middleware\RateLimiter::class,

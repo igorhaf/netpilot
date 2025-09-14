@@ -18,6 +18,12 @@ class Domain extends Model
         'is_active',
         'auto_ssl',
         'dns_records',
+        'force_https',
+        'block_external_access',
+        'internal_bind_ip',
+        'security_headers',
+        'www_redirect',
+        'www_redirect_type',
     ];
 
     protected $attributes = [
@@ -28,6 +34,10 @@ class Domain extends Model
         'is_active' => 'boolean',
         'auto_ssl' => 'boolean',
         'dns_records' => 'array',
+        'force_https' => 'boolean',
+        'block_external_access' => 'boolean',
+        'security_headers' => 'array',
+        'www_redirect' => 'boolean',
     ];
 
     public function proxyRules(): HasMany

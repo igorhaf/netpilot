@@ -1,0 +1,15 @@
+http:
+  routers:
+    r_meadadigital_com_2:
+      rule: "Host(`meadadigital.com`) && PathPrefix(`/`)"
+      service: s_meadadigital_com_2
+      entryPoints:
+        - web
+      priority: 100
+  services:
+    s_meadadigital_com_2:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://host.docker.internal:8989"
+  middlewares:
