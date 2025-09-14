@@ -1,0 +1,17 @@
+http:
+  routers:
+    netpilot-http:
+      rule: Host(`netpilot.meadadigital.com`)
+      entryPoints: [web]
+      service: netpilot-svc
+    netpilot-https:
+      rule: Host(`netpilot.meadadigital.com`)
+      entryPoints: [websecure]
+      service: netpilot-svc
+      tls:
+        certResolver: le
+  services:
+    netpilot-svc:
+      loadBalancer:
+        servers:
+          - url: 'http://laravel.test:80'
