@@ -25,6 +25,37 @@ createInertiaApp({
       .use(plugin)
       .use(ZiggyVue, Ziggy);
 
+    // Global error handlers to surface detailed context
+    app.config.errorHandler = (err, instance, info) => {
+      // Provide more context in console to locate the source component and hook
+      const comp = instance?.type || instance;
+      const compName = (comp && (comp.name || comp.__name)) || undefined;
+      const compFile = comp && comp.__file ? comp.__file : undefined;
+      // eslint-disable-next-line no-console
+      console.error('[Vue Global Error]', { err, info, component: compName || comp, file: compFile });
+    };
+
+    app.config.warnHandler = (msg, instance, trace) => {
+      // eslint-disable-next-line no-console
+      console.warn('[Vue Warning]', msg, { component: instance?.type?.name || instance?.type || instance, trace });
+    };
+
+    // Also capture unhandled promise rejections for extra context
+    window.addEventListener('unhandledrejection', (event) => {
+      // eslint-disable-next-line no-console
+      console.error('[Unhandled Promise Rejection]', event.reason);
+    });
+
+    window.addEventListener('error', (event) => {
+      // eslint-disable-next-line no-console
+      console.error('[Window Error]', event.message, {
+        file: event.filename,
+        line: event.lineno,
+        column: event.colno,
+        error: event.error,
+      });
+    });
+
     app.mount(el);
   },
 });

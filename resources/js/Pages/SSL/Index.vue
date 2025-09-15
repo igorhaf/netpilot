@@ -330,11 +330,11 @@ const renewCertificate = async (certificate: SslCertificate) => {
         success('Certificado renovado com sucesso!');
       },
       onError: () => {
-        showToast('Erro ao renovar certificado', 'error');
+        error('Erro ao renovar certificado');
       }
     });
-  } catch (error) {
-    showToast('Erro ao renovar certificado', 'error');
+  } catch (err) {
+    error('Erro ao renovar certificado');
   }
 };
 
@@ -345,14 +345,14 @@ const toggleAutoRenew = async (certificate: SslCertificate) => {
       preserveScroll: true,
       onSuccess: () => {
         const action = certificate.auto_renew ? 'desativada' : 'ativada';
-        showToast(`Auto renovação ${action} com sucesso!`, 'success');
+        success(`Auto renovação ${action} com sucesso!`);
       },
       onError: () => {
-        showToast('Erro ao alterar auto renovação', 'error');
+        error('Erro ao alterar auto renovação');
       }
     });
-  } catch (error) {
-    showToast('Erro ao alterar auto renovação', 'error');
+  } catch (err) {
+    error('Erro ao alterar auto renovação');
   }
 };
 
@@ -362,10 +362,10 @@ const deleteCertificate = (certificate: SslCertificate) => {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
-        showToast('Certificado excluído com sucesso!', 'success');
+        success('Certificado excluído com sucesso!');
       },
       onError: () => {
-        showToast('Erro ao excluir certificado', 'error');
+        error('Erro ao excluir certificado');
       }
     });
   }
@@ -378,17 +378,17 @@ const renewAll = async () => {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => {
-        showToast('Renovação em lote iniciada!', 'success');
+        success('Renovação em lote iniciada!');
       },
       onError: () => {
-        showToast('Erro ao iniciar renovação em lote', 'error');
+        error('Erro ao iniciar renovação em lote');
       },
       onFinish: () => {
         isRenewing.value = false;
       }
     });
-  } catch (error) {
-    showToast('Erro ao iniciar renovação em lote', 'error');
+  } catch (err) {
+    error('Erro ao iniciar renovação em lote');
     isRenewing.value = false;
   }
 };

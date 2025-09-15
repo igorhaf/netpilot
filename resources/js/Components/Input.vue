@@ -5,21 +5,40 @@
       <span v-if="required" class="text-red-500 ml-1">*</span>
     </label>
     <div class="relative">
-      <component
-        :is="type === 'textarea' ? 'textarea' : 'input'"
+      <textarea
+        v-if="type === 'textarea'"
         :id="id"
-        :type="type === 'textarea' ? undefined : type"
         :value="modelValue"
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
-        :rows="type === 'textarea' ? rows : undefined"
+        :rows="rows"
+        :class="[
+          'block w-full rounded-lg border transition-all duration-200 ease-in-out ring-brand disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none',
+          error 
+            ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' 
+            : 'border-gray-300 dark:border-gray-700 focus:border-[--brand-500] focus:ring-[--brand-500] hover:border-gray-400 dark:hover:border-gray-600',
+          sizeClasses
+        ]"
+        @input="$emit('update:modelValue', $event.target.value)"
+        @focus="focused = true"
+        @blur="focused = false"
+        v-bind="$attrs"
+      />
+      
+      <input
+        v-else
+        :id="id"
+        :type="type"
+        :value="modelValue"
+        :placeholder="placeholder"
+        :required="required"
+        :disabled="disabled"
         :class="[
           'block w-full rounded-lg border transition-all duration-200 ease-in-out ring-brand disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100',
           error 
             ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500' 
             : 'border-gray-300 dark:border-gray-700 focus:border-[--brand-500] focus:ring-[--brand-500] hover:border-gray-400 dark:hover:border-gray-600',
-          type === 'textarea' ? 'resize-none' : '',
           sizeClasses
         ]"
         @input="$emit('update:modelValue', $event.target.value)"

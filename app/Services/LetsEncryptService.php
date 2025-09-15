@@ -33,6 +33,7 @@ class LetsEncryptService
         try {
             // Log inicial da operação
             $mainLog = DeploymentLog::create([
+                'tenant_id' => $certificate->tenant_id,
                 'type' => 'ssl_renewal',
                 'action' => 'issue_certificate',
                 'status' => 'running',
@@ -539,6 +540,7 @@ class LetsEncryptService
         
         try {
             $mainLog = DeploymentLog::create([
+                'tenant_id' => $certificate->tenant_id,
                 'type' => 'ssl_renewal',
                 'action' => 'renew_certificate',
                 'status' => 'running',
@@ -669,6 +671,7 @@ class LetsEncryptService
         
         try {
             $mainLog = DeploymentLog::create([
+                'tenant_id' => $certificate->tenant_id,
                 'type' => 'ssl_renewal',
                 'action' => 'revoke_certificate',
                 'status' => 'running',

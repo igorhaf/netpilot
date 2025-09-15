@@ -1,14 +1,23 @@
 http:
   routers:
-    redirect_3:
-      rule: "Host(`meadadigital.com`) && PathPrefix(`www.meadadigital.com`)"
+    redirect_2:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`netpilot.meadadigital.com:8484`)"
+      service: noop
+      entryPoints:
+        - web
+        - websecure
+      priority: 150
+      middlewares:
+        - redirect_c42301b8f0843349813da0bdedd6615c
+    redirect_1:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`www.netpilot.meadadigital.com`)"
       service: noop
       entryPoints:
         - web
         - websecure
       priority: 100
       middlewares:
-        - redirect_df2ee95c37652294c6358b1701e64ab1
+        - redirect_682429816865de21cca3662cfabb5b02
   services:
     noop:
       loadBalancer:
@@ -16,8 +25,13 @@ http:
           - 
             url: "http://127.0.0.1:1"
   middlewares:
-    redirect_df2ee95c37652294c6358b1701e64ab1:
+    redirect_c42301b8f0843349813da0bdedd6615c:
       redirectRegex:
         regex: ".*"
-        replacement: "https://meadadigital.com${query}"
+        replacement: "https://netpilot.meadadigital.com"
+        permanent: true
+    redirect_682429816865de21cca3662cfabb5b02:
+      redirectRegex:
+        regex: ".*"
+        replacement: "https://netpilot.meadadigital.com$${query}"
         permanent: true

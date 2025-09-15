@@ -51,28 +51,67 @@
 
       <!-- Navigation Links -->
       <nav class="mt-4 px-2 space-y-1 flex-1 overflow-y-auto pb-4">
-        <Link
+        <a
           v-for="item in navigation"
           :key="item.name"
           :href="item.href"
           :class="[
-            route().current(item.active) 
-              ? 'bg-elevated text-accent' 
-              : 'text-text-muted hover:bg-elevated hover:text-text',
+            isCurrentRoute(item.active) ? 'bg-elevated text-accent' : 'text-text-muted hover:bg-elevated hover:text-text',
             'group flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200'
           ]"
-          :aria-current="route().current(item.active) ? 'page' : undefined"
+          :aria-current="isCurrentRoute(item.active) ? 'page' : null"
         >
-          <component
-            :is="item.icon"
-            :class="[
-              'flex-shrink-0 w-5 h-5',
-              route().current(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
-            ]"
-            aria-hidden="true"
-          />
+          <!-- Dashboard Icon -->
+          <svg v-if="item.name === 'Dashboard'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="[
+            'flex-shrink-0 w-5 h-5',
+            isCurrentRoute(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
+          ]" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          
+          <!-- Globe Icon -->
+          <svg v-else-if="item.name === 'Domínios'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="[
+            'flex-shrink-0 w-5 h-5',
+            isCurrentRoute(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
+          ]" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          
+          <!-- Proxy Icon -->
+          <svg v-else-if="item.name === 'Proxy Reverso'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="[
+            'flex-shrink-0 w-5 h-5',
+            isCurrentRoute(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
+          ]" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 5v14M8 5v14" />
+          </svg>
+          
+          <!-- SSL Icon -->
+          <svg v-else-if="item.name === 'Certificados SSL'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="[
+            'flex-shrink-0 w-5 h-5',
+            isCurrentRoute(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
+          ]" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          
+          <!-- Redirect Icon -->
+          <svg v-else-if="item.name === 'Redirects'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="[
+            'flex-shrink-0 w-5 h-5',
+            isCurrentRoute(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
+          ]" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          
+          <!-- Logs Icon -->
+          <svg v-else-if="item.name === 'Logs'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" :class="[
+            'flex-shrink-0 w-5 h-5',
+            isCurrentRoute(item.active) ? 'text-accent' : 'text-text-muted group-hover:text-text'
+          ]" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          
           <span v-if="!sidebarCollapsed" class="ml-3 truncate transition-all duration-300">{{ item.name }}</span>
-        </Link>
+        </a>
       </nav>
     </aside>
 
@@ -144,21 +183,32 @@
 
       <!-- Page Content -->
       <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background scrollbar-thin scrollbar-thumb-elevated scrollbar-track-transparent transition-all duration-300">
-        <slot />
+        <template v-if="$slots && $slots.default">
+          <slot />
+        </template>
       </main>
     </div>
 
-    <!-- Toast Container -->
-    <Toast />
+    <!-- Toast Container removed temporarily for debugging 'ce' error -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
-import Toast from '@/Components/ui/Toast.vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
-// A função route está disponível globalmente via window.route
+// Safe route checking function
+const isCurrentRoute = (routeName: string): boolean => {
+  try {
+    if (typeof window !== 'undefined' && window.route && typeof window.route === 'function') {
+      const route = window.route();
+      return route && typeof route.current === 'function' ? route.current(routeName) : false;
+    }
+    return false;
+  } catch (error) {
+    console.warn('Route checking failed:', error);
+    return false;
+  }
+};
 
 interface Props {
   title?: string;
@@ -172,11 +222,16 @@ const props = withDefaults(defineProps<Props>(), {
 const sidebarCollapsed = ref(false);
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
-  localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value.toString());
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value.toString());
+  }
 };
 
 // User menu state
 const userMenuOpen = ref(false);
+
+// Ensure some client-only components render after mount
+const isClient = ref(false);
 
 // Fechar menu ao clicar fora
 const closeUserMenu = (event: MouseEvent) => {
@@ -186,84 +241,20 @@ const closeUserMenu = (event: MouseEvent) => {
   }
 };
 
-// Componentes de ícones
-const DashboardIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-  `
-};
-
-const GlobeIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  `
-};
-
-const ServerIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-    </svg>
-  `
-};
-
-const ShieldIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  `
-};
-
-const ProxyIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 5v14M8 5v14" />
-    </svg>
-  `
-};
-
-const SSLIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-    </svg>
-  `
-};
-
-const RedirectIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-    </svg>
-  `
-};
-
-const LogsIcon = {
-  template: `
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-  `
-};
-
-// Navegação (usando apenas rotas existentes)
+// Navegação simplificada (sem componentes dinâmicos)
 const navigation = [
-  { name: 'Dashboard', href: '/', active: 'dashboard', icon: DashboardIcon },
-  { name: 'Domínios', href: '/domains', active: 'domains.*', icon: GlobeIcon },
-  { name: 'Proxy Reverso', href: '/proxy', active: 'proxy.*', icon: ProxyIcon },
-  { name: 'Certificados SSL', href: '/ssl', active: 'ssl.*', icon: SSLIcon },
-  { name: 'Redirects', href: '/redirects', active: 'redirects.*', icon: RedirectIcon },
-  { name: 'Logs', href: '/logs', active: 'logs.*', icon: LogsIcon },
+  { name: 'Dashboard', href: '/', active: 'dashboard' },
+  { name: 'Domínios', href: '/domains', active: 'domains.*' },
+  { name: 'Proxy Reverso', href: '/proxy', active: 'proxy.*' },
+  { name: 'Certificados SSL', href: '/ssl', active: 'ssl.*' },
+  { name: 'Redirects', href: '/redirects', active: 'redirects.*' },
+  { name: 'Logs', href: '/logs', active: 'logs.*' },
 ];
 
 // Lifecycle hooks
 onMounted(() => {
+  // Mark client-mounted for client-only renders
+  isClient.value = true;
   // Restaurar estado do sidebar do localStorage
   const savedState = localStorage.getItem('sidebarCollapsed');
   if (savedState) {

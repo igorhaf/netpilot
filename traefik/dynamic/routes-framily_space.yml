@@ -1,40 +1,34 @@
 http:
   routers:
-    r_framily_space_2_http:
+    r_framily_space_4_http:
       rule: "Host(`framily.space`) && PathPrefix(`/`) && Method(`GET`)"
-      service: api@internal
+      service: noop
       entryPoints:
         - web
       priority: 100
       middlewares:
-        - m_https_framily_space_2
-    r_framily_space_2:
+        - m_https_framily_space_4
+    r_framily_space_4:
       rule: "Host(`framily.space`) && PathPrefix(`/`) && Method(`GET`)"
-      service: s_framily_space_2
+      service: s_framily_space_4
       entryPoints:
         - websecure
       priority: 100
-      middlewares:
-        - m_https_framily_space_2
-        - m_www_framily_space_2
       tls:
         certResolver: letsencrypt
   services:
-    s_framily_space_2:
+    noop:
       loadBalancer:
         servers:
           - 
-            url: "http://localhost:8989"
-        healthCheck:
-          path: /health
-          interval: 30s
+            url: "http://127.0.0.1:1"
+    s_framily_space_4:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://host.docker.internal:8989"
   middlewares:
-    m_https_framily_space_2:
+    m_https_framily_space_4:
       redirectScheme:
         scheme: https
-        permanent: true
-    m_www_framily_space_2:
-      redirectRegex:
-        regex: "^https?://www\.(.*)"
-        replacement: "https://${1}"
         permanent: true

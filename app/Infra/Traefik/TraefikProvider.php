@@ -123,7 +123,7 @@ class TraefikProvider
                     $middlewares[$mwName] = [
                         'redirectRegex' => [
                             'regex' => '^https?://www\\.(.*)',
-                            'replacement' => 'https://${1}',
+                            'replacement' => 'https://$1',
                             'permanent' => true
                         ]
                     ];
@@ -131,7 +131,7 @@ class TraefikProvider
                     $middlewares[$mwName] = [
                         'redirectRegex' => [
                             'regex' => '^https?://(?!www\\.)(.*)$',
-                            'replacement' => 'https://www.${1}',
+                            'replacement' => 'https://www.$1',
                             'permanent' => true
                         ]
                     ];
@@ -218,7 +218,7 @@ class TraefikProvider
 
             $replacement = $redirect->target_url;
             if ($redirect->preserve_query) {
-                $replacement .= '${query}';
+                $replacement .= '$${query}';
             }
 
             $middlewares[$mwName] = [
@@ -314,7 +314,8 @@ class TraefikProvider
         if (is_numeric($v)) return (string)$v;
         if ($v === null) return '';
         $s = (string)$v;
-        if (preg_match('/[:#{}\[\],&*?]|^\s|\s$/', $s)) {
+        // Quote strings with special chars including dollar signs
+        if (preg_match('/[:#{}\[\],&*?$]|^\s|\s$/', $s)) {
             return '"' . str_replace('"', '\\"', $s) . '"';
         }
         return $s;

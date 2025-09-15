@@ -2,7 +2,7 @@ http:
   routers:
     r_meadadigital_com_1_http:
       rule: "Host(`meadadigital.com`) && PathPrefix(`/`) && Method(`GET`)"
-      service: api@internal
+      service: noop
       entryPoints:
         - web
       priority: 100
@@ -14,27 +14,21 @@ http:
       entryPoints:
         - websecure
       priority: 100
-      middlewares:
-        - m_https_meadadigital_com_1
-        - m_www_meadadigital_com_1
       tls:
         certResolver: letsencrypt
   services:
+    noop:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://127.0.0.1:1"
     s_meadadigital_com_1:
       loadBalancer:
         servers:
           - 
-            url: "http://localhost:8989"
-        healthCheck:
-          path: /health
-          interval: 30s
+            url: "http://host.docker.internal:8989"
   middlewares:
     m_https_meadadigital_com_1:
       redirectScheme:
         scheme: https
-        permanent: true
-    m_www_meadadigital_com_1:
-      redirectRegex:
-        regex: "^https?://www\.(.*)"
-        replacement: "https://${1}"
         permanent: true

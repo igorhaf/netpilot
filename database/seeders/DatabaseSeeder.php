@@ -32,9 +32,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Call NetPilot seeder for real data
+        // Call NetPilot seeders for real data
         $this->call([
             NetPilotSeeder::class,
+            NetPilotDomainSeeder::class,
         ]);
     }
 }

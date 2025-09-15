@@ -1,40 +1,74 @@
 http:
   routers:
-    r_netpilot_meadadigital_com_3_http:
-      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/`) && Method(`GET`)"
+    r_netpilot_meadadigital_com_2_http:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)"
+      service: api@internal
+      entryPoints:
+        - web
+      priority: 200
+      middlewares:
+        - m_https_netpilot_meadadigital_com_2
+    r_netpilot_meadadigital_com_2:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)"
+      service: s_netpilot_meadadigital_com_2
+      entryPoints:
+        - websecure
+      priority: 200
+      middlewares:
+        - m_https_netpilot_meadadigital_com_2
+        - m_security_netpilot_meadadigital_com_2
+      tls:
+        certResolver: letsencrypt
+    r_netpilot_meadadigital_com_1_http:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/`)"
       service: api@internal
       entryPoints:
         - web
       priority: 100
       middlewares:
-        - m_https_netpilot_meadadigital_com_3
-    r_netpilot_meadadigital_com_3:
-      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/`) && Method(`GET`)"
-      service: s_netpilot_meadadigital_com_3
+        - m_https_netpilot_meadadigital_com_1
+    r_netpilot_meadadigital_com_1:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/`)"
+      service: s_netpilot_meadadigital_com_1
       entryPoints:
         - websecure
       priority: 100
       middlewares:
-        - m_https_netpilot_meadadigital_com_3
-        - m_www_netpilot_meadadigital_com_3
+        - m_https_netpilot_meadadigital_com_1
+        - m_security_netpilot_meadadigital_com_1
       tls:
         certResolver: letsencrypt
   services:
-    s_netpilot_meadadigital_com_3:
+    s_netpilot_meadadigital_com_2:
       loadBalancer:
         servers:
           - 
-            url: "http://localhost:8989"
-        healthCheck:
-          path: /health
-          interval: 30s
+            url: "http://laravel.test:80"
+    s_netpilot_meadadigital_com_1:
+      loadBalancer:
+        servers:
+          - 
+            url: "http://laravel.test:80"
   middlewares:
-    m_https_netpilot_meadadigital_com_3:
+    m_https_netpilot_meadadigital_com_2:
       redirectScheme:
         scheme: https
         permanent: true
-    m_www_netpilot_meadadigital_com_3:
-      redirectRegex:
-        regex: "^https?://www\.(.*)"
-        replacement: "https://${1}"
+    m_security_netpilot_meadadigital_com_2:
+      headers:
+        customRequestHeaders:
+          X-Frame-Options: DENY
+          X-XSS-Protection: 1; mode=block
+          X-Content-Type-Options: nosniff
+          Strict-Transport-Security: max-age=31536000; includeSubDomains
+    m_https_netpilot_meadadigital_com_1:
+      redirectScheme:
+        scheme: https
         permanent: true
+    m_security_netpilot_meadadigital_com_1:
+      headers:
+        customRequestHeaders:
+          X-Frame-Options: DENY
+          X-XSS-Protection: 1; mode=block
+          X-Content-Type-Options: nosniff
+          Strict-Transport-Security: max-age=31536000; includeSubDomains
