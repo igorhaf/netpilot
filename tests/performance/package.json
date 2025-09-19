@@ -1,0 +1,30 @@
+{
+  "name": "netpilot-performance-tests",
+  "version": "1.0.0",
+  "description": "Performance and load testing suite for NetPilot",
+  "scripts": {
+    "test:load": "artillery run artillery-config.yml",
+    "test:load:report": "artillery run --output results.json artillery-config.yml && artillery report results.json",
+    "test:performance": "k6 run k6-performance.js",
+    "test:stress": "../stress/stress-test.sh",
+    "test:all": "npm run test:load && npm run test:performance && npm run test:stress",
+    "install:tools": "npm install -g artillery && echo 'Please install k6 from https://k6.io/docs/get-started/installation/'",
+    "clean": "rm -rf results/ *.json *.html *.csv"
+  },
+  "dependencies": {
+    "artillery": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "keywords": [
+    "performance",
+    "load-testing",
+    "stress-testing",
+    "netpilot",
+    "artillery",
+    "k6"
+  ],
+  "author": "NetPilot Team",
+  "license": "MIT"
+}

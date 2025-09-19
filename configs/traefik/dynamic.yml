@@ -1,0 +1,41 @@
+
+  http: 
+    routers: 
+      netpilot-meadadigital-com: 
+        rule: Host(`netpilot.meadadigital.com`)
+        service: netpilot-meadadigital-com-service
+        middlewares: []
+        tls: 
+          certResolver: letsencrypt
+        
+      
+      netpilot-meadadigital-com-redirect: 
+        rule: Host(`netpilot.meadadigital.com`)
+        middlewares: [
+          netpilot-meadadigital-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
+    
+    services: 
+      netpilot-meadadigital-com-service: 
+        loadBalancer: 
+          servers: [
+            
+              url: http://backend:3001
+            
+          ]
+        
+      
+    
+    middlewares: 
+      netpilot-meadadigital-com-redirect-https: 
+        redirectScheme: 
+          scheme: https
+          permanent: true
+        
+      
+    
+  

@@ -1,0 +1,219 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NetPilot Redirects API",
+    "description": "API endpoints for managing HTTP redirects and URL rewriting",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {"url": "http://localhost:3001/api/v1", "description": "Development"},
+    {"url": "https://api.seudominio.com/api/v1", "description": "Production"}
+  ],
+  "tags": [{"name": "Redirects", "description": "HTTP redirect management"}],
+  "paths": {
+    "/redirects": {
+      "get": {
+        "tags": ["Redirects"],
+        "summary": "List redirects",
+        "operationId": "listRedirects",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "default": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 10}},
+          {"name": "domain_id", "in": "query", "schema": {"type": "integer"}},
+          {"name": "enabled", "in": "query", "schema": {"type": "boolean"}},
+          {"name": "redirect_type", "in": "query", "schema": {"type": "integer", "enum": [301, 302, 307, 308]}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Redirects retrieved",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/RedirectsListResponse"}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Redirects"],
+        "summary": "Create redirect",
+        "operationId": "createRedirect",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/CreateRedirectRequest"},
+              "examples": {
+                "permanent_redirect": {
+                  "summary": "301 Permanent Redirect",
+                  "value": {
+                    "domain_id": 1,
+                    "source_path": "/old-page",
+                    "target_url": "https://example.com/new-page",
+                    "redirect_type": 301,
+                    "enabled": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Redirect created",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/RedirectResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/redirects/{id}": {
+      "get": {
+        "tags": ["Redirects"],
+        "summary": "Get redirect",
+        "operationId": "getRedirect",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "responses": {
+          "200": {
+            "description": "Redirect retrieved",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/RedirectDetailResponse"}
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Redirects"],
+        "summary": "Update redirect",
+        "operationId": "updateRedirect",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/UpdateRedirectRequest"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Redirect updated",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/RedirectResponse"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Redirects"],
+        "summary": "Delete redirect",
+        "operationId": "deleteRedirect",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+        "responses": {"204": {"description": "Redirect deleted"}}
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+    },
+    "schemas": {
+      "CreateRedirectRequest": {
+        "type": "object",
+        "required": ["domain_id", "source_path", "target_url", "redirect_type"],
+        "properties": {
+          "domain_id": {"type": "integer", "minimum": 1},
+          "source_path": {"type": "string", "pattern": "^/.*", "example": "/old-path"},
+          "target_url": {"type": "string", "format": "uri", "example": "https://example.com/new-path"},
+          "redirect_type": {"type": "integer", "enum": [301, 302, 307, 308], "example": 301},
+          "enabled": {"type": "boolean", "default": true},
+          "preserve_query": {"type": "boolean", "default": true},
+          "regex_pattern": {"type": "boolean", "default": false}
+        }
+      },
+      "UpdateRedirectRequest": {
+        "type": "object",
+        "properties": {
+          "source_path": {"type": "string", "pattern": "^/.*"},
+          "target_url": {"type": "string", "format": "uri"},
+          "redirect_type": {"type": "integer", "enum": [301, 302, 307, 308]},
+          "enabled": {"type": "boolean"},
+          "preserve_query": {"type": "boolean"},
+          "regex_pattern": {"type": "boolean"}
+        }
+      },
+      "RedirectResponse": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "domain_id": {"type": "integer"},
+          "source_path": {"type": "string"},
+          "target_url": {"type": "string"},
+          "redirect_type": {"type": "integer"},
+          "enabled": {"type": "boolean"},
+          "preserve_query": {"type": "boolean"},
+          "regex_pattern": {"type": "boolean"},
+          "hit_count": {"type": "integer"},
+          "created_at": {"type": "string", "format": "date-time"},
+          "updated_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "RedirectDetailResponse": {
+        "allOf": [
+          {"$ref": "#/components/schemas/RedirectResponse"},
+          {
+            "type": "object",
+            "properties": {
+              "domain": {"type": "object", "properties": {"id": {"type": "integer"}, "domain": {"type": "string"}}},
+              "stats": {
+                "type": "object",
+                "properties": {
+                  "hits_24h": {"type": "integer"},
+                  "hits_7d": {"type": "integer"},
+                  "hits_30d": {"type": "integer"},
+                  "last_hit": {"type": "string", "format": "date-time", "nullable": true}
+                }
+              }
+            }
+          }
+        ]
+      },
+      "RedirectsListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {"$ref": "#/components/schemas/RedirectResponse"},
+                {"type": "object", "properties": {"domain": {"type": "object", "properties": {"id": {"type": "integer"}, "domain": {"type": "string"}}}}}
+              ]
+            }
+          },
+          "pagination": {"$ref": "#/components/schemas/PaginationResponse"}
+        }
+      },
+      "PaginationResponse": {
+        "type": "object",
+        "properties": {
+          "page": {"type": "integer"},
+          "limit": {"type": "integer"},
+          "total": {"type": "integer"},
+          "total_pages": {"type": "integer"}
+        }
+      }
+    }
+  }
+}

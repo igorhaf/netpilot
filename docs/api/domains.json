@@ -1,0 +1,1496 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NetPilot Domains API",
+    "description": "API endpoints for managing domains and domain configurations in NetPilot",
+    "version": "1.0.0",
+    "contact": {
+      "name": "NetPilot Support",
+      "email": "support@netpilot.local",
+      "url": "https://netpilot.local/support"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001/api/v1",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api-staging.seudominio.com/api/v1",
+      "description": "Staging server"
+    },
+    {
+      "url": "https://api.seudominio.com/api/v1",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Domains",
+      "description": "Domain management operations"
+    }
+  ],
+  "paths": {
+    "/domains": {
+      "get": {
+        "tags": ["Domains"],
+        "summary": "List domains",
+        "description": "Retrieve a paginated list of domains with optional filtering and sorting",
+        "operationId": "listDomains",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search domains by name",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "example.com"
+            }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "description": "Filter by enabled status",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Field to sort by",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["domain", "created_at", "updated_at"],
+              "default": "created_at"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort order",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Domains retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainsListResponse"
+                },
+                "examples": {
+                  "domains_list": {
+                    "summary": "List of domains",
+                    "value": {
+                      "data": [
+                        {
+                          "id": 1,
+                          "domain": "example.com",
+                          "enabled": true,
+                          "user_id": 1,
+                          "proxy_rules_count": 2,
+                          "redirects_count": 1,
+                          "ssl_certificate": {
+                            "id": 1,
+                            "status": "active",
+                            "expires_at": "2024-03-01T00:00:00Z",
+                            "days_until_expiry": 89
+                          },
+                          "created_at": "2023-12-01T10:00:00Z",
+                          "updated_at": "2023-12-01T10:00:00Z"
+                        },
+                        {
+                          "id": 2,
+                          "domain": "test.com",
+                          "enabled": false,
+                          "user_id": 1,
+                          "proxy_rules_count": 0,
+                          "redirects_count": 0,
+                          "ssl_certificate": null,
+                          "created_at": "2023-12-01T09:00:00Z",
+                          "updated_at": "2023-12-01T09:30:00Z"
+                        }
+                      ],
+                      "pagination": {
+                        "page": 1,
+                        "limit": 10,
+                        "total": 2,
+                        "total_pages": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Domains"],
+        "summary": "Create domain",
+        "description": "Create a new domain configuration",
+        "operationId": "createDomain",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDomainRequest"
+              },
+              "examples": {
+                "create_domain": {
+                  "summary": "Create new domain",
+                  "value": {
+                    "domain": "newdomain.com",
+                    "enabled": true,
+                    "description": "Main application domain"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Domain created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainResponse"
+                },
+                "examples": {
+                  "domain_created": {
+                    "summary": "New domain created",
+                    "value": {
+                      "id": 3,
+                      "domain": "newdomain.com",
+                      "enabled": true,
+                      "description": "Main application domain",
+                      "user_id": 1,
+                      "proxy_rules": [],
+                      "redirects": [],
+                      "ssl_certificate": null,
+                      "created_at": "2023-12-01T12:00:00Z",
+                      "updated_at": "2023-12-01T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "domain_exists": {
+                    "summary": "Domain already exists",
+                    "value": {
+                      "error": {
+                        "code": "DOMAIN_ALREADY_EXISTS",
+                        "message": "Domain already exists in the system",
+                        "timestamp": "2023-12-01T12:00:00Z",
+                        "path": "/api/v1/domains"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/domains/{id}": {
+      "get": {
+        "tags": ["Domains"],
+        "summary": "Get domain",
+        "description": "Retrieve detailed information about a specific domain",
+        "operationId": "getDomain",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Domain retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainDetailResponse"
+                },
+                "examples": {
+                  "domain_detail": {
+                    "summary": "Domain with all details",
+                    "value": {
+                      "id": 1,
+                      "domain": "example.com",
+                      "enabled": true,
+                      "description": "Main application domain",
+                      "user_id": 1,
+                      "proxy_rules": [
+                        {
+                          "id": 1,
+                          "source_path": "/",
+                          "target_url": "http://localhost:3000",
+                          "enabled": true,
+                          "load_balancing_method": "round_robin"
+                        },
+                        {
+                          "id": 2,
+                          "source_path": "/api",
+                          "target_url": "http://localhost:3001",
+                          "enabled": true,
+                          "load_balancing_method": "least_connections"
+                        }
+                      ],
+                      "redirects": [
+                        {
+                          "id": 1,
+                          "source_path": "/old-path",
+                          "target_url": "https://example.com/new-path",
+                          "redirect_type": 301,
+                          "enabled": true
+                        }
+                      ],
+                      "ssl_certificate": {
+                        "id": 1,
+                        "status": "active",
+                        "issuer": "Let's Encrypt",
+                        "expires_at": "2024-03-01T00:00:00Z",
+                        "days_until_expiry": 89,
+                        "auto_renew": true
+                      },
+                      "dns_records": [
+                        {
+                          "type": "A",
+                          "name": "@",
+                          "value": "192.168.1.100",
+                          "ttl": 300
+                        },
+                        {
+                          "type": "CNAME",
+                          "name": "www",
+                          "value": "example.com",
+                          "ttl": 300
+                        }
+                      ],
+                      "stats": {
+                        "requests_24h": 1250,
+                        "bandwidth_24h_mb": 45.2,
+                        "avg_response_time_ms": 142,
+                        "uptime_percentage": 99.9
+                      },
+                      "created_at": "2023-12-01T10:00:00Z",
+                      "updated_at": "2023-12-01T10:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Domains"],
+        "summary": "Update domain",
+        "description": "Update an existing domain configuration",
+        "operationId": "updateDomain",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDomainRequest"
+              },
+              "examples": {
+                "update_domain": {
+                  "summary": "Update domain configuration",
+                  "value": {
+                    "domain": "updateddomain.com",
+                    "enabled": false,
+                    "description": "Updated domain description"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Domain updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "description": "Domain name conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Domains"],
+        "summary": "Delete domain",
+        "description": "Delete a domain and all its associated configurations",
+        "operationId": "deleteDomain",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainId"
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "description": "Force delete even if domain has dependencies",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Domain deleted successfully"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "description": "Domain has dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "has_dependencies": {
+                    "summary": "Domain has active dependencies",
+                    "value": {
+                      "error": {
+                        "code": "DOMAIN_HAS_DEPENDENCIES",
+                        "message": "Cannot delete domain with active proxy rules or SSL certificates. Use force=true to override.",
+                        "details": {
+                          "proxy_rules": 2,
+                          "ssl_certificates": 1,
+                          "redirects": 1
+                        },
+                        "timestamp": "2023-12-01T12:00:00Z",
+                        "path": "/api/v1/domains/1"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/domains/{id}/toggle": {
+      "patch": {
+        "tags": ["Domains"],
+        "summary": "Toggle domain status",
+        "description": "Enable or disable a domain",
+        "operationId": "toggleDomain",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Domain status toggled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "domain": {
+                      "type": "string",
+                      "example": "example.com"
+                    },
+                    "enabled": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2023-12-01T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/domains/{id}/verify": {
+      "post": {
+        "tags": ["Domains"],
+        "summary": "Verify domain ownership",
+        "description": "Verify domain ownership through DNS or file-based verification",
+        "operationId": "verifyDomain",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyDomainRequest"
+              },
+              "examples": {
+                "dns_verification": {
+                  "summary": "DNS verification",
+                  "value": {
+                    "method": "dns",
+                    "record_type": "TXT"
+                  }
+                },
+                "file_verification": {
+                  "summary": "File verification",
+                  "value": {
+                    "method": "file"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Domain verification initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainVerificationResponse"
+                },
+                "examples": {
+                  "dns_verification_response": {
+                    "summary": "DNS verification challenge",
+                    "value": {
+                      "verification_id": "verify_12345",
+                      "method": "dns",
+                      "challenge": {
+                        "record_type": "TXT",
+                        "record_name": "_netpilot-challenge.example.com",
+                        "record_value": "netpilot-domain-verification=abc123def456",
+                        "ttl": 300
+                      },
+                      "instructions": "Add the TXT record to your DNS zone and then call the verification endpoint",
+                      "expires_at": "2023-12-01T13:00:00Z"
+                    }
+                  },
+                  "file_verification_response": {
+                    "summary": "File verification challenge",
+                    "value": {
+                      "verification_id": "verify_12346",
+                      "method": "file",
+                      "challenge": {
+                        "file_path": "/.well-known/netpilot-domain-verification.txt",
+                        "file_content": "netpilot-domain-verification=abc123def456"
+                      },
+                      "instructions": "Upload the file to your web server at the specified path",
+                      "verification_url": "https://example.com/.well-known/netpilot-domain-verification.txt",
+                      "expires_at": "2023-12-01T13:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/domains/{id}/verify/{verification_id}": {
+      "post": {
+        "tags": ["Domains"],
+        "summary": "Complete domain verification",
+        "description": "Complete the domain verification process",
+        "operationId": "completeDomainVerification",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainId"
+          },
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Verification ID from the verification initiation response"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Domain verification completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "verified": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "verification_method": {
+                      "type": "string",
+                      "example": "dns"
+                    },
+                    "verified_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2023-12-01T12:30:00Z"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Domain ownership verified successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Verification failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "verification_failed": {
+                    "summary": "Domain verification failed",
+                    "value": {
+                      "error": {
+                        "code": "DOMAIN_VERIFICATION_FAILED",
+                        "message": "Could not verify domain ownership. Please check the DNS record or file placement.",
+                        "details": {
+                          "method": "dns",
+                          "expected_record": "_netpilot-challenge.example.com TXT \"netpilot-domain-verification=abc123def456\"",
+                          "found_records": []
+                        },
+                        "timestamp": "2023-12-01T12:30:00Z",
+                        "path": "/api/v1/domains/1/verify/verify_12345"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/domains/bulk": {
+      "post": {
+        "tags": ["Domains"],
+        "summary": "Bulk create domains",
+        "description": "Create multiple domains in a single request",
+        "operationId": "bulkCreateDomains",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreateDomainsRequest"
+              },
+              "examples": {
+                "bulk_create": {
+                  "summary": "Create multiple domains",
+                  "value": {
+                    "domains": [
+                      {
+                        "domain": "site1.com",
+                        "enabled": true,
+                        "description": "First site"
+                      },
+                      {
+                        "domain": "site2.com",
+                        "enabled": true,
+                        "description": "Second site"
+                      },
+                      {
+                        "domain": "site3.com",
+                        "enabled": false,
+                        "description": "Third site (staging)"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Domains created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCreateDomainsResponse"
+                },
+                "examples": {
+                  "bulk_create_response": {
+                    "summary": "Bulk creation results",
+                    "value": {
+                      "created": [
+                        {
+                          "id": 4,
+                          "domain": "site1.com",
+                          "enabled": true,
+                          "description": "First site",
+                          "created_at": "2023-12-01T12:00:00Z"
+                        },
+                        {
+                          "id": 5,
+                          "domain": "site2.com",
+                          "enabled": true,
+                          "description": "Second site",
+                          "created_at": "2023-12-01T12:00:00Z"
+                        }
+                      ],
+                      "failed": [
+                        {
+                          "domain": "site3.com",
+                          "error": "Domain already exists"
+                        }
+                      ],
+                      "summary": {
+                        "total": 3,
+                        "created": 2,
+                        "failed": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "DomainId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "description": "Domain ID"
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Domain not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "domain_not_found": {
+                "summary": "Domain not found",
+                "value": {
+                  "error": {
+                    "code": "DOMAIN_NOT_FOUND",
+                    "message": "Domain not found",
+                    "timestamp": "2023-12-01T12:00:00Z",
+                    "path": "/api/v1/domains/999"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "CreateDomainRequest": {
+        "type": "object",
+        "required": ["domain"],
+        "properties": {
+          "domain": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$",
+            "description": "Domain name (FQDN)",
+            "example": "example.com",
+            "maxLength": 253
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the domain is enabled",
+            "example": true,
+            "default": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Domain description",
+            "example": "Main application domain",
+            "maxLength": 255,
+            "nullable": true
+          }
+        }
+      },
+      "UpdateDomainRequest": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$",
+            "description": "Domain name (FQDN)",
+            "example": "example.com",
+            "maxLength": 253
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the domain is enabled",
+            "example": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Domain description",
+            "example": "Updated domain description",
+            "maxLength": 255,
+            "nullable": true
+          }
+        }
+      },
+      "VerifyDomainRequest": {
+        "type": "object",
+        "required": ["method"],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["dns", "file"],
+            "description": "Verification method",
+            "example": "dns"
+          },
+          "record_type": {
+            "type": "string",
+            "enum": ["TXT", "CNAME"],
+            "description": "DNS record type (required for DNS verification)",
+            "example": "TXT"
+          }
+        }
+      },
+      "BulkCreateDomainsRequest": {
+        "type": "object",
+        "required": ["domains"],
+        "properties": {
+          "domains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateDomainRequest"
+            },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        }
+      },
+      "DomainResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Domain ID",
+            "example": 1
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain name",
+            "example": "example.com"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the domain is enabled",
+            "example": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Domain description",
+            "example": "Main application domain",
+            "nullable": true
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "Owner user ID",
+            "example": 1
+          },
+          "proxy_rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProxyRuleSummary"
+            }
+          },
+          "redirects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RedirectSummary"
+            }
+          },
+          "ssl_certificate": {
+            "$ref": "#/components/schemas/SSLCertificateSummary",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2023-12-01T10:00:00Z"
+          }
+        }
+      },
+      "DomainDetailResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DomainResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "dns_records": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DNSRecord"
+                }
+              },
+              "stats": {
+                "$ref": "#/components/schemas/DomainStats"
+              },
+              "verification": {
+                "$ref": "#/components/schemas/DomainVerification",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "DomainsListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainListItem"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "DomainListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Domain ID",
+            "example": 1
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domain name",
+            "example": "example.com"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the domain is enabled",
+            "example": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Domain description",
+            "example": "Main application domain",
+            "nullable": true
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "Owner user ID",
+            "example": 1
+          },
+          "proxy_rules_count": {
+            "type": "integer",
+            "description": "Number of proxy rules",
+            "example": 2
+          },
+          "redirects_count": {
+            "type": "integer",
+            "description": "Number of redirects",
+            "example": 1
+          },
+          "ssl_certificate": {
+            "$ref": "#/components/schemas/SSLCertificateSummary",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2023-12-01T10:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2023-12-01T10:00:00Z"
+          }
+        }
+      },
+      "DomainVerificationResponse": {
+        "type": "object",
+        "properties": {
+          "verification_id": {
+            "type": "string",
+            "description": "Verification ID",
+            "example": "verify_12345"
+          },
+          "method": {
+            "type": "string",
+            "enum": ["dns", "file"],
+            "description": "Verification method",
+            "example": "dns"
+          },
+          "challenge": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DNSChallenge"
+              },
+              {
+                "$ref": "#/components/schemas/FileChallenge"
+              }
+            ]
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Verification instructions",
+            "example": "Add the TXT record to your DNS zone"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Challenge expiration time",
+            "example": "2023-12-01T13:00:00Z"
+          }
+        }
+      },
+      "BulkCreateDomainsResponse": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainResponse"
+            }
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "domain": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "created": {
+                "type": "integer"
+              },
+              "failed": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "ProxyRuleSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "source_path": {
+            "type": "string",
+            "example": "/"
+          },
+          "target_url": {
+            "type": "string",
+            "example": "http://localhost:3000"
+          },
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "load_balancing_method": {
+            "type": "string",
+            "example": "round_robin"
+          }
+        }
+      },
+      "RedirectSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "source_path": {
+            "type": "string",
+            "example": "/old-path"
+          },
+          "target_url": {
+            "type": "string",
+            "example": "https://example.com/new-path"
+          },
+          "redirect_type": {
+            "type": "integer",
+            "example": 301
+          },
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "SSLCertificateSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "active", "expired", "failed"],
+            "example": "active"
+          },
+          "issuer": {
+            "type": "string",
+            "example": "Let's Encrypt"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-03-01T00:00:00Z"
+          },
+          "days_until_expiry": {
+            "type": "integer",
+            "example": 89
+          },
+          "auto_renew": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "DNSRecord": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["A", "AAAA", "CNAME", "MX", "TXT", "SRV"],
+            "example": "A"
+          },
+          "name": {
+            "type": "string",
+            "example": "@"
+          },
+          "value": {
+            "type": "string",
+            "example": "192.168.1.100"
+          },
+          "ttl": {
+            "type": "integer",
+            "example": 300
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Priority for MX and SRV records",
+            "example": 10,
+            "nullable": true
+          }
+        }
+      },
+      "DomainStats": {
+        "type": "object",
+        "properties": {
+          "requests_24h": {
+            "type": "integer",
+            "description": "Requests in last 24 hours",
+            "example": 1250
+          },
+          "bandwidth_24h_mb": {
+            "type": "number",
+            "description": "Bandwidth usage in MB (last 24 hours)",
+            "example": 45.2
+          },
+          "avg_response_time_ms": {
+            "type": "number",
+            "description": "Average response time in milliseconds",
+            "example": 142
+          },
+          "uptime_percentage": {
+            "type": "number",
+            "description": "Uptime percentage",
+            "example": 99.9
+          },
+          "error_rate": {
+            "type": "number",
+            "description": "Error rate percentage",
+            "example": 0.12
+          }
+        }
+      },
+      "DomainVerification": {
+        "type": "object",
+        "properties": {
+          "verified": {
+            "type": "boolean",
+            "example": true
+          },
+          "verification_method": {
+            "type": "string",
+            "example": "dns"
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-12-01T12:30:00Z"
+          }
+        }
+      },
+      "DNSChallenge": {
+        "type": "object",
+        "properties": {
+          "record_type": {
+            "type": "string",
+            "example": "TXT"
+          },
+          "record_name": {
+            "type": "string",
+            "example": "_netpilot-challenge.example.com"
+          },
+          "record_value": {
+            "type": "string",
+            "example": "netpilot-domain-verification=abc123def456"
+          },
+          "ttl": {
+            "type": "integer",
+            "example": 300
+          }
+        }
+      },
+      "FileChallenge": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "example": "/.well-known/netpilot-domain-verification.txt"
+          },
+          "file_content": {
+            "type": "string",
+            "example": "netpilot-domain-verification=abc123def456"
+          },
+          "verification_url": {
+            "type": "string",
+            "example": "https://example.com/.well-known/netpilot-domain-verification.txt"
+          }
+        }
+      },
+      "PaginationResponse": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "Current page number",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Items per page",
+            "example": 10
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of items",
+            "example": 25
+          },
+          "total_pages": {
+            "type": "integer",
+            "description": "Total number of pages",
+            "example": 3
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Error code",
+                "example": "DOMAIN_NOT_FOUND"
+              },
+              "message": {
+                "type": "string",
+                "description": "Error message",
+                "example": "Domain not found"
+              },
+              "details": {
+                "type": "object",
+                "description": "Additional error details",
+                "nullable": true
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Error timestamp",
+                "example": "2023-12-01T12:00:00Z"
+              },
+              "path": {
+                "type": "string",
+                "description": "API path where error occurred",
+                "example": "/api/v1/domains/999"
+              }
+            }
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string",
+                "example": "Validation failed"
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "example": "domain"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Domain is required"
+                    }
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2023-12-01T12:00:00Z"
+              },
+              "path": {
+                "type": "string",
+                "example": "/api/v1/domains"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

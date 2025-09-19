@@ -1,0 +1,198 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NetPilot Logs API",
+    "description": "API endpoints for accessing system logs, audit trails, and monitoring data",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {"url": "http://localhost:3001/api/v1", "description": "Development"},
+    {"url": "https://api.seudominio.com/api/v1", "description": "Production"}
+  ],
+  "tags": [{"name": "Logs", "description": "System logging and audit trail management"}],
+  "paths": {
+    "/logs": {
+      "get": {
+        "tags": ["Logs"],
+        "summary": "List application logs",
+        "operationId": "listLogs",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "default": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 50}},
+          {"name": "level", "in": "query", "schema": {"type": "string", "enum": ["debug", "info", "warn", "error"]}},
+          {"name": "start_date", "in": "query", "schema": {"type": "string", "format": "date-time"}},
+          {"name": "end_date", "in": "query", "schema": {"type": "string", "format": "date-time"}},
+          {"name": "search", "in": "query", "schema": {"type": "string"}},
+          {"name": "user_id", "in": "query", "schema": {"type": "integer"}},
+          {"name": "context", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Logs retrieved",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/LogsListResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logs/system": {
+      "get": {
+        "tags": ["Logs"],
+        "summary": "Get system logs",
+        "operationId": "getSystemLogs",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "service", "in": "query", "schema": {"type": "string", "enum": ["frontend", "backend", "traefik", "nginx", "db", "redis"]}},
+          {"name": "level", "in": "query", "schema": {"type": "string", "enum": ["debug", "info", "warn", "error"]}},
+          {"name": "lines", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 100}}
+        ],
+        "responses": {
+          "200": {
+            "description": "System logs retrieved",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/SystemLogsResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logs/deployment": {
+      "get": {
+        "tags": ["Logs"],
+        "summary": "Get deployment logs",
+        "operationId": "getDeploymentLogs",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "deployment_id", "in": "query", "schema": {"type": "string"}},
+          {"name": "status", "in": "query", "schema": {"type": "string", "enum": ["success", "failed", "in_progress"]}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Deployment logs retrieved",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/DeploymentLogsResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logs/clear": {
+      "delete": {
+        "tags": ["Logs"],
+        "summary": "Clear logs",
+        "operationId": "clearLogs",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "older_than_days": {"type": "integer", "minimum": 1, "maximum": 365},
+                  "levels": {"type": "array", "items": {"type": "string", "enum": ["debug", "info", "warn", "error"]}},
+                  "contexts": {"type": "array", "items": {"type": "string"}}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logs cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {"type": "string"},
+                    "deleted_count": {"type": "integer"},
+                    "remaining_count": {"type": "integer"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+    },
+    "schemas": {
+      "LogEntry": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "level": {"type": "string", "enum": ["debug", "info", "warn", "error"]},
+          "message": {"type": "string"},
+          "context": {"type": "object"},
+          "user_id": {"type": "integer", "nullable": true},
+          "user": {"type": "object", "nullable": true, "properties": {"id": {"type": "integer"}, "email": {"type": "string"}}},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "SystemLogEntry": {
+        "type": "object",
+        "properties": {
+          "timestamp": {"type": "string", "format": "date-time"},
+          "level": {"type": "string"},
+          "service": {"type": "string"},
+          "message": {"type": "string"},
+          "details": {"type": "object"}
+        }
+      },
+      "LogsListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/LogEntry"}},
+          "pagination": {"$ref": "#/components/schemas/PaginationResponse"}
+        }
+      },
+      "SystemLogsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {"type": "array", "items": {"$ref": "#/components/schemas/SystemLogEntry"}},
+          "pagination": {"$ref": "#/components/schemas/PaginationResponse"}
+        }
+      },
+      "DeploymentLogsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "status": {"type": "string"},
+                "version": {"type": "string"},
+                "started_at": {"type": "string", "format": "date-time"},
+                "completed_at": {"type": "string", "format": "date-time", "nullable": true},
+                "steps": {"type": "array", "items": {"type": "object"}}
+              }
+            }
+          }
+        }
+      },
+      "PaginationResponse": {
+        "type": "object",
+        "properties": {
+          "page": {"type": "integer"},
+          "limit": {"type": "integer"},
+          "total": {"type": "integer"},
+          "total_pages": {"type": "integer"}
+        }
+      }
+    }
+  }
+}

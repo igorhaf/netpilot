@@ -1,0 +1,251 @@
+config:
+  target: 'http://localhost:3001/api/v1'
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm-up"
+    # Normal load
+    - duration: 300
+      arrivalRate: 20
+      name: "Normal load"
+    # Peak load
+    - duration: 180
+      arrivalRate: 50
+      name: "Peak load"
+    # Spike test
+    - duration: 60
+      arrivalRate: 100
+      name: "Spike test"
+    # Cool down
+    - duration: 120
+      arrivalRate: 10
+      name: "Cool down"
+
+  # Load test data
+  payload:
+    - path: "./test-data/domains.csv"
+      fields:
+        - "domain_name"
+        - "description"
+        - "enabled"
+    - path: "./test-data/users.csv"
+      fields:
+        - "email"
+        - "password"
+
+  # Custom metrics
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+
+  # Global configuration
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+      'User-Agent': 'Artillery Load Test'
+
+  # Performance thresholds
+  ensure:
+    thresholds:
+      - http.response_time.p95: 1000  # 95% of requests < 1s
+      - http.response_time.p99: 2000  # 99% of requests < 2s
+      - http.request_rate: 50         # At least 50 req/s
+      - http.codes.200: 80           # 80% success rate
+      - http.codes.401: 5            # Max 5% auth errors
+      - http.codes.500: 1            # Max 1% server errors
+
+  # Custom processor for complex logic
+  processor: "./processors/netpilot-processor.js"
+
+scenarios:
+  # Authentication flow testing
+  - name: "Authentication Flow"
+    weight: 30
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.access_token"
+              as: "accessToken"
+            - json: "$.refresh_token"
+              as: "refreshToken"
+            - json: "$.user.id"
+              as: "userId"
+          afterResponse: "validateLogin"
+
+      - think: 2
+
+      - get:
+          url: "/auth/me"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          afterResponse: "validateProfile"
+
+      - think: 1
+
+      - post:
+          url: "/auth/refresh"
+          json:
+            refresh_token: "{{ refreshToken }}"
+          capture:
+            - json: "$.access_token"
+              as: "newAccessToken"
+          afterResponse: "validateRefresh"
+
+      - think: 1
+
+      - post:
+          url: "/auth/logout"
+          headers:
+            Authorization: "Bearer {{ newAccessToken }}"
+
+  # Domain management operations
+  - name: "Domain Management"
+    weight: 40
+    flow:
+      # Login first
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@netpilot.local"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "accessToken"
+
+      - think: 1
+
+      # List domains
+      - get:
+          url: "/domains"
+          qs:
+            page: 1
+            limit: 20
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          afterResponse: "validateDomainsList"
+
+      - think: 2
+
+      # Search domains
+      - get:
+          url: "/domains"
+          qs:
+            search: "test"
+            page: 1
+            limit: 10
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+
+      - think: 1
+
+      # Create domain (20% probability)
+      - function: "maybeCreateDomain"
+
+      - think: 3
+
+      # Get domain stats
+      - get:
+          url: "/domains/stats"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          afterResponse: "validateStats"
+
+  # SSL Certificate operations
+  - name: "SSL Management"
+    weight: 15
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@netpilot.local"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "accessToken"
+
+      - think: 1
+
+      - get:
+          url: "/ssl-certificates"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          afterResponse: "validateCertificates"
+
+      - think: 2
+
+      - get:
+          url: "/ssl-certificates/stats"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+
+  # System monitoring
+  - name: "System Monitoring"
+    weight: 10
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@netpilot.local"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "accessToken"
+
+      - think: 1
+
+      - get:
+          url: "/system/health"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          afterResponse: "validateHealth"
+
+      - think: 2
+
+      - get:
+          url: "/system/metrics"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          afterResponse: "validateMetrics"
+
+      - think: 1
+
+      - get:
+          url: "/logs"
+          qs:
+            level: "error"
+            limit: 50
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+
+  # Proxy rules management
+  - name: "Proxy Rules"
+    weight: 5
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@netpilot.local"
+            password: "admin123"
+          capture:
+            - json: "$.access_token"
+              as: "accessToken"
+
+      - think: 1
+
+      - get:
+          url: "/proxy-rules"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          afterResponse: "validateProxyRules"
+
+      - think: 2
+
+      - get:
+          url: "/redirects"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"

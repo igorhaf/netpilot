@@ -1,0 +1,732 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NetPilot SSL Certificates API",
+    "description": "API endpoints for managing SSL certificates, Let's Encrypt integration, and certificate lifecycle",
+    "version": "1.0.0",
+    "contact": {
+      "name": "NetPilot Support",
+      "email": "support@netpilot.local"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001/api/v1",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.seudominio.com/api/v1",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "SSL Certificates",
+      "description": "SSL certificate management and automation"
+    }
+  ],
+  "paths": {
+    "/ssl-certificates": {
+      "get": {
+        "tags": ["SSL Certificates"],
+        "summary": "List SSL certificates",
+        "description": "Retrieve paginated list of SSL certificates with filtering options",
+        "operationId": "listSSLCertificates",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"$ref": "#/components/parameters/Page"},
+          {"$ref": "#/components/parameters/Limit"},
+          {
+            "name": "domain_id",
+            "in": "query",
+            "schema": {"type": "integer"},
+            "description": "Filter by domain ID"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "active", "expired", "failed", "revoked"]
+            },
+            "description": "Filter by certificate status"
+          },
+          {
+            "name": "expires_soon",
+            "in": "query",
+            "schema": {"type": "boolean"},
+            "description": "Filter certificates expiring within 30 days"
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["letsencrypt", "custom", "cloudflare", "digicert"]
+            },
+            "description": "Filter by certificate provider"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSL certificates retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/SSLCertificatesListResponse"},
+                "examples": {
+                  "certificates_list": {
+                    "summary": "List of SSL certificates",
+                    "value": {
+                      "data": [
+                        {
+                          "id": 1,
+                          "domain_id": 1,
+                          "domain": {"id": 1, "domain": "example.com"},
+                          "certificate_path": "/ssl/example.com.crt",
+                          "private_key_path": "/ssl/example.com.key",
+                          "issuer": "Let's Encrypt",
+                          "serial_number": "03F2A1B4C5D6E7F8",
+                          "subject": "CN=example.com",
+                          "san": ["example.com", "www.example.com"],
+                          "expires_at": "2024-03-01T00:00:00Z",
+                          "days_until_expiry": 89,
+                          "auto_renew": true,
+                          "status": "active",
+                          "provider": "letsencrypt",
+                          "created_at": "2023-12-01T10:00:00Z",
+                          "updated_at": "2023-12-01T10:00:00Z"
+                        }
+                      ],
+                      "pagination": {
+                        "page": 1,
+                        "limit": 10,
+                        "total": 1,
+                        "total_pages": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["SSL Certificates"],
+        "summary": "Generate SSL certificate",
+        "description": "Request a new SSL certificate from specified provider",
+        "operationId": "generateSSLCertificate",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/GenerateSSLCertificateRequest"},
+              "examples": {
+                "letsencrypt_cert": {
+                  "summary": "Let's Encrypt certificate",
+                  "value": {
+                    "domain_id": 1,
+                    "provider": "letsencrypt",
+                    "challenge_type": "http-01",
+                    "auto_renew": true,
+                    "san": ["www.example.com"],
+                    "key_type": "rsa",
+                    "key_size": 2048
+                  }
+                },
+                "custom_cert": {
+                  "summary": "Upload custom certificate",
+                  "value": {
+                    "domain_id": 1,
+                    "provider": "custom",
+                    "certificate_content": "-----BEGIN CERTIFICATE-----\nMIIE...",
+                    "private_key_content": "-----BEGIN PRIVATE KEY-----\nMIIE...",
+                    "intermediate_content": "-----BEGIN CERTIFICATE-----\nMIIE..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "SSL certificate generation initiated",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/SSLCertificateResponse"},
+                "examples": {
+                  "generation_started": {
+                    "summary": "Certificate generation started",
+                    "value": {
+                      "id": 2,
+                      "domain_id": 1,
+                      "status": "pending",
+                      "provider": "letsencrypt",
+                      "challenge_type": "http-01",
+                      "challenge_token": "abc123def456",
+                      "challenge_url": "http://example.com/.well-known/acme-challenge/abc123def456",
+                      "auto_renew": true,
+                      "estimated_completion": "2023-12-01T10:05:00Z",
+                      "created_at": "2023-12-01T10:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Certificate already exists",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ErrorResponse"},
+                "examples": {
+                  "cert_exists": {
+                    "summary": "Active certificate exists",
+                    "value": {
+                      "error": {
+                        "code": "CERTIFICATE_ALREADY_EXISTS",
+                        "message": "Domain already has an active SSL certificate",
+                        "details": {
+                          "existing_certificate_id": 1,
+                          "expires_at": "2024-03-01T00:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {"$ref": "#/components/responses/ValidationError"}
+        }
+      }
+    },
+    "/ssl-certificates/{id}": {
+      "get": {
+        "tags": ["SSL Certificates"],
+        "summary": "Get SSL certificate",
+        "description": "Retrieve detailed information about a specific SSL certificate",
+        "operationId": "getSSLCertificate",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/CertificateId"}],
+        "responses": {
+          "200": {
+            "description": "SSL certificate retrieved",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/SSLCertificateDetailResponse"}
+              }
+            }
+          },
+          "404": {"$ref": "#/components/responses/NotFoundError"}
+        }
+      },
+      "delete": {
+        "tags": ["SSL Certificates"],
+        "summary": "Revoke SSL certificate",
+        "description": "Revoke and delete an SSL certificate",
+        "operationId": "revokeSSLCertificate",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"$ref": "#/components/parameters/CertificateId"},
+          {
+            "name": "reason",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["unspecified", "keyCompromise", "cACompromise", "affiliationChanged", "superseded", "cessationOfOperation"]
+            },
+            "description": "Revocation reason"
+          }
+        ],
+        "responses": {
+          "204": {"description": "SSL certificate revoked"},
+          "404": {"$ref": "#/components/responses/NotFoundError"}
+        }
+      }
+    },
+    "/ssl-certificates/{id}/renew": {
+      "post": {
+        "tags": ["SSL Certificates"],
+        "summary": "Renew SSL certificate",
+        "description": "Manually renew an SSL certificate",
+        "operationId": "renewSSLCertificate",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/CertificateId"}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Force renewal even if certificate is not expiring soon"
+                  },
+                  "challenge_type": {
+                    "type": "string",
+                    "enum": ["http-01", "dns-01"],
+                    "description": "ACME challenge type to use for renewal"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Certificate renewal initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {"type": "string", "example": "Certificate renewal initiated"},
+                    "certificate_id": {"type": "integer", "example": 1},
+                    "renewal_id": {"type": "string", "example": "renewal_12345"},
+                    "estimated_completion": {"type": "string", "format": "date-time"},
+                    "challenge_required": {"type": "boolean"},
+                    "challenge_details": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "type": {"type": "string"},
+                        "token": {"type": "string"},
+                        "url": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Renewal not needed or not possible",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ssl-certificates/check-expiration": {
+      "get": {
+        "tags": ["SSL Certificates"],
+        "summary": "Check expiring certificates",
+        "description": "Get list of certificates expiring within specified timeframe",
+        "operationId": "checkExpiringCertificates",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {"type": "integer", "minimum": 1, "maximum": 365, "default": 30},
+            "description": "Check certificates expiring within X days"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expiring certificates check completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expiring_certificates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {"type": "integer"},
+                          "domain": {"type": "string"},
+                          "expires_at": {"type": "string", "format": "date-time"},
+                          "days_until_expiry": {"type": "integer"},
+                          "auto_renew": {"type": "boolean"},
+                          "renewal_status": {
+                            "type": "string",
+                            "enum": ["scheduled", "in_progress", "failed", "not_scheduled"]
+                          }
+                        }
+                      }
+                    },
+                    "total_expiring": {"type": "integer"},
+                    "auto_renewal_enabled": {"type": "integer"},
+                    "manual_action_required": {"type": "integer"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ssl-certificates/renew-expiring": {
+      "post": {
+        "tags": ["SSL Certificates"],
+        "summary": "Bulk renew expiring certificates",
+        "description": "Initiate renewal for all certificates expiring within specified timeframe",
+        "operationId": "bulkRenewExpiringCertificates",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "days_threshold": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 90,
+                    "default": 30,
+                    "description": "Renew certificates expiring within X days"
+                  },
+                  "auto_renew_only": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Only renew certificates with auto-renewal enabled"
+                  },
+                  "challenge_type": {
+                    "type": "string",
+                    "enum": ["http-01", "dns-01"],
+                    "description": "Preferred challenge type for renewals"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk renewal initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {"type": "string"},
+                    "certificates_scheduled": {"type": "integer"},
+                    "renewal_jobs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "certificate_id": {"type": "integer"},
+                          "domain": {"type": "string"},
+                          "renewal_id": {"type": "string"},
+                          "status": {"type": "string"}
+                        }
+                      }
+                    },
+                    "estimated_completion": {"type": "string", "format": "date-time"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ssl-certificates/{id}/verify": {
+      "post": {
+        "tags": ["SSL Certificates"],
+        "summary": "Verify certificate installation",
+        "description": "Verify that the certificate is properly installed and accessible",
+        "operationId": "verifySSLCertificateInstallation",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/CertificateId"}],
+        "responses": {
+          "200": {
+            "description": "Certificate verification completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {"type": "boolean"},
+                    "domain": {"type": "string"},
+                    "certificate_details": {
+                      "type": "object",
+                      "properties": {
+                        "subject": {"type": "string"},
+                        "issuer": {"type": "string"},
+                        "serial_number": {"type": "string"},
+                        "expires_at": {"type": "string", "format": "date-time"},
+                        "san": {"type": "array", "items": {"type": "string"}},
+                        "key_size": {"type": "integer"},
+                        "signature_algorithm": {"type": "string"}
+                      }
+                    },
+                    "chain_valid": {"type": "boolean"},
+                    "trust_store_valid": {"type": "boolean"},
+                    "ocsp_status": {"type": "string", "enum": ["good", "revoked", "unknown"]},
+                    "warnings": {"type": "array", "items": {"type": "string"}},
+                    "errors": {"type": "array", "items": {"type": "string"}},
+                    "tested_at": {"type": "string", "format": "date-time"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {"type": "integer", "minimum": 1, "default": 1}
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 10}
+      },
+      "CertificateId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {"type": "integer", "minimum": 1},
+        "description": "SSL Certificate ID"
+      }
+    },
+    "responses": {
+      "NotFoundError": {
+        "description": "SSL certificate not found",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validation error",
+        "content": {
+          "application/json": {
+            "schema": {"$ref": "#/components/schemas/ValidationErrorResponse"}
+          }
+        }
+      }
+    },
+    "schemas": {
+      "GenerateSSLCertificateRequest": {
+        "type": "object",
+        "required": ["domain_id", "provider"],
+        "properties": {
+          "domain_id": {"type": "integer", "minimum": 1},
+          "provider": {
+            "type": "string",
+            "enum": ["letsencrypt", "custom", "cloudflare", "digicert"],
+            "default": "letsencrypt"
+          },
+          "challenge_type": {
+            "type": "string",
+            "enum": ["http-01", "dns-01"],
+            "default": "http-01",
+            "description": "ACME challenge type (for automated providers)"
+          },
+          "auto_renew": {"type": "boolean", "default": true},
+          "san": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Subject Alternative Names",
+            "maxItems": 100
+          },
+          "key_type": {
+            "type": "string",
+            "enum": ["rsa", "ecdsa"],
+            "default": "rsa"
+          },
+          "key_size": {
+            "type": "integer",
+            "enum": [2048, 3072, 4096, 256, 384],
+            "default": 2048,
+            "description": "Key size (RSA: 2048-4096, ECDSA: 256/384)"
+          },
+          "certificate_content": {
+            "type": "string",
+            "description": "Certificate content (for custom provider)",
+            "format": "byte"
+          },
+          "private_key_content": {
+            "type": "string",
+            "description": "Private key content (for custom provider)",
+            "format": "byte"
+          },
+          "intermediate_content": {
+            "type": "string",
+            "description": "Intermediate certificate content (for custom provider)",
+            "format": "byte",
+            "nullable": true
+          }
+        }
+      },
+      "SSLCertificateResponse": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "domain_id": {"type": "integer"},
+          "certificate_path": {"type": "string", "nullable": true},
+          "private_key_path": {"type": "string", "nullable": true},
+          "issuer": {"type": "string", "nullable": true},
+          "serial_number": {"type": "string", "nullable": true},
+          "subject": {"type": "string", "nullable": true},
+          "san": {"type": "array", "items": {"type": "string"}},
+          "expires_at": {"type": "string", "format": "date-time", "nullable": true},
+          "days_until_expiry": {"type": "integer", "nullable": true},
+          "auto_renew": {"type": "boolean"},
+          "status": {
+            "type": "string",
+            "enum": ["pending", "active", "expired", "failed", "revoked"]
+          },
+          "provider": {"type": "string"},
+          "challenge_type": {"type": "string", "nullable": true},
+          "challenge_token": {"type": "string", "nullable": true},
+          "challenge_url": {"type": "string", "nullable": true},
+          "key_type": {"type": "string"},
+          "key_size": {"type": "integer"},
+          "created_at": {"type": "string", "format": "date-time"},
+          "updated_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "SSLCertificateDetailResponse": {
+        "allOf": [
+          {"$ref": "#/components/schemas/SSLCertificateResponse"},
+          {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "object",
+                "properties": {
+                  "id": {"type": "integer"},
+                  "domain": {"type": "string"}
+                }
+              },
+              "certificate_details": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "fingerprint_sha1": {"type": "string"},
+                  "fingerprint_sha256": {"type": "string"},
+                  "public_key_algorithm": {"type": "string"},
+                  "signature_algorithm": {"type": "string"},
+                  "version": {"type": "integer"},
+                  "extensions": {"type": "object"}
+                }
+              },
+              "renewal_history": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer"},
+                    "renewal_date": {"type": "string", "format": "date-time"},
+                    "status": {"type": "string"},
+                    "provider": {"type": "string"},
+                    "challenge_type": {"type": "string"},
+                    "error": {"type": "string", "nullable": true}
+                  }
+                }
+              },
+              "validation_history": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "validated_at": {"type": "string", "format": "date-time"},
+                    "valid": {"type": "boolean"},
+                    "chain_valid": {"type": "boolean"},
+                    "ocsp_status": {"type": "string"},
+                    "errors": {"type": "array", "items": {"type": "string"}}
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SSLCertificatesListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {"$ref": "#/components/schemas/SSLCertificateResponse"},
+                {
+                  "type": "object",
+                  "properties": {
+                    "domain": {
+                      "type": "object",
+                      "properties": {
+                        "id": {"type": "integer"},
+                        "domain": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "pagination": {"$ref": "#/components/schemas/PaginationResponse"}
+        }
+      },
+      "PaginationResponse": {
+        "type": "object",
+        "properties": {
+          "page": {"type": "integer"},
+          "limit": {"type": "integer"},
+          "total": {"type": "integer"},
+          "total_pages": {"type": "integer"}
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {"type": "string"},
+              "message": {"type": "string"},
+              "details": {"type": "object", "nullable": true},
+              "timestamp": {"type": "string", "format": "date-time"},
+              "path": {"type": "string"}
+            }
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {"type": "string", "example": "VALIDATION_ERROR"},
+              "message": {"type": "string"},
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {"type": "string"},
+                    "message": {"type": "string"}
+                  }
+                }
+              },
+              "timestamp": {"type": "string", "format": "date-time"},
+              "path": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

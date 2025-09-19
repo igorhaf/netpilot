@@ -1,0 +1,122 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: netpilot-db
+    environment:
+      POSTGRES_DB: netpilot
+      POSTGRES_USER: netpilot
+      POSTGRES_PASSWORD: netpilot123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - netpilot-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netpilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: netpilot-backend
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://netpilot:netpilot123@172.21.0.1:5433/netpilot
+      - JWT_SECRET=netpilot_jwt_secret_key_2024
+      - ACME_EMAIL=admin@netpilot.local
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./configs:/app/configs
+      - ./scripts:/app/scripts
+    ports:
+      - "3001:3001"
+    networks:
+      - netpilot-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: netpilot-frontend
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    networks:
+      - netpilot-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.0
+    container_name: netpilot-traefik
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@netpilot.local"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    ports:
+      - "8090:80"
+      - "8443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./configs/traefik:/etc/traefik/dynamic
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - netpilot-network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+
+  nginx:
+    image: nginx:alpine
+    container_name: netpilot-nginx
+    volumes:
+      - ./configs/nginx/sites:/etc/nginx/conf.d
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "3010:80"
+    networks:
+      - netpilot-network
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.rule=Host(`nginx.localhost`)"
+      - "traefik.http.services.nginx.loadbalancer.server.port=80"
+
+volumes:
+  postgres_data:
+  traefik_letsencrypt:
+  nginx_logs:
+
+networks:
+  netpilot-network:
+    driver: bridge

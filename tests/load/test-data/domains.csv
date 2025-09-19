@@ -1,0 +1,21 @@
+domain_name,description,enabled
+test-load-001.example.com,Load test domain 001,true
+test-load-002.example.com,Load test domain 002,false
+test-load-003.example.com,Load test domain 003,true
+performance-001.local,Performance test domain 001,true
+performance-002.local,Performance test domain 002,true
+benchmark-001.test,Benchmark domain 001,false
+benchmark-002.test,Benchmark domain 002,true
+stress-test-001.netpilot.local,Stress test domain 001,true
+stress-test-002.netpilot.local,Stress test domain 002,false
+load-testing-001.demo.org,Load testing domain 001,true
+load-testing-002.demo.org,Load testing domain 002,true
+api-test-001.local,API test domain 001,false
+api-test-002.local,API test domain 002,true
+integration-001.example.com,Integration test domain 001,true
+integration-002.example.com,Integration test domain 002,false
+e2e-test-001.local,End-to-end test domain 001,true
+e2e-test-002.local,End-to-end test domain 002,true
+mock-service-001.test,Mock service domain 001,false
+mock-service-002.test,Mock service domain 002,true
+staging-001.netpilot.local,Staging environment domain 001,true
