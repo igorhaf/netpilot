@@ -126,7 +126,7 @@ wait_for_services() {
 
     # Aguardar backend
     echo -n "Aguardando Backend"
-    until curl -s http://localhost:3001/api/health >/dev/null 2>&1; do
+    until curl -s http://meadadigital.com:3001/api/health >/dev/null 2>&1; do
         echo -n "."
         sleep 2
     done
@@ -134,7 +134,7 @@ wait_for_services() {
 
     # Aguardar frontend
     echo -n "Aguardando Frontend"
-    until curl -s http://localhost:3000 >/dev/null 2>&1; do
+    until curl -s http://meadadigital.com:3000 >/dev/null 2>&1; do
         echo -n "."
         sleep 2
     done
@@ -164,10 +164,10 @@ check_services() {
 show_final_info() {
     print_status "NetPilot configurado com sucesso!"
     echo
-    print_info "🌐 Acesse a interface em: http://localhost:3000"
-    print_info "📚 Documentação da API: http://localhost:3001/api/docs"
-    print_info "🔧 Dashboard Traefik: http://localhost:8080"
-    print_info "📊 Status Nginx: http://localhost:8081"
+    print_info "🌐 Acesse a interface em: http://meadadigital.com:3000"
+    print_info "📚 Documentação da API: http://meadadigital.com:3001/api/docs"
+    print_info "🔧 Dashboard Traefik: http://meadadigital.com:8080"
+    print_info "📊 Status Nginx: http://meadadigital.com:8081"
     echo
     print_info "🔐 Login inicial:"
     print_info "   Email: admin@netpilot.local"

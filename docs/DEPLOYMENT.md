@@ -46,18 +46,18 @@
 
 #### Development
 ```
-localhost:3000     # Frontend
-localhost:3001     # Backend API
-localhost:8080     # Traefik Dashboard
-localhost:8081     # Nginx Status
+meadadigital.com:3000     # Frontend
+meadadigital.com:3001     # Backend API
+meadadigital.com:8080     # Traefik Dashboard
+meadadigital.com:8081     # Nginx Status
 ```
 
 #### Staging/Production
 ```
-app.seudominio.com     # Frontend
-api.seudominio.com     # Backend API
-traefik.seudominio.com # Traefik Dashboard (protegido)
-admin.seudominio.com   # Admin tools
+app.meadadigital.com     # Frontend
+api.meadadigital.com     # Backend API
+traefik.meadadigital.com # Traefik Dashboard (protegido)
+admin.meadadigital.com   # Admin tools
 ```
 
 ## Deployment Development
@@ -87,7 +87,7 @@ PORT=3001
 FRONTEND_PORT=3000
 
 # Database
-DB_HOST=localhost
+DB_HOST=meadadigital.com
 DB_PORT=5432
 DB_NAME=netpilot_dev
 DB_USER=netpilot
@@ -100,14 +100,14 @@ JWT_EXPIRES_IN=1h
 JWT_REFRESH_EXPIRES_IN=7d
 
 # ACME/SSL
-ACME_EMAIL=dev@seudominio.com
+ACME_EMAIL=dev@meadadigital.com
 ACME_STAGING=true
 ACME_PROVIDER=letsencrypt
 
 # URLs
-FRONTEND_URL=http://localhost:3000
-BACKEND_URL=http://localhost:3001
-TRAEFIK_DASHBOARD_URL=http://localhost:8080
+FRONTEND_URL=http://meadadigital.com:3000
+BACKEND_URL=http://meadadigital.com:3001
+TRAEFIK_DASHBOARD_URL=http://meadadigital.com:8080
 
 # Logs
 LOG_LEVEL=debug
@@ -127,8 +127,8 @@ docker-compose ps
 docker-compose logs -f
 
 # Verificar saúde dos serviços
-curl http://localhost:3001/health
-curl http://localhost:3000/api/health
+curl http://meadadigital.com:3001/health
+curl http://meadadigital.com:3000/api/health
 ```
 
 ### 4. Desenvolvimento com Hot Reload
@@ -180,14 +180,14 @@ JWT_EXPIRES_IN=2h
 JWT_REFRESH_EXPIRES_IN=7d
 
 # ACME/SSL
-ACME_EMAIL=staging@seudominio.com
+ACME_EMAIL=staging@meadadigital.com
 ACME_STAGING=true  # Usar staging Let's Encrypt
 ACME_PROVIDER=letsencrypt
 
 # URLs
-FRONTEND_URL=https://staging.seudominio.com
-BACKEND_URL=https://api-staging.seudominio.com
-TRAEFIK_DASHBOARD_URL=https://traefik-staging.seudominio.com
+FRONTEND_URL=https://staging.meadadigital.com
+BACKEND_URL=https://api-staging.meadadigital.com
+TRAEFIK_DASHBOARD_URL=https://traefik-staging.meadadigital.com
 
 # Logs
 LOG_LEVEL=info
@@ -214,7 +214,7 @@ services:
       - NODE_ENV=staging
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`staging.seudominio.com`)"
+      - "traefik.http.routers.frontend.rule=Host(`staging.meadadigital.com`)"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
 
   backend:
@@ -225,7 +225,7 @@ services:
       - NODE_ENV=staging
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api-staging.seudominio.com`)"
+      - "traefik.http.routers.backend.rule=Host(`api-staging.meadadigital.com`)"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
 
   db:
@@ -250,8 +250,8 @@ volumes:
 docker-compose -f docker-compose.staging.yml up -d --build
 
 # Verificar SSL
-curl -I https://staging.seudominio.com
-curl -I https://api-staging.seudominio.com
+curl -I https://staging.meadadigital.com
+curl -I https://api-staging.meadadigital.com
 
 # Executar testes de integração
 npm run test:integration:staging
@@ -315,14 +315,14 @@ JWT_EXPIRES_IN=1h
 JWT_REFRESH_EXPIRES_IN=7d
 
 # ACME/SSL
-ACME_EMAIL=admin@seudominio.com
+ACME_EMAIL=admin@meadadigital.com
 ACME_STAGING=false  # PRODUCTION Let's Encrypt
 ACME_PROVIDER=letsencrypt
 
 # URLs
-FRONTEND_URL=https://app.seudominio.com
-BACKEND_URL=https://api.seudominio.com
-TRAEFIK_DASHBOARD_URL=https://traefik.seudominio.com
+FRONTEND_URL=https://app.meadadigital.com
+BACKEND_URL=https://api.meadadigital.com
+TRAEFIK_DASHBOARD_URL=https://traefik.meadadigital.com
 
 # Logs
 LOG_LEVEL=warn
@@ -340,7 +340,7 @@ COMPRESSION_ENABLED=true
 # Security
 RATE_LIMIT_WINDOW=900000  # 15 minutes
 RATE_LIMIT_MAX=100        # requests per window
-CORS_ORIGINS=https://app.seudominio.com
+CORS_ORIGINS=https://app.meadadigital.com
 SESSION_SECURE=true
 COOKIE_SECURE=true
 
@@ -373,7 +373,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=netpilot_network"
-      - "traefik.http.routers.frontend.rule=Host(`app.seudominio.com`)"
+      - "traefik.http.routers.frontend.rule=Host(`app.meadadigital.com`)"
       - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
       - "traefik.http.routers.frontend.middlewares=security-headers"
       - "traefik.http.middlewares.security-headers.headers.forcestsheader=true"
@@ -396,7 +396,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=netpilot_network"
-      - "traefik.http.routers.backend.rule=Host(`api.seudominio.com`)"
+      - "traefik.http.routers.backend.rule=Host(`api.meadadigital.com`)"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
       - "traefik.http.routers.backend.middlewares=api-ratelimit"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
@@ -453,7 +453,7 @@ services:
       - --metrics.prometheus=true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.seudominio.com`)"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.meadadigital.com`)"
       - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       - "traefik.http.routers.traefik.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$10$$hash_da_senha"
@@ -507,8 +507,8 @@ docker-compose -f docker-compose.prod.yml ps
 docker-compose -f docker-compose.prod.yml logs -f
 
 # Verificar SSL
-curl -I https://app.seudominio.com
-curl -I https://api.seudominio.com
+curl -I https://app.meadadigital.com
+curl -I https://api.meadadigital.com
 
 # Executar testes de produção
 npm run test:e2e:production
@@ -558,7 +558,7 @@ SECURITY_HEADERS_ENABLED=true
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: admin@seudominio.com
+      email: admin@meadadigital.com
       storage: /ssl/acme.json
       httpChallenge:
         entryPoint: web
@@ -719,9 +719,9 @@ check_service() {
     fi
 }
 
-check_service "Frontend" "http://localhost:3000"
-check_service "Backend" "http://localhost:3001"
-check_service "Traefik" "http://localhost:8080"
+check_service "Frontend" "http://meadadigital.com:3000"
+check_service "Backend" "http://meadadigital.com:3001"
+check_service "Traefik" "http://meadadigital.com:8080"
 
 # Verificar banco de dados
 if docker-compose exec db pg_isready -U netpilot > /dev/null; then
@@ -745,8 +745,8 @@ check_ssl() {
     fi
 }
 
-check_ssl "app.seudominio.com"
-check_ssl "api.seudominio.com"
+check_ssl "app.meadadigital.com"
+check_ssl "api.meadadigital.com"
 ```
 
 ### 2. Alertas
@@ -824,7 +824,7 @@ docker-compose exec traefik cat /etc/traefik/traefik.yml
 docker-compose logs traefik | grep acme
 
 # Testar certificado
-openssl s_client -servername app.seudominio.com -connect app.seudominio.com:443
+openssl s_client -servername app.meadadigital.com -connect app.meadadigital.com:443
 ```
 
 ### 2. Debug Mode
@@ -907,12 +907,12 @@ services:
   frontend-blue:
     build: ./frontend
     labels:
-      - "traefik.http.routers.frontend-blue.rule=Host(`app.seudominio.com`) && Headers(`X-Version`, `blue`)"
+      - "traefik.http.routers.frontend-blue.rule=Host(`app.meadadigital.com`) && Headers(`X-Version`, `blue`)"
 
   frontend-green:
     build: ./frontend
     labels:
-      - "traefik.http.routers.frontend-green.rule=Host(`app.seudominio.com`) && Headers(`X-Version`, `green`)"
+      - "traefik.http.routers.frontend-green.rule=Host(`app.meadadigital.com`) && Headers(`X-Version`, `green`)"
 
   # Switch traffic between blue and green
   traefik:

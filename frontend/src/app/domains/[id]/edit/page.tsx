@@ -276,7 +276,7 @@ export default function EditDomainPage() {
                       Bloquear Acesso Externo Direto
                     </span>
                     <p className="text-sm text-muted-foreground">
-                      Impede acesso direto às portas da aplicação (ex: localhost:8484) de IPs externos
+                      Impede acesso direto às portas da aplicação (ex: meadadigital.com:8484) de IPs externos
                     </p>
                   </div>
                 </label>

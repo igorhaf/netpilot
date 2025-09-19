@@ -2,7 +2,7 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
-    baseUrl: 'http://localhost:3000',
+    baseUrl: 'http://meadadigital.com:3000',
     supportFile: 'cypress/support/e2e.ts',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     videosFolder: 'cypress/videos',
@@ -18,7 +18,7 @@ export default defineConfig({
 
     // Environment variables
     env: {
-      API_URL: 'http://localhost:3001/api/v1',
+      API_URL: 'http://meadadigital.com:3001/api/v1',
       TEST_USER_EMAIL: 'cypress@netpilot.local',
       TEST_USER_PASSWORD: 'cypress123',
       ADMIN_EMAIL: 'admin@netpilot.local',

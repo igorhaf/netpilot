@@ -29,12 +29,12 @@ cd backend && npm run migration:run
 #### Backend API Unreachable
 ```bash
 # Sintomas
-Cannot GET http://localhost:3001/api/docs
+Cannot GET http://meadadigital.com:3001/api/docs
 ERR_CONNECTION_REFUSED
 
 # Soluções
 # 1. Verificar se backend está rodando
-curl http://localhost:3001/health
+curl http://meadadigital.com:3001/health
 
 # 2. Verificar logs do backend
 docker-compose logs backend
@@ -49,12 +49,12 @@ docker-compose restart backend
 #### Frontend Not Loading
 ```bash
 # Sintomas
-Cannot GET http://localhost:3000
+Cannot GET http://meadadigital.com:3000
 This site can't be reached
 
 # Soluções
 # 1. Verificar se frontend está rodando
-curl http://localhost:3000
+curl http://meadadigital.com:3000
 
 # 2. Verificar dependências
 cd frontend && npm install
@@ -122,7 +122,7 @@ docker-compose logs traefik | grep -i renew
 
 # Soluções
 # 1. Renovar certificados expirados via API
-curl -X POST http://localhost:3001/ssl-certificates/renew
+curl -X POST http://meadadigital.com:3001/ssl-certificates/renew
 
 # 2. Renovação manual
 docker-compose exec traefik \
@@ -176,7 +176,7 @@ The requested URL was not found
 
 # Diagnóstico
 # 1. Verificar regras de proxy configuradas
-curl http://localhost:3001/proxy-rules
+curl http://meadadigital.com:3001/proxy-rules
 
 # 2. Verificar ordem de prioridade
 # Regras com maior prioridade são processadas primeiro
@@ -194,7 +194,7 @@ curl http://localhost:3001/proxy-rules
 # Para capturar específico: api/(.*)
 
 # 3. Testar configuração
-curl -H "Host: example.com" http://localhost/api/health
+curl -H "Host: example.com" http://meadadigital.com/api/health
 ```
 
 ### 4. Problemas de Performance
@@ -315,12 +315,12 @@ docker-compose logs --tail=50 backend
 docker-compose exec backend env
 
 # 3. Verificar health check
-docker-compose exec backend curl http://localhost:3001/health
+docker-compose exec backend curl http://meadadigital.com:3001/health
 
 # Soluções
 # 1. Ajustar health check no docker-compose.yml
 healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+  test: ["CMD", "curl", "-f", "http://meadadigital.com:3001/health"]
   interval: 30s
   timeout: 10s
   retries: 3
@@ -389,7 +389,7 @@ cat > /etc/logrotate.d/netpilot << EOF
 EOF
 
 # 2. Limpar logs antigos via API
-curl -X DELETE http://localhost:3001/logs/clear?olderThan=7days
+curl -X DELETE http://meadadigital.com:3001/logs/clear?olderThan=7days
 
 # 3. Configurar retenção automática
 # No banco, adicionar job para deletar logs > 30 dias
@@ -461,9 +461,9 @@ docker-compose ps
 
 # Verificar conectividade
 echo "2. Checking connectivity..."
-curl -f http://localhost:3000 || echo "Frontend DOWN"
-curl -f http://localhost:3001/health || echo "Backend DOWN"
-curl -f http://localhost:8080 || echo "Traefik DOWN"
+curl -f http://meadadigital.com:3000 || echo "Frontend DOWN"
+curl -f http://meadadigital.com:3001/health || echo "Backend DOWN"
+curl -f http://meadadigital.com:8080 || echo "Traefik DOWN"
 
 # Verificar banco
 echo "3. Checking database..."
@@ -523,7 +523,7 @@ docker-compose logs -f | grep -E "(ERROR|WARN|FATAL)"
 
 # Verificar saúde dos serviços
 while true; do
-  curl -f http://localhost:3001/health || echo "$(date): Backend DOWN"
+  curl -f http://meadadigital.com:3001/health || echo "$(date): Backend DOWN"
   sleep 60
 done
 ```

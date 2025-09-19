@@ -217,7 +217,7 @@ export default function NewProxyRulePage() {
                     type="url"
                     value={formData.targetUrl}
                     onChange={(e) => setFormData({ ...formData, targetUrl: e.target.value })}
-                    placeholder="http://localhost:3001, http://api.exemplo.com"
+                    placeholder="http://meadadigital.com:3001, http://api.exemplo.com"
                     className="input w-full"
                     required
                   />

@@ -24,9 +24,9 @@ A API NetPilot é uma API RESTful que fornece endpoints para gerenciar domínios
 
 ### Base URL
 ```
-Development: http://localhost:3001/api/v1
-Staging:     https://api-staging.seudominio.com/api/v1
-Production:  https://api.seudominio.com/api/v1
+Development: http://meadadigital.com:3001/api/v1
+Staging:     https://api-staging.meadadigital.com/api/v1
+Production:  https://api.meadadigital.com/api/v1
 ```
 
 ### Versioning
@@ -293,7 +293,7 @@ Authorization: Bearer <access_token>
     {
       "id": 1,
       "source_path": "/",
-      "target_url": "http://localhost:3000",
+      "target_url": "http://meadadigital.com:3000",
       "enabled": true
     }
   ],
@@ -441,10 +441,10 @@ Query Parameters:
         "domain": "example.com"
       },
       "source_path": "/api",
-      "target_url": "http://localhost:3001",
+      "target_url": "http://meadadigital.com:3001",
       "enabled": true,
       "load_balancing_method": "round_robin",
-      "health_check_url": "http://localhost:3001/health",
+      "health_check_url": "http://meadadigital.com:3001/health",
       "created_at": "2023-12-01T10:00:00Z",
       "updated_at": "2023-12-01T10:00:00Z"
     }
@@ -468,10 +468,10 @@ Content-Type: application/json
 {
   "domain_id": 1,
   "source_path": "/api",
-  "target_url": "http://localhost:3001",
+  "target_url": "http://meadadigital.com:3001",
   "enabled": true,
   "load_balancing_method": "round_robin",
-  "health_check_url": "http://localhost:3001/health"
+  "health_check_url": "http://meadadigital.com:3001/health"
 }
 ```
 
@@ -489,10 +489,10 @@ Content-Type: application/json
   "id": 2,
   "domain_id": 1,
   "source_path": "/api",
-  "target_url": "http://localhost:3001",
+  "target_url": "http://meadadigital.com:3001",
   "enabled": true,
   "load_balancing_method": "round_robin",
-  "health_check_url": "http://localhost:3001/health",
+  "health_check_url": "http://meadadigital.com:3001/health",
   "created_at": "2023-12-01T10:00:00Z",
   "updated_at": "2023-12-01T10:00:00Z"
 }
@@ -507,7 +507,7 @@ Content-Type: application/json
 
 {
   "source_path": "/api/v2",
-  "target_url": "http://localhost:3002",
+  "target_url": "http://meadadigital.com:3002",
   "enabled": true
 }
 ```
@@ -518,10 +518,10 @@ Content-Type: application/json
   "id": 1,
   "domain_id": 1,
   "source_path": "/api/v2",
-  "target_url": "http://localhost:3002",
+  "target_url": "http://meadadigital.com:3002",
   "enabled": true,
   "load_balancing_method": "round_robin",
-  "health_check_url": "http://localhost:3002/health",
+  "health_check_url": "http://meadadigital.com:3002/health",
   "created_at": "2023-12-01T10:00:00Z",
   "updated_at": "2023-12-01T11:00:00Z"
 }
@@ -1356,7 +1356,7 @@ npm install @netpilot/sdk
 import NetPilot from '@netpilot/sdk';
 
 const client = new NetPilot({
-  baseUrl: 'https://api.seudominio.com/api/v1',
+  baseUrl: 'https://api.meadadigital.com/api/v1',
   accessToken: 'your-access-token'
 });
 
@@ -1386,7 +1386,7 @@ pip install netpilot-sdk
 from netpilot import NetPilotClient
 
 client = NetPilotClient(
-    base_url='https://api.seudominio.com/api/v1',
+    base_url='https://api.meadadigital.com/api/v1',
     access_token='your-access-token'
 )
 
@@ -1414,7 +1414,7 @@ npm install -g @netpilot/cli
 
 ```bash
 # Configure
-netpilot config set api_url https://api.seudominio.com/api/v1
+netpilot config set api_url https://api.meadadigital.com/api/v1
 netpilot auth login
 
 # Manage domains
@@ -1434,4 +1434,4 @@ netpilot logs search "error"
 
 ---
 
-Para mais informações, consulte a [documentação completa](https://docs.netpilot.local) ou a [interface Swagger](https://api.seudominio.com/api/docs).
+Para mais informações, consulte a [documentação completa](https://docs.netpilot.local) ou a [interface Swagger](https://api.meadadigital.com/api/docs).

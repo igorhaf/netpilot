@@ -643,16 +643,16 @@ scrape_configs:
 # scripts/traefik-health.sh
 
 # Check Traefik API
-curl -f http://localhost:8080/ping || echo "Traefik API down"
+curl -f http://meadadigital.com:8080/ping || echo "Traefik API down"
 
 # Check certificate expiry
-curl -s http://localhost:8080/api/http/certificates | jq '.[] | select(.notAfter < (now + 86400*30))'
+curl -s http://meadadigital.com:8080/api/http/certificates | jq '.[] | select(.notAfter < (now + 86400*30))'
 
 # Check service health
-curl -s http://localhost:8080/api/http/services | jq '.[] | select(.serverStatus != null) | select(.serverStatus[] | .status != "UP")'
+curl -s http://meadadigital.com:8080/api/http/services | jq '.[] | select(.serverStatus != null) | select(.serverStatus[] | .status != "UP")'
 
 # Check router rules
-curl -s http://localhost:8080/api/http/routers | jq '.[] | {name: .name, rule: .rule, status: .status}'
+curl -s http://meadadigital.com:8080/api/http/routers | jq '.[] | {name: .name, rule: .rule, status: .status}'
 ```
 
 ## Debugging e Troubleshooting
@@ -691,19 +691,19 @@ docker-compose restart traefik
 #### Routing Issues
 ```bash
 # Check router configuration
-curl http://localhost:8080/api/http/routers
+curl http://meadadigital.com:8080/api/http/routers
 
 # Check service status
-curl http://localhost:8080/api/http/services
+curl http://meadadigital.com:8080/api/http/services
 
 # Test routing
-curl -H "Host: example.com" http://localhost/api/health
+curl -H "Host: example.com" http://meadadigital.com/api/health
 ```
 
 #### Performance Issues
 ```bash
 # Check metrics
-curl http://localhost:8080/metrics
+curl http://meadadigital.com:8080/metrics
 
 # Monitor resource usage
 docker stats traefik

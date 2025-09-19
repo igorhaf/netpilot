@@ -75,7 +75,7 @@ Analise as imagens fornecidas que mostram a interface do sistema NetPilot e crie
 
 ### 7. Sistema de Configuração
 - Modal de configuração de domínio com:
-  - IP de Bind Interno (127.0.0.1 - Localhost apenas)
+  - IP de Bind Interno (127.0.0.1 - meadadigital.com apenas)
   - Configurações básicas (Domínio Ativo, SSL Automático)
   - Configurações de segurança (Forçar HTTPS, Bloquear Acesso Externo)
   - Redirecionamento WWW

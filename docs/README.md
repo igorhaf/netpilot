@@ -164,9 +164,9 @@ ACME_STAGING=true
 ACME_PROVIDER=letsencrypt
 
 # URLs de Serviço
-FRONTEND_URL=http://localhost:3000
-BACKEND_URL=http://localhost:3001
-TRAEFIK_URL=http://localhost:8080
+FRONTEND_URL=http://meadadigital.com:3000
+BACKEND_URL=http://meadadigital.com:3001
+TRAEFIK_URL=http://meadadigital.com:8080
 ```
 
 ### Credenciais Padrão
@@ -182,9 +182,9 @@ Senha: admin123
 
 ### 1. Acesse a Interface
 
-- **Dashboard Principal**: http://localhost:3000
-- **API Documentation**: http://localhost:3001/api/docs
-- **Traefik Dashboard**: http://localhost:8080
+- **Dashboard Principal**: http://meadadigital.com:3000
+- **API Documentation**: http://meadadigital.com:3001/api/docs
+- **Traefik Dashboard**: http://meadadigital.com:8080
 
 ### 2. Primeira Configuração
 
@@ -274,8 +274,8 @@ docker-compose down             # Parar todos
 
 ### Documentação Completa
 
-- **Swagger UI**: http://localhost:3001/api/docs
-- **OpenAPI JSON**: http://localhost:3001/api/docs-json
+- **Swagger UI**: http://meadadigital.com:3001/api/docs
+- **OpenAPI JSON**: http://meadadigital.com:3001/api/docs-json
 - **Postman Collection**: `docs/api/postman/NetPilot.json`
 
 ### Endpoints Principais
@@ -335,11 +335,11 @@ DB_PASS=<senha-banco-muito-forte>
 
 # SSL
 ACME_STAGING=false
-ACME_EMAIL=admin@seudominio.com
+ACME_EMAIL=admin@meadadigital.com
 
 # URLs
-FRONTEND_URL=https://seudominio.com
-BACKEND_URL=https://api.seudominio.com
+FRONTEND_URL=https://meadadigital.com
+BACKEND_URL=https://api.meadadigital.com
 ```
 
 ### Backup
@@ -367,13 +367,13 @@ docker exec netpilot-db pg_dump -U netpilot netpilot > backup.sql
 
 ```bash
 # Verificar saúde dos serviços
-curl http://localhost:3001/health
+curl http://meadadigital.com:3001/health
 
 # Status do banco
-curl http://localhost:3001/health/database
+curl http://meadadigital.com:3001/health/database
 
 # Métricas Prometheus
-curl http://localhost:3001/metrics
+curl http://meadadigital.com:3001/metrics
 ```
 
 ## 🔧 Troubleshooting
@@ -445,6 +445,6 @@ Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICEN
 
 **Desenvolvido com ❤️ pela equipe NetPilot**
 
-[Website](https://netpilot.local) • [Documentação](docs/) • [API](http://localhost:3001/api/docs)
+[Website](https://netpilot.local) • [Documentação](docs/) • [API](http://meadadigital.com:3001/api/docs)
 
 </div>

@@ -575,7 +575,7 @@ export class AuditInterceptor implements NestInterceptor {
 ```bash
 # .env.production (exemplo)
 # Database
-DB_HOST=localhost
+DB_HOST=meadadigital.com
 DB_PORT=5432
 DB_USERNAME=netpilot_prod
 DB_PASSWORD=ComplexPassword123!@#
@@ -656,11 +656,11 @@ secrets:
 ### Procedimentos de Emergência
 ```bash
 # 1. Bloqueio imediato de usuário suspeito
-curl -X PATCH http://localhost:3001/users/{id}/block \
+curl -X PATCH http://meadadigital.com:3001/users/{id}/block \
   -H "Authorization: Bearer $ADMIN_TOKEN"
 
 # 2. Revogar todos os tokens de um usuário
-curl -X POST http://localhost:3001/auth/revoke-all \
+curl -X POST http://meadadigital.com:3001/auth/revoke-all \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"userId": "user-id"}'
 
@@ -671,7 +671,7 @@ docker-compose exec db pg_dump -U netpilot -t logs > security-incident-$(date +%
 docker-compose logs | grep -E "(WARN|ERROR)" | grep -i "security"
 
 # 5. Renovação de certificados comprometidos
-curl -X POST http://localhost:3001/ssl-certificates/emergency-renew
+curl -X POST http://meadadigital.com:3001/ssl-certificates/emergency-renew
 ```
 
 ### Contatos de Emergência

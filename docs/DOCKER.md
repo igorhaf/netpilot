@@ -226,7 +226,7 @@ services:
       - TRAEFIK_API_INSECURE=true # Apenas desenvolvimento
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.meadadigital.com`)"
       - "traefik.http.routers.traefik.service=api@internal"
 
   backend:
@@ -257,14 +257,14 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://meadadigital.com:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.backend.rule=Host(`api.meadadigital.com`)"
       - "traefik.http.routers.backend.tls=true"
 
   frontend:
@@ -283,12 +283,12 @@ services:
       - netpilot-api
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://meadadigital.com:3001
     depends_on:
       - backend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.rule=Host(`meadadigital.com`)"
       - "traefik.http.routers.frontend.tls=true"
 
   nginx:
@@ -307,7 +307,7 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      test: ["CMD", "curl", "-f", "http://meadadigital.com:8081/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -407,7 +407,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://meadadigital.com:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -455,7 +455,7 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      test: ["CMD", "curl", "-f", "http://meadadigital.com:8081/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -630,7 +630,7 @@ USER nestjs
 EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+  CMD curl -f http://meadadigital.com:3001/health || exit 1
 
 CMD ["node", "dist/main.js"]
 
@@ -671,7 +671,7 @@ USER nextjs
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+  CMD curl -f http://meadadigital.com:3000/api/health || exit 1
 
 CMD ["node", "server.js"]
 
@@ -702,7 +702,7 @@ COPY --from=builder /app/dist ./dist
 
 # 4. Health checks
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+  CMD curl -f http://meadadigital.com:3001/health || exit 1
 
 # 5. Não expor portas desnecessárias
 # EXPOSE apenas o que for necessário

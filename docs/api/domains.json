@@ -297,14 +297,14 @@
                         {
                           "id": 1,
                           "source_path": "/",
-                          "target_url": "http://localhost:3000",
+                          "target_url": "http://meadadigital.com:3000",
                           "enabled": true,
                           "load_balancing_method": "round_robin"
                         },
                         {
                           "id": 2,
                           "source_path": "/api",
-                          "target_url": "http://localhost:3001",
+                          "target_url": "http://meadadigital.com:3001",
                           "enabled": true,
                           "load_balancing_method": "least_connections"
                         }
@@ -1205,7 +1205,7 @@
           },
           "target_url": {
             "type": "string",
-            "example": "http://localhost:3000"
+            "example": "http://meadadigital.com:3000"
           },
           "enabled": {
             "type": "boolean",
