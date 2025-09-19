@@ -17,6 +17,9 @@ export class ProxyRule {
   @Column()
   sourcePath: string;
 
+  @Column({ nullable: true })
+  sourcePort: number;
+
   @Column()
   targetUrl: string;
 
