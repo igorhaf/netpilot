@@ -1,5 +1,5 @@
 config:
-  target: 'http://localhost:3001/api/v1'
+  target: 'http://meadadigital.com:3001/api/v1'
   phases:
     # Warm-up phase
     - duration: 60

@@ -6,8 +6,8 @@
     "version": "1.0.0"
   },
   "servers": [
-    {"url": "http://localhost:3001/api/v1", "description": "Development"},
-    {"url": "https://api.seudominio.com/api/v1", "description": "Production"}
+    {"url": "http://meadadigital.com:3001/api/v1", "description": "Development"},
+    {"url": "https://api.meadadigital.com/api/v1", "description": "Production"}
   ],
   "tags": [{"name": "Logs", "description": "System logging and audit trail management"}],
   "paths": {

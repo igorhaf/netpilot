@@ -6,7 +6,7 @@
 set -euo pipefail
 
 # Configuration
-BASE_URL="${BASE_URL:-http://localhost:3001}"
+BASE_URL="${BASE_URL:-http://meadadigital.com:3001}"
 API_BASE="$BASE_URL/api/v1"
 TEST_DURATION="${TEST_DURATION:-300}" # 5 minutes default
 MAX_USERS="${MAX_USERS:-100}"

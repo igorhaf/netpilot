@@ -17,4 +17,5 @@ export declare class LogsService {
         message: string;
     }>;
     getRecentLogs(limit?: number): Promise<Log[]>;
+    exportLogs(type?: LogType, status?: LogStatus): Promise<string>;
 }

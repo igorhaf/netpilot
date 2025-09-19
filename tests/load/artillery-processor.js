@@ -317,7 +317,7 @@ async function loginUser(email, password, context) {
 
 async function makeRequest(method, path, data, context) {
   return new Promise((resolve, reject) => {
-    const target = context.vars.$target || 'http://localhost:3001';
+    const target = context.vars.$target || 'http://meadadigital.com:3001';
     const url = new URL(path, target);
 
     const options = {
@@ -368,7 +368,7 @@ async function makeRequest(method, path, data, context) {
 
 async function makeAuthenticatedRequest(method, path, data, token, context) {
   return new Promise((resolve, reject) => {
-    const target = context.vars.$target || 'http://localhost:3001';
+    const target = context.vars.$target || 'http://meadadigital.com:3001';
     const url = new URL(path, target);
 
     const options = {

@@ -102,10 +102,10 @@ docker-compose logs -f
 ```
 
 ### 4. Acesse a Interface
-- **NetPilot Dashboard**: http://localhost:3000
-- **API Documentation**: http://localhost:3001/api/docs
-- **Traefik Dashboard**: http://localhost:8080
-- **Nginx Status**: http://localhost:8081
+- **NetPilot Dashboard**: http://meadadigital.com:3000
+- **API Documentation**: http://meadadigital.com:3001/api/docs
+- **Traefik Dashboard**: http://meadadigital.com:8080
+- **Nginx Status**: http://meadadigital.com:8081
 
 ### 5. Login Inicial
 - **Email**: admin@netpilot.local
@@ -128,7 +128,7 @@ ACME_EMAIL=seu-email@exemplo.com
 ACME_STAGING=false  # true para testes
 
 # Frontend
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://meadadigital.com:3001
 ```
 
 ### Configurações Nginx
