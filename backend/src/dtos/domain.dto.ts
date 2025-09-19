@@ -1,4 +1,5 @@
-import { IsString, IsBoolean, IsOptional, IsIP } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsIP, ValidateIf } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDomainDto {
@@ -38,7 +39,8 @@ export class CreateDomainDto {
 
   @ApiProperty({ example: '127.0.0.1', required: false })
   @IsOptional()
-  @IsIP()
+  @Transform(({ value }) => value && value.trim() !== '' ? value : undefined)
+  @IsString()
   bindIp?: string;
 }
 

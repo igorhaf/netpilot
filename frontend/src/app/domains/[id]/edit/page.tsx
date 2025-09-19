@@ -36,7 +36,7 @@ export default function EditDomainPage() {
     forceHttps: true,
     blockExternalAccess: false,
     enableWwwRedirect: false,
-    bindIp: '',
+    bindIp: undefined,
   })
 
   const { data: domain, isLoading } = useQuery({
@@ -55,7 +55,7 @@ export default function EditDomainPage() {
         forceHttps: domain.forceHttps ?? true,
         blockExternalAccess: domain.blockExternalAccess ?? false,
         enableWwwRedirect: domain.enableWwwRedirect ?? false,
-        bindIp: domain.bindIp || '',
+        bindIp: domain.bindIp || undefined,
       })
     }
   }, [domain])
@@ -79,7 +79,17 @@ export default function EditDomainPage() {
       toast.error('Nome do domínio é obrigatório')
       return
     }
-    updateDomainMutation.mutate(formData)
+
+    // Clean up empty/undefined fields before sending
+    const cleanedData = { ...formData }
+    if (!cleanedData.description?.trim()) {
+      delete cleanedData.description
+    }
+    if (!cleanedData.bindIp?.trim()) {
+      delete cleanedData.bindIp
+    }
+
+    updateDomainMutation.mutate(cleanedData)
   }
 
   const handleBack = () => {

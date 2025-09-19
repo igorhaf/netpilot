@@ -33,7 +33,7 @@ export default function NewDomainPage() {
     forceHttps: true,
     blockExternalAccess: false,
     enableWwwRedirect: false,
-    bindIp: '',
+    bindIp: undefined,
   })
 
   const createDomainMutation = useMutation({
@@ -54,7 +54,17 @@ export default function NewDomainPage() {
       toast.error('Nome do domínio é obrigatório')
       return
     }
-    createDomainMutation.mutate(formData)
+
+    // Clean up empty/undefined fields before sending
+    const cleanedData = { ...formData }
+    if (!cleanedData.description?.trim()) {
+      delete cleanedData.description
+    }
+    if (!cleanedData.bindIp?.trim()) {
+      delete cleanedData.bindIp
+    }
+
+    createDomainMutation.mutate(cleanedData)
   }
 
   const handleBack = () => {

@@ -29,8 +29,6 @@ services:
       - JWT_SECRET=netpilot_jwt_secret_key_2024
       - ACME_EMAIL=admin@meadadigital.com
     volumes:
-      - ./backend:/app
-      - /app/node_modules
       - ./configs:/app/configs
       - ./scripts:/app/scripts
     ports:
@@ -38,16 +36,6 @@ services:
     networks:
       - netpilot-network
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`netpilot.meadadigital.com`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.backend-redirect.rule=Host(`netpilot.meadadigital.com`)"
-      - "traefik.http.routers.backend-redirect.entrypoints=web"
-      - "traefik.http.routers.backend-redirect.middlewares=backend-redirect-https"
-      - "traefik.http.middlewares.backend-redirect-https.redirectscheme.scheme=https"
-      - "traefik.http.services.backend.loadbalancer.server.port=3001"
 
   frontend:
     build:
@@ -57,27 +45,13 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=https://netpilot.meadadigital.com
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     networks:
       - netpilot-network
     depends_on:
       - backend
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`meadadigital.com`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.frontend-redirect.rule=Host(`meadadigital.com`)"
-      - "traefik.http.routers.frontend-redirect.entrypoints=web"
-      - "traefik.http.routers.frontend-redirect.middlewares=frontend-redirect-https"
-      - "traefik.http.middlewares.frontend-redirect-https.redirectscheme.scheme=https"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
 
   traefik:
     image: traefik:v3.0
