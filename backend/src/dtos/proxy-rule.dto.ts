@@ -6,6 +6,11 @@ export class CreateProxyRuleDto {
   @IsString()
   sourcePath: string;
 
+  @ApiProperty({ example: 80, required: false, description: 'Porta de origem (padrão: 80 para HTTP, 443 para HTTPS)' })
+  @IsOptional()
+  @IsNumber()
+  sourcePort?: number;
+
   @ApiProperty({ example: 'http://backend:3001' })
   @IsString()
   targetUrl: string;

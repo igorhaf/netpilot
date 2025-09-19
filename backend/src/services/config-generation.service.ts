@@ -163,14 +163,18 @@ server {
           routerRule += ` && PathPrefix(\`${pathPattern}\`)`;
         }
 
+        // Determine entry points based on source port
+        const entryPoints = this.getEntryPointsForPort(rule.sourcePort, domain.autoTls);
+
         config.http.routers[currentRouterName] = {
           rule: routerRule,
           service: `${currentRouterName}-service`,
           middlewares: [],
           priority: rule.priority,
+          entryPoints: entryPoints,
         };
 
-        if (domain.autoTls) {
+        if (domain.autoTls && entryPoints.includes('websecure')) {
           config.http.routers[currentRouterName].tls = {
             certResolver: 'letsencrypt',
           };
@@ -209,6 +213,7 @@ server {
       service: `${routerName}-api-service`,
       middlewares: [],
       priority: 10,
+      entryPoints: ['websecure'],
       tls: {
         certResolver: 'letsencrypt',
       },
@@ -226,6 +231,7 @@ server {
       service: `${routerName}-service`,
       middlewares: [],
       priority: 1,
+      entryPoints: ['websecure'],
       tls: {
         certResolver: 'letsencrypt',
       },
@@ -264,5 +270,23 @@ server {
   private async reloadNginx(): Promise<void> {
     // In production, this would trigger nginx reload
     console.log('🔄 Nginx configuration reloaded');
+  }
+
+  private getEntryPointsForPort(sourcePort?: number, autoTls?: boolean): string[] {
+    // If no port specified, use default behavior
+    if (!sourcePort) {
+      return autoTls ? ['websecure'] : ['web'];
+    }
+
+    // Custom port mapping
+    switch (sourcePort) {
+      case 80:
+        return ['web'];
+      case 443:
+        return ['websecure'];
+      default:
+        // For custom ports, create dynamic entry point
+        return [`port${sourcePort}`];
+    }
   }
 }
