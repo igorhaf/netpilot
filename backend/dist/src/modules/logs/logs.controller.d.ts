@@ -15,4 +15,5 @@ export declare class LogsController {
         success: boolean;
         message: string;
     }>;
+    exportLogs(type?: LogType, status?: LogStatus): Promise<string>;
 }

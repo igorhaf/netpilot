@@ -5,7 +5,7 @@ const path = require('path');
 
 // Configuration
 const config = {
-  baseUrl: process.env.BASE_URL || 'http://localhost:3000',
+  baseUrl: process.env.BASE_URL || 'http://meadadigital.com:3000',
   outputDir: './tests/performance/reports',
   pages: [
     {

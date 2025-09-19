@@ -94,6 +94,34 @@ let LogsService = class LogsService {
             take: limit,
         });
     }
+    async exportLogs(type, status) {
+        const logs = await this.findAll(type, status);
+        const header = [
+            'ID',
+            'Tipo',
+            'Status',
+            'Ação',
+            'Mensagem',
+            'Detalhes',
+            'Duração (ms)',
+            'Iniciado em',
+            'Concluído em',
+            'Criado em',
+        ].join(',');
+        const rows = logs.map(log => [
+            `"${log.id}"`,
+            `"${log.type}"`,
+            `"${log.status}"`,
+            `"${log.action?.replace(/"/g, '""') || ''}"`,
+            `"${log.message?.replace(/"/g, '""') || ''}"`,
+            `"${log.details?.replace(/"/g, '""') || ''}"`,
+            log.duration || '',
+            log.startedAt ? `"${log.startedAt.toISOString()}"` : '',
+            log.completedAt ? `"${log.completedAt.toISOString()}"` : '',
+            `"${log.createdAt.toISOString()}"`,
+        ].join(','));
+        return [header, ...rows].join('\n');
+    }
 };
 exports.LogsService = LogsService;
 exports.LogsService = LogsService = __decorate([

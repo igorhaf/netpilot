@@ -34,6 +34,9 @@ let LogsController = class LogsController {
     clearLogs() {
         return this.logsService.clearLogs();
     }
+    async exportLogs(type, status) {
+        return await this.logsService.exportLogs(type, status);
+    }
 };
 exports.LogsController = LogsController;
 __decorate([
@@ -70,6 +73,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], LogsController.prototype, "clearLogs", null);
+__decorate([
+    (0, common_1.Get)('export'),
+    __param(0, (0, common_1.Query)('type')),
+    __param(1, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], LogsController.prototype, "exportLogs", null);
 exports.LogsController = LogsController = __decorate([
     (0, swagger_1.ApiTags)('logs'),
     (0, common_1.Controller)('logs'),

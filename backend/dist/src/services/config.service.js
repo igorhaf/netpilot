@@ -32,7 +32,7 @@ let ConfigService = class ConfigService {
         return this.get('JWT_EXPIRES_IN') || '7d';
     }
     get nginxConfigPath() {
-        return this.get('NGINX_CONFIG_PATH') || './configs/nginx';
+        return this.get('NGINX_CONFIG_PATH') || './configs/nginx/sites';
     }
     get traefikConfigPath() {
         return this.get('TRAEFIK_CONFIG_PATH') || './configs/traefik';

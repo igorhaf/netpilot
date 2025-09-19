@@ -110,10 +110,10 @@ docker-compose ps             # Status dos containers
 
 ## URLs de Acesso
 
-- **Interface Principal**: http://localhost:3000
-- **API Documentation**: http://localhost:3001/api/docs
-- **Traefik Dashboard**: http://localhost:8080
-- **Nginx Status**: http://localhost:3010
+- **Interface Principal**: http://meadadigital.com:3000
+- **API Documentation**: http://meadadigital.com:3001/api/docs
+- **Traefik Dashboard**: http://meadadigital.com:8080
+- **Nginx Status**: http://meadadigital.com:3010
 
 ## Scripts Utilitários
 

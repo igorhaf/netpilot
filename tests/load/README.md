@@ -56,7 +56,7 @@ k6 run k6-auth-load.js
 ```
 
 **Environment Variables:**
-- `BASE_URL`: API base URL (default: http://localhost:3001/api/v1)
+- `BASE_URL`: API base URL (default: http://meadadigital.com:3001/api/v1)
 
 #### Domain Management Load Test (`k6-domains-load.js`)
 Tests domain management with:
@@ -310,4 +310,4 @@ docker-compose exec backend npm run test:cleanup
 - [K6 Documentation](https://k6.io/docs/)
 - [Artillery Documentation](https://artillery.io/docs/)
 - [Lighthouse Documentation](https://developers.google.com/web/tools/lighthouse)
-- [NetPilot API Documentation](http://localhost:3001/api/docs)
+- [NetPilot API Documentation](http://meadadigital.com:3001/api/docs)
