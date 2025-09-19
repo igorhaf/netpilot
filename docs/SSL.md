@@ -849,7 +849,7 @@ telnet domain.com 80
 openssl x509 -in /path/to/cert.pem -text -noout | grep -A 2 "Validity"
 
 # Force renewal
-curl -X POST http://localhost:3001/ssl-certificates/{id}/renew
+curl -X POST http://meadadigital.com:3001/ssl-certificates/{id}/renew
 
 # Manual renewal via Traefik
 docker-compose exec traefik rm /etc/traefik/acme/acme.json

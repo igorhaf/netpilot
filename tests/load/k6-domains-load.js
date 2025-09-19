@@ -58,7 +58,7 @@ export const options = {
   },
 };
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001/api/v1';
+const BASE_URL = __ENV.BASE_URL || 'http://meadadigital.com:3001/api/v1';
 let accessToken = null;
 
 // Test data

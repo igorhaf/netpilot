@@ -39,7 +39,7 @@ describe('NetPilot E2E Tests', () => {
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => ({
             type: 'postgres',
-            host: configService.get('DB_HOST', 'localhost'),
+            host: configService.get('DB_HOST', 'meadadigital.com'),
             port: configService.get('DB_PORT', 5433),
             username: configService.get('DB_USER', 'netpilot_test'),
             password: configService.get('DB_PASS', 'test_password'),
@@ -193,16 +193,16 @@ describe('NetPilot E2E Tests', () => {
         .send({
           domainId: testDomain.id,
           sourcePath: '/api',
-          targetUrl: 'http://localhost:3001',
+          targetUrl: 'http://meadadigital.com:3001',
           enabled: true,
           loadBalancingMethod: 'round_robin',
-          healthCheckUrl: 'http://localhost:3001/health',
+          healthCheckUrl: 'http://meadadigital.com:3001/health',
         })
         .expect(201);
 
       const proxyRule = createRuleResponse.body;
       expect(proxyRule.sourcePath).toBe('/api');
-      expect(proxyRule.targetUrl).toBe('http://localhost:3001');
+      expect(proxyRule.targetUrl).toBe('http://meadadigital.com:3001');
 
       // 2. List proxy rules
       const listRulesResponse = await request(app.getHttpServer())
@@ -218,12 +218,12 @@ describe('NetPilot E2E Tests', () => {
         .put(`/proxy-rules/${proxyRule.id}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          targetUrl: 'http://localhost:3002',
+          targetUrl: 'http://meadadigital.com:3002',
           loadBalancingMethod: 'least_connections',
         })
         .expect(200);
 
-      expect(updateRuleResponse.body.targetUrl).toBe('http://localhost:3002');
+      expect(updateRuleResponse.body.targetUrl).toBe('http://meadadigital.com:3002');
       expect(updateRuleResponse.body.loadBalancingMethod).toBe('least_connections');
 
       // 4. Test proxy rule
@@ -357,7 +357,7 @@ describe('NetPilot E2E Tests', () => {
         .send({
           domainId: domain1Response.body.id,
           sourcePath: '/',
-          targetUrl: 'http://localhost:3000',
+          targetUrl: 'http://meadadigital.com:3000',
           enabled: true,
         });
     });
@@ -581,7 +581,7 @@ describe('NetPilot E2E Tests', () => {
         {
           domainId: domainResponse.body.id,
           sourcePath: 'invalid-path', // Should start with /
-          targetUrl: 'http://localhost:3001',
+          targetUrl: 'http://meadadigital.com:3001',
         },
         {
           domainId: domainResponse.body.id,
@@ -591,7 +591,7 @@ describe('NetPilot E2E Tests', () => {
         {
           domainId: 999999, // Non-existent domain
           sourcePath: '/api',
-          targetUrl: 'http://localhost:3001',
+          targetUrl: 'http://meadadigital.com:3001',
         },
       ];
 
