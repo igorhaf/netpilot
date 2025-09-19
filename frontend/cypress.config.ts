@@ -8,7 +8,6 @@ export default defineConfig({
     videosFolder: 'cypress/videos',
     screenshotsFolder: 'cypress/screenshots',
     video: true,
-    screenshot: true,
     viewportWidth: 1280,
     viewportHeight: 720,
     defaultCommandTimeout: 10000,

@@ -8,15 +8,13 @@
         tls: 
           certResolver: letsencrypt
         
-      
-      netpilot-meadadigital-com-redirect: 
-        rule: Host(`netpilot.meadadigital.com`)
-        middlewares: [
-          netpilot-meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
+      meadadigital-com: 
+        rule: Host(`meadadigital.com`)
+        service: meadadigital-com-service
+        middlewares: []
+        tls: 
+          certResolver: letsencrypt
+        
       
     
     services: 
@@ -28,13 +26,17 @@
             
           ]
         
+      meadadigital-com-service: 
+        loadBalancer: 
+          servers: [
+            
+              url: http://frontend:3000
+            
+          ]
+        
       
     
-    middlewares: 
-      netpilot-meadadigital-com-redirect-https: 
-        redirectScheme: 
-          scheme: https
-          permanent: true
+    middlewares: {}
         
       
     
