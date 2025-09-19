@@ -36,7 +36,7 @@ export class Domain {
   @Column({ default: false })
   enableWwwRedirect: boolean;
 
-  @Column({ default: '127.0.0.1' })
+  @Column({ nullable: true })
   bindIp: string;
 
   @OneToMany(() => ProxyRule, (proxyRule) => proxyRule.domain)

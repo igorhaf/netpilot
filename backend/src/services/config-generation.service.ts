@@ -131,20 +131,61 @@ server {
 
   private addTraefikDomainConfig(config: any, domain: Domain): void {
     const routerName = domain.name.replace(/\./g, '-');
+    const isNetpilotDomain = domain.name === 'netpilot.meadadigital.com';
 
-    // Main router
-    config.http.routers[routerName] = {
-      rule: `Host(\`${domain.name}\`)`,
-      service: `${routerName}-service`,
-      middlewares: [],
-    };
-
-    if (domain.autoTls) {
-      config.http.routers[routerName].tls = {
-        certResolver: 'letsencrypt',
-      };
+    // Special case for NetPilot domain - always ensure API + Frontend routing
+    if (isNetpilotDomain) {
+      this.addNetpilotDomainRouting(config, domain, routerName);
+      return;
     }
 
+    // Regular domain handling - create routers for each proxy rule
+    const activeProxyRules = domain.proxyRules
+      ?.filter(rule => rule.isActive)
+      .sort((a, b) => b.priority - a.priority) || [];
+
+    if (activeProxyRules.length > 0) {
+      for (let i = 0; i < activeProxyRules.length; i++) {
+        const rule = activeProxyRules[i];
+
+        // Create unique router names based on path
+        let currentRouterName = routerName;
+        if (rule.sourcePath.startsWith('/api')) {
+          currentRouterName = `${routerName}-api`;
+        } else if (rule.sourcePath !== '/') {
+          currentRouterName = `${routerName}-${rule.sourcePath.replace(/[^a-zA-Z0-9]/g, '-').replace(/^-+|-+$/g, '')}`;
+        }
+
+        // Create router rule with proper path matching
+        let routerRule = `Host(\`${domain.name}\`)`;
+        if (rule.sourcePath !== '/') {
+          const pathPattern = rule.sourcePath.replace('/*', '');
+          routerRule += ` && PathPrefix(\`${pathPattern}\`)`;
+        }
+
+        config.http.routers[currentRouterName] = {
+          rule: routerRule,
+          service: `${currentRouterName}-service`,
+          middlewares: [],
+          priority: rule.priority,
+        };
+
+        if (domain.autoTls) {
+          config.http.routers[currentRouterName].tls = {
+            certResolver: 'letsencrypt',
+          };
+        }
+
+        // Create service for each proxy rule
+        config.http.services[`${currentRouterName}-service`] = {
+          loadBalancer: {
+            servers: [{ url: rule.targetUrl }],
+          },
+        };
+      }
+    }
+
+    // Add HTTPS redirect if force HTTPS is enabled
     if (domain.forceHttps) {
       config.http.routers[`${routerName}-redirect`] = {
         rule: `Host(\`${domain.name}\`)`,
@@ -159,20 +200,56 @@ server {
         },
       };
     }
+  }
 
-    // Add proxy rules as services
-    const activeProxyRules = domain.proxyRules
-      ?.filter(rule => rule.isActive)
-      .sort((a, b) => b.priority - a.priority) || [];
+  private addNetpilotDomainRouting(config: any, domain: Domain, routerName: string): void {
+    // Always ensure API routing for NetPilot domain
+    config.http.routers[`${routerName}-api`] = {
+      rule: `Host(\`${domain.name}\`) && PathPrefix(\`/api\`)`,
+      service: `${routerName}-api-service`,
+      middlewares: [],
+      priority: 10,
+      tls: {
+        certResolver: 'letsencrypt',
+      },
+    };
 
-    if (activeProxyRules.length > 0) {
-      const primaryRule = activeProxyRules[0];
-      config.http.services[`${routerName}-service`] = {
-        loadBalancer: {
-          servers: [{ url: primaryRule.targetUrl }],
-        },
-      };
-    }
+    config.http.services[`${routerName}-api-service`] = {
+      loadBalancer: {
+        servers: [{ url: 'http://backend:3001' }],
+      },
+    };
+
+    // Always ensure Frontend routing for NetPilot domain
+    config.http.routers[routerName] = {
+      rule: `Host(\`${domain.name}\`)`,
+      service: `${routerName}-service`,
+      middlewares: [],
+      priority: 1,
+      tls: {
+        certResolver: 'letsencrypt',
+      },
+    };
+
+    config.http.services[`${routerName}-service`] = {
+      loadBalancer: {
+        servers: [{ url: 'http://frontend:3000' }],
+      },
+    };
+
+    // Always add HTTPS redirect for NetPilot domain
+    config.http.routers[`${routerName}-redirect`] = {
+      rule: `Host(\`${domain.name}\`)`,
+      middlewares: [`${routerName}-redirect-https`],
+      entryPoints: ['web'],
+    };
+
+    config.http.middlewares[`${routerName}-redirect-https`] = {
+      redirectScheme: {
+        scheme: 'https',
+        permanent: true,
+      },
+    };
   }
 
   private yamlStringify(obj: any): string {

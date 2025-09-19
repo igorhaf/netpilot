@@ -1,24 +1,63 @@
 
   http: 
     routers: 
-      netpilot-meadadigital-com: 
-        rule: Host(`netpilot.meadadigital.com`)
-        service: netpilot-meadadigital-com-service
-        middlewares: []
-        tls: 
-          certResolver: letsencrypt
-        
       meadadigital-com: 
         rule: Host(`meadadigital.com`)
         service: meadadigital-com-service
         middlewares: []
+        priority: 1
         tls: 
           certResolver: letsencrypt
         
       
+      meadadigital-com-redirect: 
+        rule: Host(`meadadigital.com`)
+        middlewares: [
+          meadadigital-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
+      netpilot-meadadigital-com-api: 
+        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)
+        service: netpilot-meadadigital-com-api-service
+        middlewares: []
+        priority: 10
+        tls: 
+          certResolver: letsencrypt
+        
+      
+      netpilot-meadadigital-com: 
+        rule: Host(`netpilot.meadadigital.com`)
+        service: netpilot-meadadigital-com-service
+        middlewares: []
+        priority: 1
+        tls: 
+          certResolver: letsencrypt
+        
+      
+      netpilot-meadadigital-com-redirect: 
+        rule: Host(`netpilot.meadadigital.com`)
+        middlewares: [
+          netpilot-meadadigital-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
     
     services: 
-      netpilot-meadadigital-com-service: 
+      meadadigital-com-service: 
+        loadBalancer: 
+          servers: [
+            
+              url: http://host.docker.internal:9090
+            
+          ]
+        
+      
+      netpilot-meadadigital-com-api-service: 
         loadBalancer: 
           servers: [
             
@@ -26,7 +65,8 @@
             
           ]
         
-      meadadigital-com-service: 
+      
+      netpilot-meadadigital-com-service: 
         loadBalancer: 
           servers: [
             
@@ -36,7 +76,17 @@
         
       
     
-    middlewares: {}
+    middlewares: 
+      meadadigital-com-redirect-https: 
+        redirectScheme: 
+          scheme: https
+          permanent: true
+        
+      
+      netpilot-meadadigital-com-redirect-https: 
+        redirectScheme: 
+          scheme: https
+          permanent: true
         
       
     
