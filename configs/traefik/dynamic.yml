@@ -1,17 +1,6 @@
 
   http: 
     routers: 
-      netpilot-meadadigital-com-websocket: 
-        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/socket.io`)
-        service: netpilot-meadadigital-com-api-service
-        middlewares: [websocket-headers]
-        priority: 15
-        entryPoints: [
-          websecure
-        ]
-        tls: 
-          certResolver: letsencrypt
-        
       netpilot-meadadigital-com-api: 
         rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)
         service: netpilot-meadadigital-com-api-service
@@ -63,6 +52,48 @@
           web
         ]
       
+      suinda-meadadigital-com: 
+        rule: Host(`suinda.meadadigital.com`)
+        service: suinda-meadadigital-com-service
+        middlewares: []
+        priority: 100
+        entryPoints: [
+          websecure
+        ]
+        tls: 
+          certResolver: letsencrypt
+        
+      
+      suinda-meadadigital-com-redirect: 
+        rule: Host(`suinda.meadadigital.com`)
+        middlewares: [
+          suinda-meadadigital-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
+      bangalo-meadadigital-com: 
+        rule: Host(`bangalo.meadadigital.com`)
+        service: bangalo-meadadigital-com-service
+        middlewares: []
+        priority: 1
+        entryPoints: [
+          websecure
+        ]
+        tls: 
+          certResolver: letsencrypt
+        
+      
+      bangalo-meadadigital-com-redirect: 
+        rule: Host(`bangalo.meadadigital.com`)
+        middlewares: [
+          bangalo-meadadigital-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
     
     services: 
       netpilot-meadadigital-com-api-service: 
@@ -92,17 +123,26 @@
           ]
         
       
+      suinda-meadadigital-com-service: 
+        loadBalancer: 
+          servers: [
+            
+              url: http://host.docker.internal:9874
+            
+          ]
+        
+      
+      bangalo-meadadigital-com-service: 
+        loadBalancer: 
+          servers: [
+            
+              url: http://host.docker.internal:9875
+            
+          ]
+        
+      
     
     middlewares: 
-      websocket-headers:
-        headers:
-          customRequestHeaders:
-            Connection: "upgrade"
-            Upgrade: "websocket"
-          customResponseHeaders:
-            Connection: "upgrade"
-            Upgrade: "websocket"
-        
       netpilot-meadadigital-com-redirect-https: 
         redirectScheme: 
           scheme: https
@@ -110,6 +150,18 @@
         
       
       meadadigital-com-redirect-https: 
+        redirectScheme: 
+          scheme: https
+          permanent: true
+        
+      
+      suinda-meadadigital-com-redirect-https: 
+        redirectScheme: 
+          scheme: https
+          permanent: true
+        
+      
+      bangalo-meadadigital-com-redirect-https: 
         redirectScheme: 
           scheme: https
           permanent: true

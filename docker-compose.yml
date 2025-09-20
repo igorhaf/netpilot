@@ -28,9 +28,14 @@ services:
       - DATABASE_URL=postgresql://netpilot:netpilot123@db:5432/netpilot
       - JWT_SECRET=netpilot_jwt_secret_key_2024
       - ACME_EMAIL=admin@meadadigital.com
+      - SSH_HOST=172.18.0.1
+      - SSH_PORT=22
+      - SSH_USER=root
+      - SSH_PRIVATE_KEY_PATH=/app/ssh/id_rsa
     volumes:
       - ./configs:/app/configs
       - ./scripts:/app/scripts
+      - ./ssh:/app/ssh
     ports:
       - "3001:3001"
     networks:
@@ -44,7 +49,7 @@ services:
     container_name: netpilot-frontend
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://netpilot.meadadigital.com
+      - NEXT_PUBLIC_API_URL=http://netpilot.meadadigital.com
     expose:
       - "3000"
     networks:

@@ -1,12 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { MainLayout } from '@/components/layout/main-layout'
 import { useConsoleSocket } from '@/hooks/useConsoleSocket'
-import { useAuth } from '@/hooks/useAuth'
-import { Terminal, Wifi, WifiOff, AlertCircle } from 'lucide-react'
+import { Terminal, Server, Wifi, WifiOff, Activity } from 'lucide-react'
 
 interface SshSession {
     id: string
@@ -29,321 +26,253 @@ interface CommandResult {
 }
 
 export default function ConsolePage() {
-    // Estado para garantir renderização consistente no cliente
-    const [mounted, setMounted] = useState(false)
-
-    // Proteção de autenticação - redireciona para login se não autenticado
-    const auth = useAuth()
-
-    const [sessions, setSessions] = useState<SshSession[]>([])
-    const [selectedSessionId, setSelectedSessionId] = useState<string>('')
     const [command, setCommand] = useState('')
-    const [commandHistory, setCommandHistory] = useState<CommandResult[]>([])
-    const [loading, setLoading] = useState(false)
+    const [terminalOutput, setTerminalOutput] = useState<string[]>(['Conectando ao servidor...'])
+    const [isConnected, setIsConnected] = useState(false)
 
     const {
-        isConnected,
-        error,
-        connectToSession,
-        disconnectFromSession,
+        isConnected: wsConnected,
+        error: wsError,
         executeCommand,
-        joinSession,
-        leaveSession,
         on,
         off
     } = useConsoleSocket()
 
-    // Effect para marcar componente como montado no cliente
     useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    // Effect para configurar listeners do WebSocket
-    useEffect(() => {
-        // Listener para resultados de comandos
-        const handleCommandResult = (data: any) => {
-            setCommandHistory(prev => [data, ...prev])
-            setLoading(false)
+        // Listeners para output do terminal
+        const handleTerminalOutput = (data: any) => {
+            setTerminalOutput(prev => [...prev, data.output])
         }
 
-        // Listener para erros de comandos
-        const handleCommandError = (data: any) => {
-            setCommandHistory(prev => [{
-                id: `error_${Date.now()}`,
-                command: data.command,
-                output: '',
-                errorOutput: data.message,
-                exitCode: 1,
-                executionTime: 0,
-                status: 'error',
-                executedAt: new Date().toISOString()
-            }, ...prev])
-            setLoading(false)
+        const handleTerminalError = (data: any) => {
+            setTerminalOutput(prev => [...prev, `ERROR: ${data.message}`])
         }
 
-        // Listener para conexão de sessão
-        const handleSessionConnected = (data: { sessionId: string }) => {
-            setSessions(prev => prev.map(session =>
-                session.id === data.sessionId
-                    ? { ...session, status: 'connected' as const }
-                    : session
-            ))
+        const handleConnectionStatus = (data: any) => {
+            setIsConnected(data.connected)
+            if (data.connected) {
+                setTerminalOutput(prev => [...prev, 'Conectado ao servidor NetPilot'])
+            } else {
+                setTerminalOutput(prev => [...prev, 'Desconectado do servidor'])
+            }
         }
 
-        // Listener para desconexão de sessão
-        const handleSessionDisconnected = (data: { sessionId: string }) => {
-            setSessions(prev => prev.map(session =>
-                session.id === data.sessionId
-                    ? { ...session, status: 'disconnected' as const }
-                    : session
-            ))
+        if (wsConnected) {
+            on('terminal:output', handleTerminalOutput)
+            on('terminal:error', handleTerminalError)
+            on('ssh:status', handleConnectionStatus)
         }
 
-        // Registrar listeners
-        on('command:result', handleCommandResult)
-        on('command:error', handleCommandError)
-        on('session:connected', handleSessionConnected)
-        on('session:disconnected', handleSessionDisconnected)
-
-        // Cleanup
         return () => {
-            off('command:result', handleCommandResult)
-            off('command:error', handleCommandError)
-            off('session:connected', handleSessionConnected)
-            off('session:disconnected', handleSessionDisconnected)
+            if (wsConnected) {
+                off('terminal:output', handleTerminalOutput)
+                off('terminal:error', handleTerminalError)
+                off('ssh:status', handleConnectionStatus)
+            }
         }
-    }, [on, off])
-
-    const handleConnectSession = (sessionId: string) => {
-        connectToSession(sessionId)
-        joinSession(sessionId)
-    }
-
-    const handleDisconnectSession = (sessionId: string) => {
-        disconnectFromSession(sessionId)
-        leaveSession(sessionId)
-    }
+    }, [wsConnected, on, off])
 
     const handleExecuteCommand = async () => {
-        if (!command.trim() || !selectedSessionId) return
+        if (!command.trim() || !wsConnected) return
 
-        setLoading(true)
         try {
-            await executeCommand(selectedSessionId, command.trim())
+            setTerminalOutput(prev => [...prev, `$ ${command}`])
+            await executeCommand('default', command.trim())
             setCommand('')
         } catch (err) {
-            setLoading(false)
-            console.error('Erro ao executar comando:', err)
+            setTerminalOutput(prev => [...prev, `Erro: ${err}`])
         }
     }
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !loading) {
+        if (e.key === 'Enter') {
             handleExecuteCommand()
         }
     }
 
-    // Não renderizar até montagem no cliente ou se não autenticado
-    if (!mounted || !auth.isAuthenticated) {
-        return <div className="flex items-center justify-center min-h-screen">
-            <div className="text-gray-500">Carregando...</div>
-        </div>
-    }
-
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                    <Terminal className="h-8 w-8 text-green-500" />
-                    <h1 className="text-3xl font-bold">Console SSH</h1>
+        <MainLayout>
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-foreground">Console SSH</h1>
+                        <p className="text-muted-foreground">
+                            Acesse o terminal do servidor via SSH
+                        </p>
+                    </div>
+
                 </div>
 
-                {/* Status de Conexão WebSocket */}
-                <div className="flex items-center space-x-2">
-                    {isConnected ? (
-                        <>
-                            <Wifi className="h-5 w-5 text-green-500" />
-                            <span className="text-sm text-green-500">WebSocket Conectado</span>
-                        </>
-                    ) : (
-                        <>
-                            <WifiOff className="h-5 w-5 text-red-500" />
-                            <span className="text-sm text-red-500">WebSocket Desconectado</span>
-                        </>
-                    )}
-                </div>
-            </div>
-
-            {/* Erro de Conexão */}
-            {error && (
-                <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
-                    <div className="flex items-center space-x-2 p-4">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                        <span className="text-red-700 dark:text-red-400">{error}</span>
-                    </div>
-                </Card>
-            )}
-
-            {/* Conectar ao Servidor Local */}
-            <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Conexão SSH - Servidor Local</h2>
-                <div className="space-y-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Configure a conexão SSH para acessar o console do servidor onde o NetPilot está executando.
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Hostname/IP</label>
-                            <Input
-                                placeholder="localhost ou IP do servidor"
-                                defaultValue="localhost"
-                                className="w-full"
-                            />
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {/* Status e Informações */}
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="flex items-center gap-2">
+                                <Activity className="h-5 w-5 text-blue-500" />
+                                <h3 className="card-title">Status da Conexão</h3>
+                            </div>
+                            <p className="card-description">
+                                Informações do servidor e WebSocket
+                            </p>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Porta SSH</label>
-                            <Input
-                                placeholder="22"
-                                defaultValue="22"
-                                type="number"
-                                className="w-full"
-                            />
-                        </div>
-                    </div>
+                        <div className="card-content space-y-4">
+                            {/* Status WebSocket */}
+                            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                    {wsConnected ? (
+                                        <Wifi className="h-5 w-5 text-green-500" />
+                                    ) : (
+                                        <WifiOff className="h-5 w-5 text-red-500" />
+                                    )}
+                                    <div>
+                                        <p className="text-sm font-medium">WebSocket</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {wsConnected ? 'Conectado' : 'Desconectado'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className={`status-badge ${wsConnected ? 'status-badge-success' : 'status-badge-error'}`}>
+                                    {wsConnected ? 'Online' : 'Offline'}
+                                </div>
+                            </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Usuário</label>
-                            <Input
-                                placeholder="root, ubuntu, etc."
-                                className="w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Senha</label>
-                            <Input
-                                placeholder="Senha SSH"
-                                type="password"
-                                className="w-full"
-                            />
+                            {/* Status SSH */}
+                            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                    <Server className="h-5 w-5 text-blue-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Servidor SSH</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            NetPilot Host
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className={`status-badge ${isConnected ? 'status-badge-success' : 'status-badge-warning'}`}>
+                                    {isConnected ? 'Conectado' : 'Conectando'}
+                                </div>
+                            </div>
+
+                            {wsError && (
+                                <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                    <p className="text-sm text-red-600 dark:text-red-400">
+                                        Erro: {wsError}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                    <strong>Configuração automática:</strong> Conecta automaticamente ao servidor
+                                    onde o NetPilot está executando usando chave SSH configurada.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-3">
-                        <Button
-                            onClick={() => console.log('Conectar SSH - em desenvolvimento')}
-                            className="bg-green-600 hover:bg-green-700"
-                            disabled={!isConnected}
-                        >
-                            {isConnected ? 'Criar Sessão SSH' : 'Aguardando WebSocket...'}
-                        </Button>
+                    {/* Terminal Console */}
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="flex items-center gap-2">
+                                <Terminal className="h-5 w-5 text-green-500" />
+                                <h3 className="card-title">Terminal SSH</h3>
+                            </div>
+                            <p className="card-description">
+                                Terminal interativo do servidor NetPilot
+                            </p>
+                        </div>
+                        <div className="card-content">
+                            {/* Terminal Output */}
+                            <div className="bg-black rounded-lg p-4 font-mono text-sm h-96 overflow-y-auto mb-4">
+                                {terminalOutput.map((line, index) => (
+                                    <div key={index} className="text-green-400 mb-1">
+                                        {line}
+                                    </div>
+                                ))}
+                                {wsConnected && isConnected && (
+                                    <div className="flex items-center text-green-400">
+                                        <span className="text-blue-400">root@netpilot:~$&nbsp;</span>
+                                        <div className="w-2 h-4 bg-green-400 animate-pulse"></div>
+                                    </div>
+                                )}
+                            </div>
 
-                        <div className="flex items-center space-x-2 text-sm">
-                            {isConnected ? (
-                                <span className="text-green-600">✅ WebSocket Conectado</span>
-                            ) : (
-                                <span className="text-red-600">❌ WebSocket Desconectado</span>
+                            {/* Command Input */}
+                            <div className="flex gap-2">
+                                <div className="flex items-center bg-black text-green-400 px-3 py-2 rounded font-mono text-sm">
+                                    root@netpilot:~$
+                                </div>
+                                <input
+                                    type="text"
+                                    value={command}
+                                    onChange={(e) => setCommand(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    placeholder={wsConnected ? "Digite um comando..." : "Aguarde conexão..."}
+                                    className="input flex-1 font-mono"
+                                    disabled={!wsConnected || !isConnected}
+                                />
+                                <button
+                                    onClick={handleExecuteCommand}
+                                    disabled={!command.trim() || !wsConnected || !isConnected}
+                                    className="btn-secondary"
+                                >
+                                    Executar
+                                </button>
+                            </div>
+
+                            {!wsConnected && (
+                                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                    <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                                        Aguardando conexão WebSocket...
+                                    </p>
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
-            </Card>
 
-            {/* Terminal Console */}
-            <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Terminal</h2>
-
-                {/* Command Input */}
-                <div className="mb-4 flex space-x-2">
-                    <Input
-                        value={command}
-                        onChange={(e) => setCommand(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Digite um comando SSH..."
-                        className="font-mono"
-                        disabled={!isConnected || loading}
-                    />
-                    <Button
-                        onClick={handleExecuteCommand}
-                        disabled={!command.trim() || !isConnected || loading}
-                    >
-                        {loading ? 'Executando...' : 'Executar'}
-                    </Button>
-                </div>
-
-                {/* Command History */}
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {commandHistory.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            <Terminal className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                            <p>Nenhum comando executado ainda</p>
-                            <p className="text-sm mt-1">
-                                {isConnected
-                                    ? 'WebSocket conectado - pronto para executar comandos'
-                                    : 'Aguardando conexão WebSocket...'
-                                }
+                {/* Status da Implementação */}
+                <div className="card bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                    <div className="card-content">
+                        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                            Status da Implementação
+                        </h3>
+                        <div className="grid gap-2 text-sm text-blue-800 dark:text-blue-200 md:grid-cols-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500">✅</span>
+                                <span>WebSocket Gateway implementado</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500">✅</span>
+                                <span>Interface de configuração SSH</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500">✅</span>
+                                <span>Listeners de eventos configurados</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-500">✅</span>
+                                <span>Roteamento WebSocket corrigido</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-yellow-500">⏳</span>
+                                <span>Conexão SSH real no backend</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-yellow-500">⏳</span>
+                                <span>Terminal interativo com PTY</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                                <strong>Conexão Automática:</strong> O terminal conecta automaticamente ao servidor
+                                onde o NetPilot está executando usando configurações do ambiente (.env).
+                                A autenticação é feita via chave SSH configurada no servidor.
                             </p>
                         </div>
-                    ) : (
-                        commandHistory.map((result) => (
-                            <div
-                                key={result.id}
-                                className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50"
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <code className="text-sm font-medium">$ {result.command}</code>
-                                    <span className={`text-xs px-2 py-1 rounded ${result.status === 'success'
-                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                        }`}>
-                                        {result.status === 'success' ? `Exit ${result.exitCode}` : 'Error'}
-                                    </span>
-                                </div>
-
-                                {result.output && (
-                                    <pre className="text-sm bg-black text-green-400 p-3 rounded overflow-x-auto mb-2">
-                                        {result.output}
-                                    </pre>
-                                )}
-
-                                {result.errorOutput && (
-                                    <pre className="text-sm bg-red-900 text-red-100 p-3 rounded overflow-x-auto mb-2">
-                                        {result.errorOutput}
-                                    </pre>
-                                )}
-
-                                <div className="text-xs text-gray-500 flex justify-between">
-                                    <span>Executado em: {new Date(result.executedAt).toLocaleString()}</span>
-                                    <span>Duração: {result.executionTime}ms</span>
-                                </div>
-                            </div>
-                        ))
-                    )}
+                    </div>
                 </div>
-            </Card>
-
-            {/* Instruções */}
-            <Card className="p-6 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                    Console SSH - Conectar ao Servidor Local
-                </h3>
-                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>✅ WebSocket Gateway implementado com autenticação JWT</li>
-                    <li>✅ Interface para conexão SSH ao servidor local</li>
-                    <li>✅ Listeners para eventos de comando e sessão configurados</li>
-                    <li>✅ Roteamento WebSocket corrigido no Traefik</li>
-                    <li>⏳ Implementação da conexão SSH real no backend</li>
-                    <li>⏳ Terminal interativo com PTY para servidor local</li>
-                </ul>
-                <div className="mt-3 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>Próximo passo:</strong> Configure as credenciais SSH acima para conectar
-                        ao console do servidor onde o NetPilot está executando (normalmente localhost).
-                    </p>
-                </div>
-            </Card>
-        </div>
+            </div>
+        </MainLayout>
     )
 }

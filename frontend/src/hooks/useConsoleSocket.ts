@@ -27,6 +27,9 @@ interface ConsoleSocketEvents {
         message: string
     }) => void
     'session:stats': (data: any) => void
+    'terminal:output': (data: { output: string }) => void
+    'terminal:error': (data: { message: string }) => void
+    'ssh:status': (data: { connected: boolean }) => void
 }
 
 interface UseConsoleSocketReturn {
