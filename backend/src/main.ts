@@ -1,14 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
 import { InitialSeedService } from './seeds/initial-seed';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Configure WebSocket adapter
+  app.useWebSocketAdapter(new IoAdapter(app));
+
   app.enableCors({
     origin: [
+      'http://netpilot.meadadigital.com',
       'http://netpilot.meadadigital.com:3000',
       'https://netpilot.meadadigital.com:3000',
       'https://netpilot.meadadigital.com'
