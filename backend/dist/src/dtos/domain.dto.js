@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateDomainDto = exports.CreateDomainDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 const swagger_1 = require("@nestjs/swagger");
 class CreateDomainDto {
 }
@@ -59,7 +60,8 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '127.0.0.1', required: false }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIP)(),
+    (0, class_transformer_1.Transform)(({ value }) => value && value.trim() !== '' ? value : undefined),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateDomainDto.prototype, "bindIp", void 0);
 class UpdateDomainDto extends CreateDomainDto {
