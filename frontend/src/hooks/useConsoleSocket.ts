@@ -113,7 +113,17 @@ export function useConsoleSocket(): UseConsoleSocketReturn {
     }, [token])
 
     useEffect(() => {
-        connectSocket()
+        // Só conectar se tivermos token e não estivermos conectados
+        if (token && !socketRef.current) {
+            connectSocket()
+        }
+
+        // Desconectar se não há token mas há conexão
+        if (!token && socketRef.current) {
+            socketRef.current.disconnect()
+            socketRef.current = null
+            setIsConnected(false)
+        }
 
         return () => {
             if (socketRef.current) {
@@ -121,7 +131,7 @@ export function useConsoleSocket(): UseConsoleSocketReturn {
                 socketRef.current = null
             }
         }
-    }, [connectSocket])
+    }, [token, connectSocket])
 
     const connectToSession = useCallback((sessionId: string) => {
         if (socketRef.current) {

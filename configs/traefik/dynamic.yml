@@ -1,6 +1,17 @@
 
   http: 
     routers: 
+      netpilot-meadadigital-com-websocket: 
+        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/socket.io`)
+        service: netpilot-meadadigital-com-api-service
+        middlewares: [websocket-headers]
+        priority: 15
+        entryPoints: [
+          websecure
+        ]
+        tls: 
+          certResolver: letsencrypt
+        
       netpilot-meadadigital-com-api: 
         rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)
         service: netpilot-meadadigital-com-api-service
@@ -83,6 +94,15 @@
       
     
     middlewares: 
+      websocket-headers:
+        headers:
+          customRequestHeaders:
+            Connection: "upgrade"
+            Upgrade: "websocket"
+          customResponseHeaders:
+            Connection: "upgrade"
+            Upgrade: "websocket"
+        
       netpilot-meadadigital-com-redirect-https: 
         redirectScheme: 
           scheme: https

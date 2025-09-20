@@ -8,7 +8,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: ['http://meadadigital.com:3000', 'https://meadadigital.com:3000'],
+    origin: [
+      'http://netpilot.meadadigital.com:3000',
+      'https://netpilot.meadadigital.com:3000',
+      'https://netpilot.meadadigital.com'
+    ],
     credentials: true,
   });
 
@@ -41,8 +45,8 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`🚀 NetPilot Backend running on http://meadadigital.com:${port}`);
-  console.log(`📚 Swagger docs available at http://meadadigital.com:${port}/api/docs`);
+  console.log(`🚀 NetPilot Backend running on https://netpilot.meadadigital.com/api`);
+  console.log(`📚 Swagger docs available at https://netpilot.meadadigital.com/api/docs`);
 }
 
 bootstrap();

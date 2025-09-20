@@ -278,7 +278,11 @@ exports.ConsoleGateway = ConsoleGateway = ConsoleGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
         namespace: '/console',
         cors: {
-            origin: ['http://meadadigital.com:3000', 'https://meadadigital.com:3000'],
+            origin: [
+                'http://netpilot.meadadigital.com:3000',
+                'https://netpilot.meadadigital.com:3000',
+                'https://netpilot.meadadigital.com'
+            ],
             credentials: true,
         },
     }),

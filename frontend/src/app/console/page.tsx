@@ -29,6 +29,9 @@ interface CommandResult {
 }
 
 export default function ConsolePage() {
+    // Estado para garantir renderização consistente no cliente
+    const [mounted, setMounted] = useState(false)
+
     // Proteção de autenticação - redireciona para login se não autenticado
     const auth = useAuth()
 
@@ -50,10 +53,10 @@ export default function ConsolePage() {
         off
     } = useConsoleSocket()
 
-    // Não renderizar se não estiver autenticado
-    if (!auth.isAuthenticated) {
-        return null
-    }
+    // Effect para marcar componente como montado no cliente
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     // Effect para configurar listeners do WebSocket
     useEffect(() => {
@@ -140,6 +143,13 @@ export default function ConsolePage() {
         }
     }
 
+    // Não renderizar até montagem no cliente ou se não autenticado
+    if (!mounted || !auth.isAuthenticated) {
+        return <div className="flex items-center justify-center min-h-screen">
+            <div className="text-gray-500">Carregando...</div>
+        </div>
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -175,26 +185,67 @@ export default function ConsolePage() {
                 </Card>
             )}
 
-            {/* Sessões SSH Mock (para demonstração) */}
+            {/* Conectar ao Servidor Local */}
             <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Sessões SSH</h2>
-                <div className="space-y-3">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Esta é uma demonstração do console SSH. As sessões serão carregadas via API quando implementadas.
+                <h2 className="text-xl font-semibold mb-4">Conexão SSH - Servidor Local</h2>
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Configure a conexão SSH para acessar o console do servidor onde o NetPilot está executando.
                     </p>
 
-                    {/* Mock Session */}
-                    <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-medium">Servidor Demo</h3>
-                                <p className="text-sm text-gray-500">demo@localhost:22</p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-sm px-2 py-1 rounded bg-gray-200 dark:bg-gray-700">
-                                    Configuração Necessária
-                                </span>
-                            </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Hostname/IP</label>
+                            <Input
+                                placeholder="localhost ou IP do servidor"
+                                defaultValue="localhost"
+                                className="w-full"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Porta SSH</label>
+                            <Input
+                                placeholder="22"
+                                defaultValue="22"
+                                type="number"
+                                className="w-full"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Usuário</label>
+                            <Input
+                                placeholder="root, ubuntu, etc."
+                                className="w-full"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Senha</label>
+                            <Input
+                                placeholder="Senha SSH"
+                                type="password"
+                                className="w-full"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                        <Button
+                            onClick={() => console.log('Conectar SSH - em desenvolvimento')}
+                            className="bg-green-600 hover:bg-green-700"
+                            disabled={!isConnected}
+                        >
+                            {isConnected ? 'Criar Sessão SSH' : 'Aguardando WebSocket...'}
+                        </Button>
+
+                        <div className="flex items-center space-x-2 text-sm">
+                            {isConnected ? (
+                                <span className="text-green-600">✅ WebSocket Conectado</span>
+                            ) : (
+                                <span className="text-red-600">❌ WebSocket Desconectado</span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -276,16 +327,22 @@ export default function ConsolePage() {
             {/* Instruções */}
             <Card className="p-6 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
                 <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                    Console SSH - Status da Implementação
+                    Console SSH - Conectar ao Servidor Local
                 </h3>
                 <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     <li>✅ WebSocket Gateway implementado com autenticação JWT</li>
-                    <li>✅ Frontend conecta ao WebSocket com token</li>
+                    <li>✅ Interface para conexão SSH ao servidor local</li>
                     <li>✅ Listeners para eventos de comando e sessão configurados</li>
-                    <li>⏳ API REST para gerenciar sessões SSH (em desenvolvimento)</li>
-                    <li>⏳ Interface para criar/configurar sessões SSH</li>
-                    <li>⏳ Terminal interativo com PTY real</li>
+                    <li>✅ Roteamento WebSocket corrigido no Traefik</li>
+                    <li>⏳ Implementação da conexão SSH real no backend</li>
+                    <li>⏳ Terminal interativo com PTY para servidor local</li>
                 </ul>
+                <div className="mt-3 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                        <strong>Próximo passo:</strong> Configure as credenciais SSH acima para conectar
+                        ao console do servidor onde o NetPilot está executando (normalmente localhost).
+                    </p>
+                </div>
             </Card>
         </div>
     )
