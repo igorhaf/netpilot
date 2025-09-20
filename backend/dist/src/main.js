@@ -8,7 +8,7 @@ const initial_seed_1 = require("./seeds/initial-seed");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableCors({
-        origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+        origin: ['http://meadadigital.com:3000', 'https://meadadigital.com:3000'],
         credentials: true,
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
@@ -31,8 +31,8 @@ async function bootstrap() {
     }
     const port = process.env.PORT || 3001;
     await app.listen(port);
-    console.log(`🚀 NetPilot Backend running on http://localhost:${port}`);
-    console.log(`📚 Swagger docs available at http://localhost:${port}/api/docs`);
+    console.log(`🚀 NetPilot Backend running on http://meadadigital.com:${port}`);
+    console.log(`📚 Swagger docs available at http://meadadigital.com:${port}/api/docs`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

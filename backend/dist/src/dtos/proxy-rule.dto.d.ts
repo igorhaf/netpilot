@@ -1,5 +1,6 @@
 export declare class CreateProxyRuleDto {
     sourcePath: string;
+    sourcePort?: number;
     targetUrl: string;
     priority: number;
     isActive?: boolean;

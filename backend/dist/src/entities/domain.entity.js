@@ -50,7 +50,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Domain.prototype, "enableWwwRedirect", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: '127.0.0.1' }),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Domain.prototype, "bindIp", void 0);
 __decorate([

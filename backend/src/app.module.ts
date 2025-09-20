@@ -44,4 +44,4 @@ import { Log } from './entities/log.entity';
     SeedModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

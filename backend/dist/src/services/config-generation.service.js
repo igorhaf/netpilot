@@ -120,15 +120,48 @@ server {
     }
     addTraefikDomainConfig(config, domain) {
         const routerName = domain.name.replace(/\./g, '-');
-        config.http.routers[routerName] = {
-            rule: `Host(\`${domain.name}\`)`,
-            service: `${routerName}-service`,
-            middlewares: [],
-        };
-        if (domain.autoTls) {
-            config.http.routers[routerName].tls = {
-                certResolver: 'letsencrypt',
-            };
+        const isNetpilotDomain = domain.name === 'netpilot.meadadigital.com';
+        if (isNetpilotDomain) {
+            this.addNetpilotDomainRouting(config, domain, routerName);
+            return;
+        }
+        const activeProxyRules = domain.proxyRules
+            ?.filter(rule => rule.isActive)
+            .sort((a, b) => b.priority - a.priority) || [];
+        if (activeProxyRules.length > 0) {
+            for (let i = 0; i < activeProxyRules.length; i++) {
+                const rule = activeProxyRules[i];
+                let currentRouterName = routerName;
+                if (rule.sourcePath.startsWith('/api')) {
+                    currentRouterName = `${routerName}-api`;
+                }
+                else if (rule.sourcePath !== '/') {
+                    currentRouterName = `${routerName}-${rule.sourcePath.replace(/[^a-zA-Z0-9]/g, '-').replace(/^-+|-+$/g, '')}`;
+                }
+                let routerRule = `Host(\`${domain.name}\`)`;
+                if (rule.sourcePath !== '/') {
+                    const pathPattern = rule.sourcePath.replace('/*', '');
+                    routerRule += ` && PathPrefix(\`${pathPattern}\`)`;
+                }
+                const entryPoints = this.getEntryPointsForPort(rule.sourcePort, domain.autoTls);
+                config.http.routers[currentRouterName] = {
+                    rule: routerRule,
+                    service: `${currentRouterName}-service`,
+                    middlewares: [],
+                    priority: rule.priority,
+                    entryPoints: entryPoints,
+                };
+                if (domain.autoTls && entryPoints.includes('websecure')) {
+                    config.http.routers[currentRouterName].tls = {
+                        certResolver: 'letsencrypt',
+                    };
+                }
+                config.http.services[`${currentRouterName}-service`] = {
+                    loadBalancer: {
+                        servers: [{ url: rule.targetUrl }],
+                    },
+                };
+            }
         }
         if (domain.forceHttps) {
             config.http.routers[`${routerName}-redirect`] = {
@@ -143,17 +176,49 @@ server {
                 },
             };
         }
-        const activeProxyRules = domain.proxyRules
-            ?.filter(rule => rule.isActive)
-            .sort((a, b) => b.priority - a.priority) || [];
-        if (activeProxyRules.length > 0) {
-            const primaryRule = activeProxyRules[0];
-            config.http.services[`${routerName}-service`] = {
-                loadBalancer: {
-                    servers: [{ url: primaryRule.targetUrl }],
-                },
-            };
-        }
+    }
+    addNetpilotDomainRouting(config, domain, routerName) {
+        config.http.routers[`${routerName}-api`] = {
+            rule: `Host(\`${domain.name}\`) && PathPrefix(\`/api\`)`,
+            service: `${routerName}-api-service`,
+            middlewares: [],
+            priority: 10,
+            entryPoints: ['websecure'],
+            tls: {
+                certResolver: 'letsencrypt',
+            },
+        };
+        config.http.services[`${routerName}-api-service`] = {
+            loadBalancer: {
+                servers: [{ url: 'http://backend:3001' }],
+            },
+        };
+        config.http.routers[routerName] = {
+            rule: `Host(\`${domain.name}\`)`,
+            service: `${routerName}-service`,
+            middlewares: [],
+            priority: 1,
+            entryPoints: ['websecure'],
+            tls: {
+                certResolver: 'letsencrypt',
+            },
+        };
+        config.http.services[`${routerName}-service`] = {
+            loadBalancer: {
+                servers: [{ url: 'http://frontend:3000' }],
+            },
+        };
+        config.http.routers[`${routerName}-redirect`] = {
+            rule: `Host(\`${domain.name}\`)`,
+            middlewares: [`${routerName}-redirect-https`],
+            entryPoints: ['web'],
+        };
+        config.http.middlewares[`${routerName}-redirect-https`] = {
+            redirectScheme: {
+                scheme: 'https',
+                permanent: true,
+            },
+        };
     }
     yamlStringify(obj) {
         return JSON.stringify(obj, null, 2)
@@ -164,6 +229,19 @@ server {
     }
     async reloadNginx() {
         console.log('🔄 Nginx configuration reloaded');
+    }
+    getEntryPointsForPort(sourcePort, autoTls) {
+        if (!sourcePort) {
+            return autoTls ? ['websecure'] : ['web'];
+        }
+        switch (sourcePort) {
+            case 80:
+                return ['web'];
+            case 443:
+                return ['websecure'];
+            default:
+                return [`port${sourcePort}`];
+        }
     }
 };
 exports.ConfigGenerationService = ConfigGenerationService;

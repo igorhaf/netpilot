@@ -47,9 +47,9 @@
         rule: Host(`framily.space`)
         service: framily-space-service
         middlewares: []
-        priority: 50
+        priority: 1
         entryPoints: [
-          port9292
+          web
         ]
       
     
@@ -76,7 +76,7 @@
         loadBalancer: 
           servers: [
             
-              url: http://host.docker.internal:9292
+              url: http://172.18.0.1:9292
             
           ]
         
