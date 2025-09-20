@@ -21,6 +21,12 @@ __decorate([
     __metadata("design:type", String)
 ], CreateProxyRuleDto.prototype, "sourcePath", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 80, required: false, description: 'Porta de origem (padrão: 80 para HTTP, 443 para HTTPS)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateProxyRuleDto.prototype, "sourcePort", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ example: 'http://backend:3001' }),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

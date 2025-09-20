@@ -33,7 +33,7 @@ describe('Domains (e2e)', () => {
                 app_module_1.AppModule,
                 typeorm_1.TypeOrmModule.forRoot({
                     type: 'postgres',
-                    host: process.env.DB_HOST || 'localhost',
+                    host: process.env.DB_HOST || 'meadadigital.com',
                     port: parseInt(process.env.DB_PORT, 10) || 5432,
                     username: process.env.DB_USERNAME || 'netpilot',
                     password: process.env.DB_PASSWORD || 'netpilot',

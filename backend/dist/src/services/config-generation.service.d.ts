@@ -9,6 +9,8 @@ export declare class ConfigGenerationService {
     private generateNginxVirtualHost;
     generateTraefikConfig(): Promise<void>;
     private addTraefikDomainConfig;
+    private addNetpilotDomainRouting;
     private yamlStringify;
     private reloadNginx;
+    private getEntryPointsForPort;
 }

@@ -31,7 +31,7 @@ describe('Auth Integration Tests', () => {
                     inject: [config_1.ConfigService],
                     useFactory: (configService) => ({
                         type: 'postgres',
-                        host: configService.get('DB_HOST', 'localhost'),
+                        host: configService.get('DB_HOST', 'meadadigital.com'),
                         port: configService.get('DB_PORT', 5433),
                         username: configService.get('DB_USER', 'netpilot_test'),
                         password: configService.get('DB_PASS', 'test_password'),

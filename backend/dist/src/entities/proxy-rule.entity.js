@@ -24,6 +24,10 @@ __decorate([
     __metadata("design:type", String)
 ], ProxyRule.prototype, "sourcePath", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], ProxyRule.prototype, "sourcePort", void 0);
+__decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], ProxyRule.prototype, "targetUrl", void 0);
