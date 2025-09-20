@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UseGuards, Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { ConsoleService } from './console.service';
 import { ExecuteCommandDto } from '../../dtos/ssh-session.dto';
@@ -33,7 +34,10 @@ export class ConsoleGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     private readonly logger = new Logger(ConsoleGateway.name);
     private userSockets: Map<string, Set<string>> = new Map(); // userId -> socketIds
 
-    constructor(private readonly consoleService: ConsoleService) { }
+    constructor(
+        private readonly consoleService: ConsoleService,
+        private readonly jwtService: JwtService
+    ) { }
 
     afterInit(server: Server) {
         this.logger.log('Console WebSocket Gateway initialized');
@@ -267,18 +271,15 @@ export class ConsoleGateway implements OnGatewayInit, OnGatewayConnection, OnGat
     // Métodos utilitários
     private async validateTokenAndGetUserId(token: string): Promise<string | null> {
         try {
-            // Aqui você implementaria a validação real do JWT
-            // Por exemplo, usando o JwtService
-            // const payload = this.jwtService.verify(token);
-            // return payload.sub;
+            // Validação real do JWT
+            const payload = this.jwtService.verify(token);
 
-            // Simulação para desenvolvimento
-            if (token === 'valid-token') {
-                return 'user-id-123'; // ID do usuário admin
-            }
+            // Extrair userId do payload JWT
+            // No NetPilot, o payload contém { sub: userId, email: userEmail, iat, exp }
+            return payload.sub || payload.userId;
 
-            return null;
         } catch (error) {
+            this.logger.warn(`JWT validation failed: ${error.message}`);
             return null;
         }
     }

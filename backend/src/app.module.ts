@@ -8,6 +8,7 @@ import { RedirectsModule } from './modules/redirects/redirects.module';
 import { SslCertificatesModule } from './modules/ssl-certificates/ssl-certificates.module';
 import { LogsModule } from './modules/logs/logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ConsoleModule } from './modules/console/console.module';
 import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
 import { User } from './entities/user.entity';
@@ -16,6 +17,8 @@ import { ProxyRule } from './entities/proxy-rule.entity';
 import { Redirect } from './entities/redirect.entity';
 import { SslCertificate } from './entities/ssl-certificate.entity';
 import { Log } from './entities/log.entity';
+import { SshSession } from './entities/ssh-session.entity';
+import { ConsoleLog } from './entities/console-log.entity';
 
 @Module({
   imports: [
@@ -27,7 +30,7 @@ import { Log } from './entities/log.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User, Domain, ProxyRule, Redirect, SslCertificate, Log],
+        entities: [User, Domain, ProxyRule, Redirect, SslCertificate, Log, SshSession, ConsoleLog],
         synchronize: process.env.NODE_ENV === 'development',
         logging: process.env.NODE_ENV === 'development',
       }),
@@ -41,6 +44,7 @@ import { Log } from './entities/log.entity';
     SslCertificatesModule,
     LogsModule,
     DashboardModule,
+    ConsoleModule,
     SeedModule,
   ],
 })

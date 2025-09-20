@@ -10,7 +10,8 @@ import {
   Shield,
   FileText,
   LogOut,
-  Settings
+  Settings,
+  Terminal
 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { cn } from '@/lib/utils'
@@ -45,6 +46,11 @@ const navigationItems = [
     name: 'Logs',
     href: '/logs',
     icon: FileText
+  },
+  {
+    name: 'Console SSH',
+    href: '/console',
+    icon: Terminal
   }
 ]
 

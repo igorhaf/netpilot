@@ -47,7 +47,7 @@ Cypress.Commands.add('logout', () => {
 
 // Navigation commands
 Cypress.Commands.add('navigateTo', (page: string) => {
-  const routes = {
+  const routes: { [key: string]: string } = {
     dashboard: '/',
     domains: '/domains',
     'proxy-rules': '/proxy-rules',
@@ -101,7 +101,7 @@ Cypress.Commands.add('deleteDomain', (name: string) => {
     url: `${Cypress.env('API_URL')}/domains?search=${name}`,
     headers: { Authorization: `Bearer ${token}` },
   }).then((response) => {
-    const domain = response.body.data.find(d => d.name === name);
+    const domain = response.body.data.find((d: any) => d.name === name);
     if (domain) {
       cy.request({
         method: 'DELETE',
@@ -119,7 +119,7 @@ Cypress.Commands.add('shouldBeClickable', { prevSubject: 'element' }, (subject) 
 
 Cypress.Commands.add('waitForApi', (aliasName: string) => {
   cy.wait(`@${aliasName}`).then((interception) => {
-    expect(interception.response.statusCode).to.be.oneOf([200, 201, 204]);
+    expect(interception?.response?.statusCode).to.be.oneOf([200, 201, 204]);
   });
 });
 
@@ -208,8 +208,8 @@ Cypress.Commands.add('waitForStable', { prevSubject: 'element' }, (subject) => {
       const currentPos = { top: currentPosition.top, left: currentPosition.left };
 
       if (previousPosition &&
-          Math.abs(currentPos.top - previousPosition.top) < 1 &&
-          Math.abs(currentPos.left - previousPosition.left) < 1) {
+        Math.abs(currentPos.top - previousPosition.top) < 1 &&
+        Math.abs(currentPos.left - previousPosition.left) < 1) {
         return; // Element is stable
       }
 
