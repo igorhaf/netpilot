@@ -23,7 +23,11 @@ interface AuthenticatedSocket extends Socket {
 @WebSocketGateway({
     namespace: '/console',
     cors: {
-        origin: ['http://meadadigital.com:3000', 'https://meadadigital.com:3000'],
+        origin: [
+            'http://netpilot.meadadigital.com:3000',
+            'https://netpilot.meadadigital.com:3000',
+            'https://netpilot.meadadigital.com'
+        ],
         credentials: true,
     },
 })

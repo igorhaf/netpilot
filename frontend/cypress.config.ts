@@ -17,7 +17,7 @@ export default defineConfig({
 
     // Environment variables
     env: {
-      API_URL: 'http://meadadigital.com:3001/api/v1',
+      API_URL: 'https://netpilot.meadadigital.com/api',
       TEST_USER_EMAIL: 'cypress@netpilot.local',
       TEST_USER_PASSWORD: 'cypress123',
       ADMIN_EMAIL: 'admin@netpilot.local',

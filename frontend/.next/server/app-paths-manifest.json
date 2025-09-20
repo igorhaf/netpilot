@@ -4,14 +4,14 @@
   "/domains/[id]/edit/page": "app/domains/[id]/edit/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/domains/new/page": "app/domains/new/page.js",
-  "/domains/page": "app/domains/page.js",
   "/login/page": "app/login/page.js",
-  "/logs/page": "app/logs/page.js",
+  "/domains/page": "app/domains/page.js",
   "/page": "app/page.js",
   "/proxy-rules/new/page": "app/proxy-rules/new/page.js",
   "/proxy-rules/page": "app/proxy-rules/page.js",
-  "/redirects/new/page": "app/redirects/new/page.js",
   "/redirects/page": "app/redirects/page.js",
   "/settings/page": "app/settings/page.js",
-  "/ssl-certificates/page": "app/ssl-certificates/page.js"
+  "/redirects/new/page": "app/redirects/new/page.js",
+  "/ssl-certificates/page": "app/ssl-certificates/page.js",
+  "/logs/page": "app/logs/page.js"
 }
