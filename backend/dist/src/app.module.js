@@ -17,6 +17,7 @@ const redirects_module_1 = require("./modules/redirects/redirects.module");
 const ssl_certificates_module_1 = require("./modules/ssl-certificates/ssl-certificates.module");
 const logs_module_1 = require("./modules/logs/logs.module");
 const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
+const console_module_1 = require("./modules/console/console.module");
 const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
 const user_entity_1 = require("./entities/user.entity");
@@ -25,6 +26,8 @@ const proxy_rule_entity_1 = require("./entities/proxy-rule.entity");
 const redirect_entity_1 = require("./entities/redirect.entity");
 const ssl_certificate_entity_1 = require("./entities/ssl-certificate.entity");
 const log_entity_1 = require("./entities/log.entity");
+const ssh_session_entity_1 = require("./entities/ssh-session.entity");
+const console_log_entity_1 = require("./entities/console-log.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -39,7 +42,7 @@ exports.AppModule = AppModule = __decorate([
                 useFactory: (configService) => ({
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
-                    entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log],
+                    entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog],
                     synchronize: process.env.NODE_ENV === 'development',
                     logging: process.env.NODE_ENV === 'development',
                 }),
@@ -53,6 +56,7 @@ exports.AppModule = AppModule = __decorate([
             ssl_certificates_module_1.SslCertificatesModule,
             logs_module_1.LogsModule,
             dashboard_module_1.DashboardModule,
+            console_module_1.ConsoleModule,
             seed_module_1.SeedModule,
         ],
     })

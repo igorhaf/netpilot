@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConsoleModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const jwt_1 = require("@nestjs/jwt");
+const config_1 = require("@nestjs/config");
 const console_service_1 = require("./console.service");
 const console_controller_1 = require("./console.controller");
 const console_gateway_1 = require("./console.gateway");
@@ -20,7 +22,15 @@ exports.ConsoleModule = ConsoleModule;
 exports.ConsoleModule = ConsoleModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog])
+            typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog]),
+            jwt_1.JwtModule.registerAsync({
+                imports: [config_1.ConfigModule],
+                useFactory: (configService) => ({
+                    secret: configService.get('JWT_SECRET'),
+                    signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN') || '7d' },
+                }),
+                inject: [config_1.ConfigService],
+            }),
         ],
         controllers: [console_controller_1.ConsoleController],
         providers: [console_service_1.ConsoleService, console_gateway_1.ConsoleGateway],

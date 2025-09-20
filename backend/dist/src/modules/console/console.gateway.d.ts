@@ -1,5 +1,6 @@
 import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
 import { ConsoleService } from './console.service';
 import { ExecuteCommandDto } from '../../dtos/ssh-session.dto';
 interface AuthenticatedSocket extends Socket {
@@ -8,10 +9,11 @@ interface AuthenticatedSocket extends Socket {
 }
 export declare class ConsoleGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly consoleService;
+    private readonly jwtService;
     server: Server;
     private readonly logger;
     private userSockets;
-    constructor(consoleService: ConsoleService);
+    constructor(consoleService: ConsoleService, jwtService: JwtService);
     afterInit(server: Server): void;
     handleConnection(client: AuthenticatedSocket): Promise<void>;
     handleDisconnect(client: AuthenticatedSocket): void;

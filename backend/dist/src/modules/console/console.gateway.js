@@ -17,10 +17,12 @@ exports.ConsoleGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
 const console_service_1 = require("./console.service");
 let ConsoleGateway = ConsoleGateway_1 = class ConsoleGateway {
-    constructor(consoleService) {
+    constructor(consoleService, jwtService) {
         this.consoleService = consoleService;
+        this.jwtService = jwtService;
         this.logger = new common_1.Logger(ConsoleGateway_1.name);
         this.userSockets = new Map();
     }
@@ -189,12 +191,11 @@ let ConsoleGateway = ConsoleGateway_1 = class ConsoleGateway {
     }
     async validateTokenAndGetUserId(token) {
         try {
-            if (token === 'valid-token') {
-                return 'user-id-123';
-            }
-            return null;
+            const payload = this.jwtService.verify(token);
+            return payload.sub || payload.userId;
         }
         catch (error) {
+            this.logger.warn(`JWT validation failed: ${error.message}`);
             return null;
         }
     }
@@ -281,6 +282,7 @@ exports.ConsoleGateway = ConsoleGateway = ConsoleGateway_1 = __decorate([
             credentials: true,
         },
     }),
-    __metadata("design:paramtypes", [console_service_1.ConsoleService])
+    __metadata("design:paramtypes", [console_service_1.ConsoleService,
+        jwt_1.JwtService])
 ], ConsoleGateway);
 //# sourceMappingURL=console.gateway.js.map

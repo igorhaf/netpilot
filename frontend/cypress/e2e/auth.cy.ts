@@ -402,13 +402,13 @@ describe('Authentication Flow', () => {
     });
 
     it('should support keyboard navigation', () => {
-      cy.get('[data-cy=email-input]').focus().tab();
+      cy.get('[data-cy=email-input]').focus().type('{tab}');
       cy.get('[data-cy=password-input]').should('be.focused');
 
-      cy.tab();
+      cy.get('[data-cy=password-input]').type('{tab}');
       cy.get('[data-cy=remember-me-checkbox]').should('be.focused');
 
-      cy.tab();
+      cy.get('[data-cy=remember-me-checkbox]').type('{tab}');
       cy.get('[data-cy=login-button]').should('be.focused');
     });
 
