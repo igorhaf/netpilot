@@ -13,10 +13,10 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
-      'http://netpilot.meadadigital.com',
-      'http://netpilot.meadadigital.com:3000',
+      'https://netpilot.meadadigital.com',
       'https://netpilot.meadadigital.com:3000',
-      'https://netpilot.meadadigital.com'
+      'http://netpilot.meadadigital.com',
+      'http://netpilot.meadadigital.com:3000'
     ],
     credentials: true,
   });

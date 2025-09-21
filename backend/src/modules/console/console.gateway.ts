@@ -24,9 +24,10 @@ interface AuthenticatedSocket extends Socket {
     namespace: '/console',
     cors: {
         origin: [
-            'http://netpilot.meadadigital.com:3000',
+            'https://netpilot.meadadigital.com',
             'https://netpilot.meadadigital.com:3000',
-            'https://netpilot.meadadigital.com'
+            'http://netpilot.meadadigital.com',
+            'http://netpilot.meadadigital.com:3000'
         ],
         credentials: true,
     },
