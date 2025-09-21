@@ -7,7 +7,7 @@ O projeto NetPilot está **totalmente funcional** e operacional. Todas as funcio
 ## ✅ Status dos Serviços
 
 ### Containers Docker
-- **Database (PostgreSQL)**: ✅ Online e saudável na porta 5433
+- **Database (PostgreSQL)**: ✅ Online e saudável na porta 5432
 - **Backend (NestJS)**: ✅ Online e funcional na porta 3001
 - **Frontend (Next.js)**: ✅ Online e funcional na porta 3000
 - **Traefik**: ✅ Online com dashboard na porta 8080

@@ -44,7 +44,7 @@ Este é o projeto "NetPilot" - um sistema completo de proxy reverso e gestão SS
 ### Infraestrutura
 - **Traefik**: Proxy reverso principal (portas 8090, 8443, 8080)
 - **Nginx**: Web server secundário (porta 3010)
-- **PostgreSQL**: Banco de dados (porta 5433)
+- **PostgreSQL**: Banco de dados (porta 5432)
 - **Docker Compose**: Orquestração de containers
 
 ## Comandos de Desenvolvimento
