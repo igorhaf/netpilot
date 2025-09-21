@@ -8,16 +8,19 @@ interface AuthState {
   user: User | null
   token: string | null
   isAuthenticated: boolean
+  isHydrated: boolean
   login: (token: string, user: User) => void
   logout: () => void
+  setHydrated: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
+      isHydrated: false,
       login: (token: string, user: User) =>
         set({
           token,
@@ -30,9 +33,15 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           isAuthenticated: false,
         }),
+      setHydrated: () => set({ isHydrated: true }),
     }),
     {
       name: 'netpilot-auth',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHydrated()
+        }
+      },
     }
   )
 )

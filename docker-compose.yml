@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5432:5432"
     networks:
       - netpilot-network
     healthcheck:
@@ -17,6 +17,63 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  mysql:
+    image: mysql:8.0
+    container_name: netpilot-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: netpilot123
+      MYSQL_DATABASE: netpilot
+      MYSQL_USER: netpilot
+      MYSQL_PASSWORD: netpilot123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - netpilot-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "netpilot", "-pnetpilot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: netpilot-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: netpilot
+      PMA_PASSWORD: netpilot123
+      MYSQL_ROOT_PASSWORD: netpilot123
+      UPLOAD_LIMIT: 128M
+    ports:
+      - "8090:80"
+    networks:
+      - netpilot-network
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: netpilot-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@meadadigital.com
+      PGADMIN_DEFAULT_PASSWORD: netpilot123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "8091:80"
+    networks:
+      - netpilot-network
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
 
   backend:
     build:
@@ -26,6 +83,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://netpilot:netpilot123@db:5432/netpilot
+      - MYSQL_URL=mysql://netpilot:netpilot123@mysql:3306/netpilot
       - JWT_SECRET=netpilot_jwt_secret_key_2024
       - ACME_EMAIL=admin@meadadigital.com
       - SSH_HOST=172.18.0.1
@@ -113,6 +171,8 @@ services:
 
 volumes:
   postgres_data:
+  mysql_data:
+  pgadmin_data:
   traefik_letsencrypt:
   nginx_logs:
 

@@ -40,7 +40,7 @@ describe('NetPilot E2E Tests', () => {
           useFactory: (configService: ConfigService) => ({
             type: 'postgres',
             host: configService.get('DB_HOST', 'meadadigital.com'),
-            port: configService.get('DB_PORT', 5433),
+            port: configService.get('DB_PORT', 5432),
             username: configService.get('DB_USER', 'netpilot_test'),
             password: configService.get('DB_PASS', 'test_password'),
             database: configService.get('DB_NAME', 'netpilot_test'),
@@ -506,7 +506,7 @@ describe('NetPilot E2E Tests', () => {
 
       for (const endpoint of protectedEndpoints) {
         await request(app.getHttpServer())
-          [endpoint.method](endpoint.path)
+        [endpoint.method](endpoint.path)
           .expect(401);
       }
     });
