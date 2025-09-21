@@ -25,7 +25,8 @@
       "Bash(nc:*)",
       "Bash(ip route:*)",
       "Bash(awk:*)",
-      "Bash(sudo:*)"
+      "Bash(sudo:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
