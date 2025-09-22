@@ -264,7 +264,7 @@ export default function JobQueuesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Job Queues & Agendamento</h1>
+            <h1 className="text-3xl font-bold">Filas de Processo & Agendamento</h1>
             <p className="text-muted-foreground">
               Gerencie tarefas automatizadas e agendamentos do sistema
             </p>

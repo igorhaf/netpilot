@@ -19,7 +19,7 @@ import { DockerRbacGuard, RequireDockerPermission, DockerPermission } from '../g
 
 @ApiTags('Docker Networks')
 @ApiBearerAuth()
-@Controller('docker/networks')
+@Controller('api/docker/networks')
 @UseGuards(JwtAuthGuard, DockerQuotaGuard, DockerRbacGuard)
 export class NetworksController {
   constructor(private networksService: NetworksService) {}

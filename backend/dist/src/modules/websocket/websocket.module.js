@@ -13,13 +13,9 @@ const typeorm_1 = require("@nestjs/typeorm");
 const websocket_gateway_1 = require("./websocket.gateway");
 const websocket_service_1 = require("./services/websocket.service");
 const ssh_websocket_handler_1 = require("./handlers/ssh-websocket.handler");
-const docker_websocket_handler_1 = require("./handlers/docker-websocket.handler");
 const ssh_session_entity_1 = require("../../entities/ssh-session.entity");
 const console_log_entity_1 = require("../../entities/console-log.entity");
-const docker_job_entity_1 = require("../docker/entities/docker-job.entity");
 const console_service_1 = require("../console/console.service");
-const docker_service_1 = require("../docker/services/docker.service");
-const containers_service_1 = require("../docker/services/containers.service");
 const websocket_rate_limit_guard_1 = require("./guards/websocket-rate-limit.guard");
 let WebSocketModule = class WebSocketModule {
 };
@@ -28,19 +24,16 @@ exports.WebSocketModule = WebSocketModule = __decorate([
     (0, common_1.Module)({
         imports: [
             jwt_1.JwtModule.register({}),
-            typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, docker_job_entity_1.DockerJob])
+            typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog]),
         ],
         providers: [
             websocket_gateway_1.WebSocketGateway,
             websocket_service_1.WebSocketService,
             ssh_websocket_handler_1.SshWebSocketHandler,
-            docker_websocket_handler_1.DockerWebSocketHandler,
             websocket_rate_limit_guard_1.WebSocketRateLimitGuard,
-            console_service_1.ConsoleService,
-            docker_service_1.DockerService,
-            containers_service_1.ContainersService
+            console_service_1.ConsoleService
         ],
-        exports: [websocket_service_1.WebSocketService, websocket_gateway_1.WebSocketGateway, ssh_websocket_handler_1.SshWebSocketHandler, docker_websocket_handler_1.DockerWebSocketHandler]
+        exports: [websocket_service_1.WebSocketService, websocket_gateway_1.WebSocketGateway, ssh_websocket_handler_1.SshWebSocketHandler]
     })
 ], WebSocketModule);
 //# sourceMappingURL=websocket.module.js.map

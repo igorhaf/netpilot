@@ -128,7 +128,7 @@ __decorate([
 exports.VolumesController = VolumesController = __decorate([
     (0, swagger_1.ApiTags)('Docker Volumes'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('docker/volumes'),
+    (0, common_1.Controller)('api/docker/volumes'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, docker_quota_guard_1.DockerQuotaGuard, docker_rbac_guard_1.DockerRbacGuard),
     __metadata("design:paramtypes", [volumes_service_1.VolumesService])
 ], VolumesController);

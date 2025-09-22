@@ -15,19 +15,17 @@ const cache_manager_1 = require("@nestjs/cache-manager");
 const auth_module_1 = require("./modules/auth/auth.module");
 const domains_module_1 = require("./modules/domains/domains.module");
 const proxy_rules_module_1 = require("./modules/proxy-rules/proxy-rules.module");
-const redirects_module_1 = require("./modules/redirects/redirects.module");
 const ssl_certificates_module_1 = require("./modules/ssl-certificates/ssl-certificates.module");
 const logs_module_1 = require("./modules/logs/logs.module");
 const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const console_module_1 = require("./modules/console/console.module");
-const docker_module_1 = require("./modules/docker/docker.module");
+const docker_minimal_module_1 = require("./modules/docker/docker-minimal.module");
 const websocket_module_1 = require("./modules/websocket/websocket.module");
 const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
 const user_entity_1 = require("./entities/user.entity");
 const domain_entity_1 = require("./entities/domain.entity");
 const proxy_rule_entity_1 = require("./entities/proxy-rule.entity");
-const redirect_entity_1 = require("./entities/redirect.entity");
 const ssl_certificate_entity_1 = require("./entities/ssl-certificate.entity");
 const log_entity_1 = require("./entities/log.entity");
 const ssh_session_entity_1 = require("./entities/ssh-session.entity");
@@ -50,8 +48,8 @@ exports.AppModule = AppModule = __decorate([
                 useFactory: (configService) => ({
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
-                    entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, docker_job_entity_1.DockerJob, docker_backup_entity_1.DockerBackup, docker_event_entity_1.DockerEvent, docker_quota_entity_1.DockerQuota],
-                    synchronize: process.env.NODE_ENV === 'development',
+                    entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, docker_job_entity_1.DockerJob, docker_backup_entity_1.DockerBackup, docker_event_entity_1.DockerEvent, docker_quota_entity_1.DockerQuota],
+                    synchronize: false,
                     logging: process.env.NODE_ENV === 'development',
                 }),
                 inject: [config_1.ConfigService],
@@ -80,15 +78,15 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             domains_module_1.DomainsModule,
             proxy_rules_module_1.ProxyRulesModule,
-            redirects_module_1.RedirectsModule,
             ssl_certificates_module_1.SslCertificatesModule,
             logs_module_1.LogsModule,
             dashboard_module_1.DashboardModule,
             console_module_1.ConsoleModule,
-            docker_module_1.DockerModule,
+            docker_minimal_module_1.DockerMinimalModule,
             websocket_module_1.WebSocketModule,
             seed_module_1.SeedModule,
         ],
+        controllers: [],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -21,7 +21,7 @@ import { DockerRbacGuard, RequireDockerPermission, DockerPermission } from '../g
 
 @ApiTags('Docker Images')
 @ApiBearerAuth()
-@Controller('docker/images')
+@Controller('api/docker/images')
 @UseGuards(JwtAuthGuard, DockerQuotaGuard, DockerRbacGuard)
 export class ImagesController {
   constructor(private imagesService: ImagesService) {}

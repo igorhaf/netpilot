@@ -35,7 +35,11 @@
       "Bash(find:*)",
       "Bash(npm run lint)",
       "Bash(grep:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(openssl req:*)",
+      "Bash(for domain in meadadigital.com suinda.meadadigital.com bangalo.meadadigital.com)",
+      "Bash(do)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

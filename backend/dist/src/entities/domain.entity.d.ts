@@ -1,5 +1,4 @@
 import { ProxyRule } from './proxy-rule.entity';
-import { Redirect } from './redirect.entity';
 import { SslCertificate } from './ssl-certificate.entity';
 export declare class Domain {
     id: string;
@@ -12,7 +11,6 @@ export declare class Domain {
     enableWwwRedirect: boolean;
     bindIp: string;
     proxyRules: ProxyRule[];
-    redirects: Redirect[];
     sslCertificates: SslCertificate[];
     createdAt: Date;
     updatedAt: Date;

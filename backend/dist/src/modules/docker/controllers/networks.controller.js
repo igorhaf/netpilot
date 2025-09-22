@@ -125,7 +125,7 @@ __decorate([
 exports.NetworksController = NetworksController = __decorate([
     (0, swagger_1.ApiTags)('Docker Networks'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('docker/networks'),
+    (0, common_1.Controller)('api/docker/networks'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, docker_quota_guard_1.DockerQuotaGuard, docker_rbac_guard_1.DockerRbacGuard),
     __metadata("design:paramtypes", [networks_service_1.NetworksService])
 ], NetworksController);

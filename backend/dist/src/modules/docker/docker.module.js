@@ -19,6 +19,7 @@ const volumes_controller_1 = require("./controllers/volumes.controller");
 const networks_controller_1 = require("./controllers/networks.controller");
 const images_controller_1 = require("./controllers/images.controller");
 const jobs_controller_1 = require("./controllers/jobs.controller");
+const test_controller_1 = require("./controllers/test.controller");
 const docker_service_1 = require("./services/docker.service");
 const containers_service_1 = require("./services/containers.service");
 const volumes_service_1 = require("./services/volumes.service");
@@ -46,6 +47,7 @@ exports.DockerModule = DockerModule = __decorate([
             }),
         ],
         controllers: [
+            test_controller_1.TestController,
             containers_controller_1.ContainersController,
             volumes_controller_1.VolumesController,
             networks_controller_1.NetworksController,

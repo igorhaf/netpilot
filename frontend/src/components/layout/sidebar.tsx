@@ -35,7 +35,7 @@ const navigationItems = [
     icon: ArrowRight
   },
   {
-    name: 'Redirects',
+    name: 'Redirecionamentos',
     href: '/redirects',
     icon: RotateCcw
   },
@@ -50,7 +50,7 @@ const navigationItems = [
     icon: Container
   },
   {
-    name: 'Job Queues',
+    name: 'Filas de Processo',
     href: '/job-queues',
     icon: Clock
   },

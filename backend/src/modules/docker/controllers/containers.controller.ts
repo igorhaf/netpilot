@@ -25,7 +25,7 @@ import { ContainerExecDto } from '../dto/containers/container-exec.dto';
 
 @ApiTags('Docker Containers')
 @ApiBearerAuth()
-@Controller('docker/containers')
+@Controller('api/docker/containers')
 @UseGuards(JwtAuthGuard, DockerQuotaGuard)
 export class ContainersController {
   constructor(private containersService: ContainersService) {}
