@@ -97,6 +97,9 @@ cp .env.example .env
 # Construir e iniciar todos os containers
 docker-compose up -d --build
 
+# Inicializar banco de dados (primeira execução)
+./scripts/init-database.sh
+
 # Verificar logs
 docker-compose logs -f
 ```
@@ -110,6 +113,58 @@ docker-compose logs -f
 ### 5. Login Inicial
 - **Email**: admin@netpilot.local
 - **Senha**: admin123
+
+## 🗄️ **Gerenciamento do Banco de Dados**
+
+### Scripts Disponíveis
+
+```bash
+# Inicializar banco (criar tabelas e dados iniciais)
+./scripts/init-database.sh
+
+# Reset completo do banco (⚠️ APAGA TUDO)
+./scripts/reset-database.sh
+
+# Executar apenas seeds
+cd backend && npm run seed
+
+# Scripts via npm (dentro da pasta backend)
+npm run db:init    # Inicializar banco
+npm run db:reset   # Reset banco
+npm run seed       # Executar seeds
+```
+
+### Estrutura do Banco
+
+O banco PostgreSQL é automaticamente configurado com:
+
+- **Tabelas**: `users`, `domains`, `proxy_rules`, `redirects`, `ssl_certificates`, `logs`, `ssh_sessions`, `console_logs`
+- **Tipos Customizados**: `log_type`, `log_status`, `redirect_type`, `certificate_status`
+- **Dados Iniciais**: Usuário admin, domínios de exemplo, logs de exemplo
+- **Relacionamentos**: Foreign keys e constraints automáticos
+
+### Comandos de Banco Úteis
+
+```bash
+# Verificar status das tabelas
+docker-compose exec -T db psql -U netpilot -d netpilot -c "\dt"
+
+# Ver registros em todas as tabelas
+docker-compose exec -T db psql -U netpilot -d netpilot -c "
+SELECT 'users' as tabela, count(*) as registros FROM users
+UNION ALL SELECT 'domains', count(*) FROM domains
+UNION ALL SELECT 'proxy_rules', count(*) FROM proxy_rules
+UNION ALL SELECT 'redirects', count(*) FROM redirects
+UNION ALL SELECT 'ssl_certificates', count(*) FROM ssl_certificates
+UNION ALL SELECT 'logs', count(*) FROM logs;
+"
+
+# Backup do banco
+docker-compose exec db pg_dump -U netpilot netpilot > backup.sql
+
+# Restaurar backup
+docker-compose exec -T db psql -U netpilot -d netpilot < backup.sql
+```
 
 ## 🔧 Configuração
 

@@ -34,7 +34,7 @@ export class DomainsService {
   async findAll(search?: string, status?: string, autoTls?: string): Promise<Domain[]> {
     const query = this.domainRepository.createQueryBuilder('domain')
       .leftJoinAndSelect('domain.proxyRules', 'proxyRules')
-      .leftJoinAndSelect('domain.redirects', 'redirects')
+      // .leftJoinAndSelect('domain.redirects', 'redirects') // Temporarily disabled
       .leftJoinAndSelect('domain.sslCertificates', 'sslCertificates');
 
     if (search) {
@@ -61,7 +61,7 @@ export class DomainsService {
   async findOne(id: string): Promise<Domain> {
     const domain = await this.domainRepository.findOne({
       where: { id },
-      relations: ['proxyRules', 'redirects', 'sslCertificates'],
+      relations: ['proxyRules', 'sslCertificates'], // 'redirects' temporarily disabled
     });
 
     if (!domain) {

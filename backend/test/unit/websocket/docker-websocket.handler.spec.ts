@@ -1,0 +1,326 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { DockerWebSocketHandler } from '../../../src/modules/websocket/handlers/docker-websocket.handler';
+import { DockerService } from '../../../src/modules/docker/services/docker.service';
+import { ContainersService } from '../../../src/modules/docker/services/containers.service';
+import { Server, Socket } from 'socket.io';
+import { EventEmitter } from 'events';
+
+describe('DockerWebSocketHandler', () => {
+  let handler: DockerWebSocketHandler;
+  let mockDockerService: jest.Mocked<DockerService>;
+  let mockContainersService: jest.Mocked<ContainersService>;
+  let mockServer: jest.Mocked<Server>;
+  let mockClient: jest.Mocked<Socket>;
+  let mockContainer: any;
+
+  beforeEach(async () => {
+    mockContainer = {
+      inspect: jest.fn(),
+      logs: jest.fn(),
+      stats: jest.fn(),
+      exec: jest.fn(),
+    };
+
+    mockDockerService = {
+      getDockerContainer: jest.fn().mockReturnValue(mockContainer),
+    } as any;
+
+    mockContainersService = {} as any;
+
+    mockServer = {
+      to: jest.fn().mockReturnThis(),
+      emit: jest.fn(),
+    } as any;
+
+    mockClient = {
+      id: 'test-client-id',
+      userId: 'test-user-id',
+      join: jest.fn(),
+      leave: jest.fn(),
+      emit: jest.fn(),
+      to: jest.fn().mockReturnThis(),
+    } as any;
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        DockerWebSocketHandler,
+        {
+          provide: DockerService,
+          useValue: mockDockerService,
+        },
+        {
+          provide: ContainersService,
+          useValue: mockContainersService,
+        },
+      ],
+    }).compile();
+
+    handler = module.get<DockerWebSocketHandler>(DockerWebSocketHandler);
+    handler.setServer(mockServer);
+  });
+
+  it('should be defined', () => {
+    expect(handler).toBeDefined();
+  });
+
+  describe('handleLogsStart', () => {
+    it('should start log streaming when container exists', async () => {
+      const containerId = 'test-container-id';
+      const mockLogStream = new EventEmitter();
+
+      mockContainer.inspect.mockResolvedValue({});
+      mockContainer.logs.mockResolvedValue(mockLogStream);
+
+      await handler.handleLogsStart(mockClient, { containerId });
+
+      expect(mockDockerService.getDockerContainer).toHaveBeenCalledWith(containerId);
+      expect(mockContainer.inspect).toHaveBeenCalled();
+      expect(mockContainer.logs).toHaveBeenCalledWith({
+        follow: true,
+        stdout: true,
+        stderr: true,
+        tail: 100,
+        timestamps: true
+      });
+      expect(mockClient.join).toHaveBeenCalledWith(`docker:logs:${containerId}`);
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:logs:started', { containerId });
+    });
+
+    it('should emit error when container not found', async () => {
+      const containerId = 'non-existent-container';
+
+      mockContainer.inspect.mockRejectedValue(new Error('Container not found'));
+
+      await handler.handleLogsStart(mockClient, { containerId });
+
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:error', {
+        containerId,
+        message: 'Container not found'
+      });
+    });
+
+    it('should handle unauthenticated client', async () => {
+      const containerId = 'test-container-id';
+      const unauthenticatedClient = { ...mockClient, userId: undefined };
+
+      await handler.handleLogsStart(unauthenticatedClient as any, { containerId });
+
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:error', {
+        message: 'Not authenticated'
+      });
+    });
+  });
+
+  describe('handleLogsStop', () => {
+    it('should stop log streaming', async () => {
+      const containerId = 'test-container-id';
+
+      await handler.handleLogsStop(mockClient, { containerId });
+
+      expect(mockClient.leave).toHaveBeenCalledWith(`docker:logs:${containerId}`);
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:logs:stopped', { containerId });
+    });
+  });
+
+  describe('handleStatsStart', () => {
+    it('should start stats streaming when container exists', async () => {
+      const containerId = 'test-container-id';
+      const mockStatsStream = new EventEmitter();
+
+      mockContainer.inspect.mockResolvedValue({});
+      mockContainer.stats.mockResolvedValue(mockStatsStream);
+
+      await handler.handleStatsStart(mockClient, { containerId });
+
+      expect(mockContainer.stats).toHaveBeenCalledWith({ stream: true });
+      expect(mockClient.join).toHaveBeenCalledWith(`docker:stats:${containerId}`);
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:stats:started', { containerId });
+    });
+
+    it('should emit error when container not found', async () => {
+      const containerId = 'non-existent-container';
+
+      mockContainer.inspect.mockRejectedValue(new Error('Container not found'));
+
+      await handler.handleStatsStart(mockClient, { containerId });
+
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:error', {
+        containerId,
+        message: 'Container not found'
+      });
+    });
+  });
+
+  describe('handleStatsStop', () => {
+    it('should stop stats streaming', async () => {
+      const containerId = 'test-container-id';
+
+      await handler.handleStatsStop(mockClient, { containerId });
+
+      expect(mockClient.leave).toHaveBeenCalledWith(`docker:stats:${containerId}`);
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:stats:stopped', { containerId });
+    });
+  });
+
+  describe('handleExecStart', () => {
+    it('should start exec session when container exists', async () => {
+      const containerId = 'test-container-id';
+      const command = ['/bin/bash'];
+      const mockExec = {
+        id: 'exec-123',
+        start: jest.fn(),
+      };
+      const mockStream = new EventEmitter();
+
+      mockContainer.inspect.mockResolvedValue({});
+      mockContainer.exec.mockResolvedValue(mockExec);
+      mockExec.start.mockResolvedValue(mockStream);
+
+      await handler.handleExecStart(mockClient, { containerId, command });
+
+      expect(mockContainer.exec).toHaveBeenCalledWith({
+        Cmd: command,
+        AttachStdout: true,
+        AttachStderr: true,
+        AttachStdin: true,
+        Tty: true,
+        Env: []
+      });
+      expect(mockClient.join).toHaveBeenCalledWith(`docker:exec:${mockExec.id}`);
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:exec:started', {
+        containerId,
+        execId: mockExec.id
+      });
+    });
+
+    it('should emit error when container not found', async () => {
+      const containerId = 'non-existent-container';
+      const command = ['/bin/bash'];
+
+      mockContainer.inspect.mockRejectedValue(new Error('Container not found'));
+
+      await handler.handleExecStart(mockClient, { containerId, command });
+
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:error', {
+        containerId,
+        message: 'Container not found'
+      });
+    });
+  });
+
+  describe('handleExecInput', () => {
+    it('should handle unauthenticated client', async () => {
+      const execId = 'exec-123';
+      const input = 'echo hello\n';
+      const unauthenticatedClient = { ...mockClient, userId: undefined };
+
+      await handler.handleExecInput(unauthenticatedClient as any, { execId, input });
+
+      // Should not throw error, but also should not process input
+      expect(mockClient.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handleExecStop', () => {
+    it('should stop exec session', async () => {
+      const execId = 'exec-123';
+
+      await handler.handleExecStop(mockClient, { execId });
+
+      expect(mockClient.leave).toHaveBeenCalledWith(`docker:exec:${execId}`);
+      expect(mockClient.emit).toHaveBeenCalledWith('docker:exec:stopped', { execId });
+    });
+  });
+
+  describe('utility methods', () => {
+    describe('calculateCpuUsage', () => {
+      it('should calculate CPU usage correctly', () => {
+        const handler_any = handler as any;
+        const stats = {
+          cpu_stats: {
+            cpu_usage: { total_usage: 200000000 },
+            system_cpu_usage: 4000000000,
+            online_cpus: 2
+          },
+          precpu_stats: {
+            cpu_usage: { total_usage: 100000000 },
+            system_cpu_usage: 2000000000
+          }
+        };
+
+        const cpuUsage = handler_any.calculateCpuUsage(stats);
+        expect(cpuUsage).toBe(10); // (100000000 / 2000000000) * 2 * 100 = 10%
+      });
+
+      it('should return 0 for invalid stats', () => {
+        const handler_any = handler as any;
+        const stats = {};
+
+        const cpuUsage = handler_any.calculateCpuUsage(stats);
+        expect(cpuUsage).toBe(0);
+      });
+    });
+
+    describe('calculateMemoryUsage', () => {
+      it('should calculate memory usage correctly', () => {
+        const handler_any = handler as any;
+        const stats = {
+          memory_stats: {
+            usage: 500000000, // 500MB
+            limit: 1000000000  // 1GB
+          }
+        };
+
+        const memoryUsage = handler_any.calculateMemoryUsage(stats);
+        expect(memoryUsage).toEqual({
+          used: 500000000,
+          available: 1000000000,
+          percentage: 50
+        });
+      });
+    });
+
+    describe('calculateNetworkIO', () => {
+      it('should calculate network I/O correctly', () => {
+        const handler_any = handler as any;
+        const stats = {
+          networks: {
+            eth0: { rx_bytes: 1000, tx_bytes: 2000 },
+            lo: { rx_bytes: 500, tx_bytes: 500 }
+          }
+        };
+
+        const networkIO = handler_any.calculateNetworkIO(stats);
+        expect(networkIO).toEqual({
+          rx: 1500,
+          tx: 2500
+        });
+      });
+    });
+  });
+
+  describe('getActiveStreams', () => {
+    it('should return active streams count', () => {
+      const activeStreams = handler.getActiveStreams();
+      expect(activeStreams).toEqual({
+        logs: 0,
+        stats: 0,
+        exec: 0
+      });
+    });
+  });
+
+  describe('emitToContainer', () => {
+    it('should emit to container rooms', () => {
+      const containerId = 'test-container-id';
+      const event = 'test-event';
+      const data = { message: 'test' };
+
+      handler.emitToContainer(containerId, event, data);
+
+      expect(mockServer.to).toHaveBeenCalledWith(`docker:logs:${containerId}`);
+      expect(mockServer.to).toHaveBeenCalledWith(`docker:stats:${containerId}`);
+      expect(mockServer.emit).toHaveBeenCalledWith(event, data);
+    });
+  });
+});

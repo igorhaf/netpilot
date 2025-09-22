@@ -10,6 +10,8 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
+const bull_1 = require("@nestjs/bull");
+const cache_manager_1 = require("@nestjs/cache-manager");
 const auth_module_1 = require("./modules/auth/auth.module");
 const domains_module_1 = require("./modules/domains/domains.module");
 const proxy_rules_module_1 = require("./modules/proxy-rules/proxy-rules.module");
@@ -18,6 +20,8 @@ const ssl_certificates_module_1 = require("./modules/ssl-certificates/ssl-certif
 const logs_module_1 = require("./modules/logs/logs.module");
 const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const console_module_1 = require("./modules/console/console.module");
+const docker_module_1 = require("./modules/docker/docker.module");
+const websocket_module_1 = require("./modules/websocket/websocket.module");
 const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
 const user_entity_1 = require("./entities/user.entity");
@@ -28,6 +32,10 @@ const ssl_certificate_entity_1 = require("./entities/ssl-certificate.entity");
 const log_entity_1 = require("./entities/log.entity");
 const ssh_session_entity_1 = require("./entities/ssh-session.entity");
 const console_log_entity_1 = require("./entities/console-log.entity");
+const docker_job_entity_1 = require("./modules/docker/entities/docker-job.entity");
+const docker_backup_entity_1 = require("./modules/docker/entities/docker-backup.entity");
+const docker_event_entity_1 = require("./modules/docker/entities/docker-event.entity");
+const docker_quota_entity_1 = require("./modules/docker/entities/docker-quota.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -42,11 +50,31 @@ exports.AppModule = AppModule = __decorate([
                 useFactory: (configService) => ({
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
-                    entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog],
+                    entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, docker_job_entity_1.DockerJob, docker_backup_entity_1.DockerBackup, docker_event_entity_1.DockerEvent, docker_quota_entity_1.DockerQuota],
                     synchronize: process.env.NODE_ENV === 'development',
                     logging: process.env.NODE_ENV === 'development',
                 }),
                 inject: [config_1.ConfigService],
+            }),
+            bull_1.BullModule.forRootAsync({
+                imports: [config_1.ConfigModule],
+                useFactory: (configService) => ({
+                    redis: {
+                        host: configService.get('REDIS_HOST', 'localhost'),
+                        port: configService.get('REDIS_PORT', 6379),
+                        password: configService.get('REDIS_PASSWORD'),
+                    },
+                }),
+                inject: [config_1.ConfigService],
+            }),
+            cache_manager_1.CacheModule.registerAsync({
+                imports: [config_1.ConfigModule],
+                useFactory: (configService) => ({
+                    ttl: 300000,
+                    max: 100,
+                }),
+                inject: [config_1.ConfigService],
+                isGlobal: true,
             }),
             config_module_1.ConfigModule,
             auth_module_1.AuthModule,
@@ -57,6 +85,8 @@ exports.AppModule = AppModule = __decorate([
             logs_module_1.LogsModule,
             dashboard_module_1.DashboardModule,
             console_module_1.ConsoleModule,
+            docker_module_1.DockerModule,
+            websocket_module_1.WebSocketModule,
             seed_module_1.SeedModule,
         ],
     })

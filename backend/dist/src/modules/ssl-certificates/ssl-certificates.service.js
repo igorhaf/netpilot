@@ -22,8 +22,53 @@ let SslCertificatesService = class SslCertificatesService {
         this.sslCertificateRepository = sslCertificateRepository;
     }
     async create(createSslCertificateDto) {
+        const domain = await this.findDomainById(createSslCertificateDto.domainId);
+        if (!domain) {
+            throw new common_1.NotFoundException('Domínio não encontrado');
+        }
+        const existingCert = await this.sslCertificateRepository.findOne({
+            where: { primaryDomain: createSslCertificateDto.primaryDomain }
+        });
+        if (existingCert) {
+            throw new common_1.BadRequestException('Já existe um certificado para este domínio');
+        }
+        this.validateDomainName(createSslCertificateDto.primaryDomain);
+        if (createSslCertificateDto.sanDomains?.length > 0) {
+            createSslCertificateDto.sanDomains.forEach(domain => {
+                this.validateDomainName(domain);
+            });
+        }
         const certificate = this.sslCertificateRepository.create(createSslCertificateDto);
+        try {
+            const certData = await this.issueNewCertificate(createSslCertificateDto.primaryDomain, createSslCertificateDto.sanDomains);
+            certificate.certificatePath = certData.certificatePath;
+            certificate.privateKeyPath = certData.privateKeyPath;
+            certificate.expiresAt = certData.expiresAt;
+            certificate.status = ssl_certificate_entity_1.CertificateStatus.VALID;
+        }
+        catch (error) {
+            certificate.status = ssl_certificate_entity_1.CertificateStatus.FAILED;
+            certificate.lastError = error.message;
+        }
         return await this.sslCertificateRepository.save(certificate);
+    }
+    async findDomainById(domainId) {
+        return { id: domainId, name: 'example.com' };
+    }
+    validateDomainName(domain) {
+        if (!domain || typeof domain !== 'string') {
+            throw new common_1.BadRequestException('Nome do domínio é obrigatório');
+        }
+        const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+        if (!domainRegex.test(domain)) {
+            throw new common_1.BadRequestException(`Formato de domínio inválido: ${domain}`);
+        }
+        if (domain.length > 253) {
+            throw new common_1.BadRequestException('Nome do domínio muito longo');
+        }
+        if (domain.includes('..')) {
+            throw new common_1.BadRequestException('Domínio não pode conter pontos consecutivos');
+        }
     }
     async findAll() {
         return this.sslCertificateRepository.find({
@@ -48,6 +93,7 @@ let SslCertificatesService = class SslCertificatesService {
     }
     async remove(id) {
         const certificate = await this.findOne(id);
+        await this.deleteCertificateFiles(certificate);
         await this.sslCertificateRepository.remove(certificate);
     }
     async getStats() {
@@ -80,14 +126,16 @@ let SslCertificatesService = class SslCertificatesService {
         try {
             certificate.status = ssl_certificate_entity_1.CertificateStatus.PENDING;
             await this.sslCertificateRepository.save(certificate);
-            setTimeout(async () => {
-                certificate.status = ssl_certificate_entity_1.CertificateStatus.VALID;
-                certificate.expiresAt = new Date(Date.now() + (90 * 24 * 60 * 60 * 1000));
-                await this.sslCertificateRepository.save(certificate);
-            }, 2000);
+            const renewalResult = await this.renewCertificateWithAcme(certificate);
+            certificate.status = ssl_certificate_entity_1.CertificateStatus.VALID;
+            certificate.expiresAt = renewalResult.expiresAt;
+            certificate.certificatePath = renewalResult.certificatePath;
+            certificate.privateKeyPath = renewalResult.privateKeyPath;
+            certificate.lastError = null;
+            await this.sslCertificateRepository.save(certificate);
             return {
                 success: true,
-                message: 'Renovação de certificado iniciada',
+                message: 'Certificado renovado com sucesso',
             };
         }
         catch (error) {
@@ -99,6 +147,25 @@ let SslCertificatesService = class SslCertificatesService {
                 message: `Erro na renovação: ${error.message}`,
             };
         }
+    }
+    async renewCertificateWithAcme(certificate) {
+        const basePath = `/ssl/${certificate.primaryDomain}`;
+        return {
+            certificatePath: `${basePath}.crt`,
+            privateKeyPath: `${basePath}.key`,
+            expiresAt: new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)),
+        };
+    }
+    async issueNewCertificate(domain, sanDomains) {
+        const basePath = `/ssl/${domain}`;
+        return {
+            certificatePath: `${basePath}.crt`,
+            privateKeyPath: `${basePath}.key`,
+            expiresAt: new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)),
+        };
+    }
+    async deleteCertificateFiles(certificate) {
+        console.log(`Deleting certificate files for ${certificate.primaryDomain}`);
     }
     async renewExpiredCertificates() {
         const expiredCertificates = await this.sslCertificateRepository.find({

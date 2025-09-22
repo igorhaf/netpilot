@@ -33,6 +33,7 @@ let InitialSeedService = class InitialSeedService {
         this.logRepository = logRepository;
     }
     async seed() {
+        console.log('🌱 Iniciando seeding do banco de dados...');
         const existingUser = await this.userRepository.findOne({
             where: { email: 'admin@netpilot.local' },
         });
@@ -42,9 +43,13 @@ let InitialSeedService = class InitialSeedService {
                 email: 'admin@netpilot.local',
                 password: hashedPassword,
                 role: 'admin',
+                isActive: true,
             });
             await this.userRepository.save(adminUser);
             console.log('✅ Admin user created: admin@netpilot.local / admin123');
+        }
+        else {
+            console.log('ℹ️  Admin user already exists');
         }
         const existingDomain = await this.domainRepository.findOne({
             where: { name: 'netpilot.meadadigital.com' },
@@ -94,6 +99,9 @@ let InitialSeedService = class InitialSeedService {
             await this.sslCertificateRepository.save(sampleCertificate);
             console.log('✅ Sample domain and configurations created');
         }
+        else {
+            console.log('ℹ️  Sample domain already exists');
+        }
         const logCount = await this.logRepository.count();
         if (logCount === 0) {
             const sampleLogs = [
@@ -131,7 +139,10 @@ let InitialSeedService = class InitialSeedService {
             }
             console.log('✅ Sample logs created');
         }
-        console.log('🌱 Database seeding completed');
+        else {
+            console.log('ℹ️  Sample logs already exist');
+        }
+        console.log('🌱 Database seeding completed successfully!');
     }
 };
 exports.InitialSeedService = InitialSeedService;

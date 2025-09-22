@@ -34,61 +34,10 @@
           web
         ]
       
-      meadadigital-com-redirect: 
-        rule: Host(`meadadigital.com`)
+      api-netpilot-com-redirect: 
+        rule: Host(`api.netpilot.com`)
         middlewares: [
-          meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
-      framily-space: 
-        rule: Host(`framily.space`)
-        service: framily-space-service
-        middlewares: []
-        priority: 1
-        entryPoints: [
-          web
-        ]
-      
-      suinda-meadadigital-com: 
-        rule: Host(`suinda.meadadigital.com`)
-        service: suinda-meadadigital-com-service
-        middlewares: []
-        priority: 100
-        entryPoints: [
-          websecure
-        ]
-        tls: 
-          certResolver: letsencrypt
-        
-      
-      suinda-meadadigital-com-redirect: 
-        rule: Host(`suinda.meadadigital.com`)
-        middlewares: [
-          suinda-meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
-      bangalo-meadadigital-com: 
-        rule: Host(`bangalo.meadadigital.com`)
-        service: bangalo-meadadigital-com-service
-        middlewares: []
-        priority: 1
-        entryPoints: [
-          websecure
-        ]
-        tls: 
-          certResolver: letsencrypt
-        
-      
-      bangalo-meadadigital-com-redirect: 
-        rule: Host(`bangalo.meadadigital.com`)
-        middlewares: [
-          bangalo-meadadigital-com-redirect-https
+          api-netpilot-com-redirect-https
         ]
         entryPoints: [
           web
@@ -114,33 +63,6 @@
           ]
         
       
-      framily-space-service: 
-        loadBalancer: 
-          servers: [
-            
-              url: http://172.18.0.1:9292
-            
-          ]
-        
-      
-      suinda-meadadigital-com-service: 
-        loadBalancer: 
-          servers: [
-            
-              url: http://host.docker.internal:9874
-            
-          ]
-        
-      
-      bangalo-meadadigital-com-service: 
-        loadBalancer: 
-          servers: [
-            
-              url: http://host.docker.internal:9875
-            
-          ]
-        
-      
     
     middlewares: 
       netpilot-meadadigital-com-redirect-https: 
@@ -149,19 +71,7 @@
           permanent: true
         
       
-      meadadigital-com-redirect-https: 
-        redirectScheme: 
-          scheme: https
-          permanent: true
-        
-      
-      suinda-meadadigital-com-redirect-https: 
-        redirectScheme: 
-          scheme: https
-          permanent: true
-        
-      
-      bangalo-meadadigital-com-redirect-https: 
+      api-netpilot-com-redirect-https: 
         redirectScheme: 
           scheme: https
           permanent: true

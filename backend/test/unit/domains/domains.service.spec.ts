@@ -24,7 +24,7 @@ describe('DomainsService', () => {
     enableWwwRedirect: false,
     bindIp: '127.0.0.1',
     proxyRules: [],
-    redirects: [],
+    // redirects: [], // Temporarily disabled
     sslCertificates: [],
     createdAt: new Date(),
     updatedAt: new Date(),

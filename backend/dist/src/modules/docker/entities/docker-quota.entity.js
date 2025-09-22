@@ -1,0 +1,62 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DockerQuota = void 0;
+const typeorm_1 = require("typeorm");
+const user_entity_1 = require("../../../entities/user.entity");
+let DockerQuota = class DockerQuota {
+};
+exports.DockerQuota = DockerQuota;
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
+    __metadata("design:type", String)
+], DockerQuota.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => user_entity_1.User),
+    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
+    __metadata("design:type", user_entity_1.User)
+], DockerQuota.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', default: 10 }),
+    __metadata("design:type", Number)
+], DockerQuota.prototype, "max_containers", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', default: 5 }),
+    __metadata("design:type", Number)
+], DockerQuota.prototype, "max_volumes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', default: 3 }),
+    __metadata("design:type", Number)
+], DockerQuota.prototype, "max_networks", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'bigint', default: 5368709120 }),
+    __metadata("design:type", Number)
+], DockerQuota.prototype, "max_volume_size", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', default: 10 }),
+    __metadata("design:type", Number)
+], DockerQuota.prototype, "max_actions_per_minute", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', default: 1800 }),
+    __metadata("design:type", Number)
+], DockerQuota.prototype, "max_exec_timeout", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)(),
+    __metadata("design:type", Date)
+], DockerQuota.prototype, "created_at", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)(),
+    __metadata("design:type", Date)
+], DockerQuota.prototype, "updated_at", void 0);
+exports.DockerQuota = DockerQuota = __decorate([
+    (0, typeorm_1.Entity)('docker_quotas')
+], DockerQuota);
+//# sourceMappingURL=docker-quota.entity.js.map

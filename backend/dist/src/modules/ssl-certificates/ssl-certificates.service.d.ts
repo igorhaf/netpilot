@@ -5,6 +5,8 @@ export declare class SslCertificatesService {
     private sslCertificateRepository;
     constructor(sslCertificateRepository: Repository<SslCertificate>);
     create(createSslCertificateDto: CreateSslCertificateDto): Promise<SslCertificate>;
+    private findDomainById;
+    private validateDomainName;
     findAll(): Promise<SslCertificate[]>;
     findOne(id: string): Promise<SslCertificate>;
     update(id: string, updateSslCertificateDto: UpdateSslCertificateDto): Promise<SslCertificate>;
@@ -19,6 +21,9 @@ export declare class SslCertificatesService {
         success: boolean;
         message: string;
     }>;
+    private renewCertificateWithAcme;
+    private issueNewCertificate;
+    private deleteCertificateFiles;
     renewExpiredCertificates(): Promise<{
         success: boolean;
         renewed: number;

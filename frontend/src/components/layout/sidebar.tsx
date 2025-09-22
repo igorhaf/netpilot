@@ -11,7 +11,9 @@ import {
   FileText,
   LogOut,
   Settings,
-  Terminal
+  Terminal,
+  Container,
+  Clock
 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { cn } from '@/lib/utils'
@@ -41,6 +43,16 @@ const navigationItems = [
     name: 'Certificados SSL',
     href: '/ssl-certificates',
     icon: Shield
+  },
+  {
+    name: 'Docker',
+    href: '/docker',
+    icon: Container
+  },
+  {
+    name: 'Job Queues',
+    href: '/job-queues',
+    icon: Clock
   },
   {
     name: 'Logs',

@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { ProxyRule } from './proxy-rule.entity';
-import { Redirect } from './redirect.entity';
+// import { Redirect } from './redirect.entity'; // Temporarily disabled
 import { SslCertificate } from './ssl-certificate.entity';
 
 @Entity('domains')
@@ -42,8 +42,8 @@ export class Domain {
   @OneToMany(() => ProxyRule, (proxyRule) => proxyRule.domain)
   proxyRules: ProxyRule[];
 
-  @OneToMany(() => Redirect, (redirect) => redirect.domain)
-  redirects: Redirect[];
+  // @OneToMany(() => Redirect, (redirect) => redirect.domain) // Temporarily disabled
+  // redirects: Redirect[];
 
   @OneToMany(() => SslCertificate, (certificate) => certificate.domain)
   sslCertificates: SslCertificate[];

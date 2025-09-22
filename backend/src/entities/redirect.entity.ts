@@ -41,7 +41,7 @@ export class Redirect {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToOne(() => Domain, (domain) => domain.redirects, {
+  @ManyToOne(() => Domain, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'domainId' })
