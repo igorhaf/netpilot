@@ -1,0 +1,32 @@
+version: '3.8'
+
+# Override para desenvolvimento com inicialização automática do banco
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://netpilot:netpilot123@db:5432/netpilot
+    # Comando personalizado para aguardar o banco e executar seeds
+    command: >
+      sh -c "
+        echo '🔄 Aguardando banco de dados...' &&
+        sleep 15 &&
+        echo '🌱 Executando seeds se necessário...' &&
+        node dist/src/scripts/seed.js 2>/dev/null || echo 'ℹ️  Seeds já executados ou falha' &&
+        echo '🚀 Iniciando backend...' &&
+        node dist/src/main.js
+      "
+
+  db:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netpilot -d netpilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

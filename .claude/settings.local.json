@@ -26,7 +26,16 @@
       "Bash(ip route:*)",
       "Bash(awk:*)",
       "Bash(sudo:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(./scripts/test-suite.sh:*)",
+      "Bash(npm run test:unit:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(npm run lint)",
+      "Bash(grep:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []

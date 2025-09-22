@@ -27,6 +27,8 @@ export class InitialSeedService {
   ) {}
 
   async seed() {
+    console.log('🌱 Iniciando seeding do banco de dados...');
+
     // Create admin user
     const existingUser = await this.userRepository.findOne({
       where: { email: 'admin@netpilot.local' },
@@ -38,9 +40,12 @@ export class InitialSeedService {
         email: 'admin@netpilot.local',
         password: hashedPassword,
         role: 'admin',
+        isActive: true,
       });
       await this.userRepository.save(adminUser);
       console.log('✅ Admin user created: admin@netpilot.local / admin123');
+    } else {
+      console.log('ℹ️  Admin user already exists');
     }
 
     // Create sample domain
@@ -99,6 +104,8 @@ export class InitialSeedService {
       await this.sslCertificateRepository.save(sampleCertificate);
 
       console.log('✅ Sample domain and configurations created');
+    } else {
+      console.log('ℹ️  Sample domain already exists');
     }
 
     // Create sample logs
@@ -140,8 +147,10 @@ export class InitialSeedService {
       }
 
       console.log('✅ Sample logs created');
+    } else {
+      console.log('ℹ️  Sample logs already exist');
     }
 
-    console.log('🌱 Database seeding completed');
+    console.log('🌱 Database seeding completed successfully!');
   }
 }

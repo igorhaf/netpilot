@@ -75,6 +75,22 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
+  redis:
+    image: redis:7-alpine
+    container_name: netpilot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - netpilot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -90,14 +106,22 @@ services:
       - SSH_PORT=22
       - SSH_USER=root
       - SSH_PRIVATE_KEY_PATH=/app/ssh/id_rsa
+      - DOCKER_SOCKET_PATH=/var/run/docker.sock
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ./configs:/app/configs
       - ./scripts:/app/scripts
       - ./ssh:/app/ssh
+      - ./data/docker-backups:/app/data/docker-backups
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "3001:3001"
     networks:
       - netpilot-network
+    depends_on:
+      - db
+      - redis
     restart: unless-stopped
 
   frontend:
@@ -173,6 +197,7 @@ volumes:
   postgres_data:
   mysql_data:
   pgadmin_data:
+  redis_data:
   traefik_letsencrypt:
   nginx_logs:
 
