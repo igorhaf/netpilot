@@ -28,7 +28,7 @@ let ConfigGenerationService = class ConfigGenerationService {
     async generateNginxConfig() {
         const domains = await this.domainRepository.find({
             where: { isActive: true },
-            relations: ['proxyRules', 'redirects'],
+            relations: ['proxyRules'],
         });
         const nginxConfigPath = this.configService.nginxConfigPath;
         await fs.ensureDir(nginxConfigPath);
@@ -43,9 +43,7 @@ let ConfigGenerationService = class ConfigGenerationService {
         const activeProxyRules = domain.proxyRules
             ?.filter(rule => rule.isActive)
             .sort((a, b) => b.priority - a.priority) || [];
-        const activeRedirects = domain.redirects
-            ?.filter(redirect => redirect.isActive)
-            .sort((a, b) => b.priority - a.priority) || [];
+        const activeRedirects = [];
         let config = `# Generated configuration for ${domain.name}\n`;
         if (domain.forceHttps) {
             config += `
@@ -101,7 +99,7 @@ server {
     async generateTraefikConfig() {
         const domains = await this.domainRepository.find({
             where: { isActive: true },
-            relations: ['proxyRules', 'redirects'],
+            relations: ['proxyRules'],
         });
         const traefikConfigPath = this.configService.traefikConfigPath;
         await fs.ensureDir(traefikConfigPath);

@@ -75,6 +75,6 @@ __decorate([
 exports.DockerJob = DockerJob = __decorate([
     (0, typeorm_1.Entity)('docker_jobs'),
     (0, typeorm_1.Index)(['status', 'type']),
-    (0, typeorm_1.Index)(['user_id', 'created_at'])
+    (0, typeorm_1.Index)(['user', 'created_at'])
 ], DockerJob);
 //# sourceMappingURL=docker-job.entity.js.map

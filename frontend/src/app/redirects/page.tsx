@@ -30,11 +30,11 @@ export default function RedirectsPage() {
     mutationFn: (id: string) => api.delete(`/redirects/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['redirects'] })
-      toast.success('Redirect removido com sucesso!')
+      toast.success('Redirecionamento removido com sucesso!')
       setRedirectToDelete(null)
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao remover redirect')
+      toast.error(error.response?.data?.message || 'Erro ao remover redirecionamento')
     },
   })
 
@@ -74,7 +74,7 @@ export default function RedirectsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Redirects</h1>
+            <h1 className="text-3xl font-bold text-foreground">Redirecionamentos</h1>
             <p className="text-muted-foreground">
               Configure redirecionamentos para seus domínios
             </p>
@@ -84,7 +84,7 @@ export default function RedirectsPage() {
             className="btn-primary"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Novo Redirect
+            Novo Redirecionamento
           </button>
         </div>
 
@@ -93,7 +93,7 @@ export default function RedirectsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Pesquisar redirects..."
+            placeholder="Pesquisar redirecionamentos..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-10"
@@ -103,25 +103,25 @@ export default function RedirectsPage() {
         {/* Redirects List */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Redirects Configurados</h3>
+            <h3 className="card-title">Redirecionamentos Configurados</h3>
             <p className="card-description">
-              {filteredRedirects.length} redirect(s) encontrado(s)
+              {filteredRedirects.length} redirecionamento(s) encontrado(s)
             </p>
           </div>
           <div className="card-content">
             {filteredRedirects.length === 0 ? (
               <div className="text-center py-12">
                 <RotateCcw className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Nenhum redirect encontrado</h3>
+                <h3 className="text-lg font-medium mb-2">Nenhum redirecionamento encontrado</h3>
                 <p className="text-muted-foreground mb-4">
-                  Crie seu primeiro redirect para começar a gerenciar redirecionamentos.
+                  Crie seu primeiro redirecionamento para começar a gerenciar.
                 </p>
                 <button
                   onClick={handleCreateRedirect}
                   className="btn-primary"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Criar Redirect
+                  Criar Redirecionamento
                 </button>
               </div>
             ) : (
@@ -182,11 +182,11 @@ export default function RedirectsPage() {
           subtitle="Esta ação não pode ser desfeita."
           itemName={redirectToDelete ? `${redirectToDelete.sourcePattern} → ${redirectToDelete.targetUrl}` : ''}
           consequences={[
-            'Remover permanentemente o redirect',
+            'Remover permanentemente o redirecionamento',
             'Parar redirecionamento do padrão especificado',
             'Afetar tráfego direcionado para esta regra'
           ]}
-          confirmText="Excluir Redirect"
+          confirmText="Excluir Redirecionamento"
           isLoading={deleteMutation.isPending}
         />
       </div>

@@ -39,7 +39,6 @@ let DomainsService = class DomainsService {
     async findAll(search, status, autoTls) {
         const query = this.domainRepository.createQueryBuilder('domain')
             .leftJoinAndSelect('domain.proxyRules', 'proxyRules')
-            .leftJoinAndSelect('domain.redirects', 'redirects')
             .leftJoinAndSelect('domain.sslCertificates', 'sslCertificates');
         if (search) {
             query.where('domain.name ILIKE :search OR domain.description ILIKE :search', {
@@ -61,7 +60,7 @@ let DomainsService = class DomainsService {
     async findOne(id) {
         const domain = await this.domainRepository.findOne({
             where: { id },
-            relations: ['proxyRules', 'redirects', 'sslCertificates'],
+            relations: ['proxyRules', 'sslCertificates'],
         });
         if (!domain) {
             throw new common_1.NotFoundException('Domínio não encontrado');

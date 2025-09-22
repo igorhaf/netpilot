@@ -15,7 +15,7 @@ import { DockerRbacGuard, RequireDockerPermission, DockerPermission } from '../g
 
 @ApiTags('Docker Jobs')
 @ApiBearerAuth()
-@Controller('docker/jobs')
+@Controller('api/docker/jobs')
 @UseGuards(JwtAuthGuard, DockerRbacGuard)
 export class JobsController {
   constructor(private jobsService: JobsService) {}

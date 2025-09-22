@@ -209,7 +209,7 @@ __decorate([
 exports.ContainersController = ContainersController = __decorate([
     (0, swagger_1.ApiTags)('Docker Containers'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('docker/containers'),
+    (0, common_1.Controller)('api/docker/containers'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, docker_quota_guard_1.DockerQuotaGuard),
     __metadata("design:paramtypes", [containers_service_1.ContainersService])
 ], ContainersController);

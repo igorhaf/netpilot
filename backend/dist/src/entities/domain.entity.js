@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Domain = void 0;
 const typeorm_1 = require("typeorm");
 const proxy_rule_entity_1 = require("./proxy-rule.entity");
-const redirect_entity_1 = require("./redirect.entity");
 const ssl_certificate_entity_1 = require("./ssl-certificate.entity");
 let Domain = class Domain {
 };
@@ -57,10 +56,6 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => proxy_rule_entity_1.ProxyRule, (proxyRule) => proxyRule.domain),
     __metadata("design:type", Array)
 ], Domain.prototype, "proxyRules", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => redirect_entity_1.Redirect, (redirect) => redirect.domain),
-    __metadata("design:type", Array)
-], Domain.prototype, "redirects", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => ssl_certificate_entity_1.SslCertificate, (certificate) => certificate.domain),
     __metadata("design:type", Array)

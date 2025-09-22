@@ -23,7 +23,7 @@ import { VolumeBackupDto } from '../dto/volumes/volume-backup.dto';
 
 @ApiTags('Docker Volumes')
 @ApiBearerAuth()
-@Controller('docker/volumes')
+@Controller('api/docker/volumes')
 @UseGuards(JwtAuthGuard, DockerQuotaGuard, DockerRbacGuard)
 export class VolumesController {
   constructor(private volumesService: VolumesService) {}

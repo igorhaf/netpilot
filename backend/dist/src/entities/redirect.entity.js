@@ -53,7 +53,7 @@ __decorate([
     __metadata("design:type", String)
 ], Redirect.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => domain_entity_1.Domain, (domain) => domain.redirects, {
+    (0, typeorm_1.ManyToOne)(() => domain_entity_1.Domain, {
         onDelete: 'CASCADE',
     }),
     (0, typeorm_1.JoinColumn)({ name: 'domainId' }),

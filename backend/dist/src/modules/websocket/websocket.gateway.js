@@ -20,21 +20,18 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const websocket_service_1 = require("./services/websocket.service");
 const ssh_websocket_handler_1 = require("./handlers/ssh-websocket.handler");
-const docker_websocket_handler_1 = require("./handlers/docker-websocket.handler");
 const websocket_rate_limit_guard_1 = require("./guards/websocket-rate-limit.guard");
 let WebSocketGateway = WebSocketGateway_1 = class WebSocketGateway {
-    constructor(jwtService, webSocketService, sshHandler, dockerHandler) {
+    constructor(jwtService, webSocketService, sshHandler) {
         this.jwtService = jwtService;
         this.webSocketService = webSocketService;
         this.sshHandler = sshHandler;
-        this.dockerHandler = dockerHandler;
         this.logger = new common_1.Logger(WebSocketGateway_1.name);
     }
     afterInit(server) {
         this.logger.log('Unified WebSocket Gateway initialized');
         this.webSocketService.setServer(server);
         this.sshHandler.setServer(server);
-        this.dockerHandler.setServer(server);
     }
     async handleConnection(client) {
         try {
@@ -87,30 +84,6 @@ let WebSocketGateway = WebSocketGateway_1 = class WebSocketGateway {
     }
     handleSshLeave(client, data) {
         return this.sshHandler.handleLeave(client, data);
-    }
-    async handleDockerLogsStart(client, data) {
-        return this.dockerHandler.handleLogsStart(client, data);
-    }
-    async handleDockerLogsStop(client, data) {
-        return this.dockerHandler.handleLogsStop(client, data);
-    }
-    async handleDockerStatsStart(client, data) {
-        return this.dockerHandler.handleStatsStart(client, data);
-    }
-    async handleDockerStatsStop(client, data) {
-        return this.dockerHandler.handleStatsStop(client, data);
-    }
-    async handleDockerExecStart(client, data) {
-        return this.dockerHandler.handleExecStart(client, data);
-    }
-    async handleDockerExecInput(client, data) {
-        return this.dockerHandler.handleExecInput(client, data);
-    }
-    async handleDockerExecResize(client, data) {
-        return this.dockerHandler.handleExecResize(client, data);
-    }
-    async handleDockerExecStop(client, data) {
-        return this.dockerHandler.handleExecStop(client, data);
     }
     handlePing(client) {
         client.emit('pong', { timestamp: new Date() });
@@ -200,74 +173,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WebSocketGateway.prototype, "handleSshLeave", null);
 __decorate([
-    (0, common_1.UseGuards)(websocket_rate_limit_guard_1.WebSocketRateLimitGuard),
-    (0, websocket_rate_limit_guard_1.ModerateRateLimit)(),
-    (0, websockets_1.SubscribeMessage)('docker:logs:start'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerLogsStart", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('docker:logs:stop'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerLogsStop", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('docker:stats:start'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerStatsStart", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('docker:stats:stop'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerStatsStop", null);
-__decorate([
-    (0, common_1.UseGuards)(websocket_rate_limit_guard_1.WebSocketRateLimitGuard),
-    (0, websocket_rate_limit_guard_1.ConnectionRateLimit)(),
-    (0, websockets_1.SubscribeMessage)('docker:exec:start'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerExecStart", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('docker:exec:input'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerExecInput", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('docker:exec:resize'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerExecResize", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('docker:exec:stop'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], WebSocketGateway.prototype, "handleDockerExecStop", null);
-__decorate([
     (0, websockets_1.SubscribeMessage)('ping'),
     __param(0, (0, websockets_1.ConnectedSocket)()),
     __metadata("design:type", Function),
@@ -319,7 +224,6 @@ exports.WebSocketGateway = WebSocketGateway = WebSocketGateway_1 = __decorate([
     }),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         websocket_service_1.WebSocketService,
-        ssh_websocket_handler_1.SshWebSocketHandler,
-        docker_websocket_handler_1.DockerWebSocketHandler])
+        ssh_websocket_handler_1.SshWebSocketHandler])
 ], WebSocketGateway);
 //# sourceMappingURL=websocket.gateway.js.map

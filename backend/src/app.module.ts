@@ -11,7 +11,7 @@ import { SslCertificatesModule } from './modules/ssl-certificates/ssl-certificat
 import { LogsModule } from './modules/logs/logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ConsoleModule } from './modules/console/console.module';
-// import { DockerModule } from './modules/docker/docker.module'; // Temporarily disabled
+// Docker module imports removed due to initialization issues
 import { WebSocketModule } from './modules/websocket/websocket.module';
 import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
@@ -23,10 +23,7 @@ import { SslCertificate } from './entities/ssl-certificate.entity';
 import { Log } from './entities/log.entity';
 import { SshSession } from './entities/ssh-session.entity';
 import { ConsoleLog } from './entities/console-log.entity';
-// import { DockerJob } from './modules/docker/entities/docker-job.entity'; // Temporarily disabled
-// import { DockerBackup } from './modules/docker/entities/docker-backup.entity';
-// import { DockerEvent } from './modules/docker/entities/docker-event.entity';
-// import { DockerQuota } from './modules/docker/entities/docker-quota.entity';
+// Docker entities removed temporarily due to module issues
 
 @Module({
   imports: [
@@ -38,7 +35,7 @@ import { ConsoleLog } from './entities/console-log.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog], // Docker and Redirect entities temporarily disabled
+        entities: [User, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog],
         synchronize: false, // Temporarily disabled to avoid migration issues
         logging: process.env.NODE_ENV === 'development',
       }),
@@ -73,9 +70,10 @@ import { ConsoleLog } from './entities/console-log.entity';
     LogsModule,
     DashboardModule,
     ConsoleModule,
-    // DockerModule, // Temporarily disabled
+    // DockerModule temporarily disabled due to initialization issues
     WebSocketModule,
     SeedModule,
   ],
+  // No custom controllers in AppModule
 })
 export class AppModule { }

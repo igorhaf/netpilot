@@ -44,11 +44,11 @@ export default function NewRedirectPage() {
     mutationFn: (data: CreateRedirectData) => api.post('/redirects', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['redirects'] })
-      toast.success('Redirect criado com sucesso!')
+      toast.success('Redirecionamento criado com sucesso!')
       router.push('/redirects')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao criar redirect')
+      toast.error(error.response?.data?.message || 'Erro ao criar redirecionamento')
     },
   })
 
@@ -94,7 +94,7 @@ export default function NewRedirectPage() {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-foreground">
-                Novo Redirect
+                Novo Redirecionamento
               </h1>
               <p className="text-muted-foreground">
                 Configure um novo redirecionamento para direcionar tráfego entre URLs
@@ -134,7 +134,7 @@ export default function NewRedirectPage() {
                     ))}
                   </select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Domínio onde o redirect será aplicado
+                    Domínio onde o redirecionamento será aplicado
                   </p>
                 </div>
 
@@ -167,12 +167,12 @@ export default function NewRedirectPage() {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descrição opcional do redirect..."
+                  placeholder="Descrição opcional do redirecionamento..."
                   rows={3}
                   className="input w-full resize-none"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Descrição opcional para identificar o redirect
+                  Descrição opcional para identificar o redirecionamento
                 </p>
               </div>
             </div>
@@ -227,7 +227,7 @@ export default function NewRedirectPage() {
 
                 <div>
                   <label htmlFor="type" className="block text-sm font-medium text-foreground mb-2">
-                    Tipo de Redirect <span className="text-red-500">*</span>
+                    Tipo de Redirecionamento <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="type"
@@ -268,10 +268,10 @@ export default function NewRedirectPage() {
                   />
                   <div>
                     <span className="text-sm font-medium text-foreground">
-                      Ativar Redirect
+                      Ativar Redirecionamento
                     </span>
                     <p className="text-sm text-muted-foreground">
-                      O redirect ficará ativo imediatamente após a criação
+                      O redirecionamento ficará ativo imediatamente após a criação
                     </p>
                   </div>
                 </label>
@@ -293,7 +293,7 @@ export default function NewRedirectPage() {
               disabled={createRedirectMutation.isPending}
               className="btn-primary"
             >
-              {createRedirectMutation.isPending ? 'Criando...' : 'Criar Redirect'}
+              {createRedirectMutation.isPending ? 'Criando...' : 'Criar Redirecionamento'}
             </button>
           </div>
         </form>

@@ -14,6 +14,7 @@ import { VolumesController } from './controllers/volumes.controller';
 import { NetworksController } from './controllers/networks.controller';
 import { ImagesController } from './controllers/images.controller';
 import { JobsController } from './controllers/jobs.controller';
+import { TestController } from './controllers/test.controller';
 
 // Services
 import { DockerService } from './services/docker.service';
@@ -43,6 +44,7 @@ import { DockerRbacGuard } from './guards/docker-rbac.guard';
     }),
   ],
   controllers: [
+    TestController,
     ContainersController,
     VolumesController,
     NetworksController,

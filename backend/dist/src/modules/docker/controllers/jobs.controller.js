@@ -73,7 +73,7 @@ __decorate([
 exports.JobsController = JobsController = __decorate([
     (0, swagger_1.ApiTags)('Docker Jobs'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.Controller)('docker/jobs'),
+    (0, common_1.Controller)('api/docker/jobs'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, docker_rbac_guard_1.DockerRbacGuard),
     __metadata("design:paramtypes", [jobs_service_1.JobsService])
 ], JobsController);
