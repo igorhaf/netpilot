@@ -37,6 +37,9 @@ let ProxyRulesController = class ProxyRulesController {
     update(id, updateProxyRuleDto) {
         return this.proxyRulesService.update(id, updateProxyRuleDto);
     }
+    toggleLock(id) {
+        return this.proxyRulesService.toggleLock(id);
+    }
     remove(id) {
         return this.proxyRulesService.remove(id);
     }
@@ -85,6 +88,14 @@ __decorate([
     __metadata("design:paramtypes", [String, proxy_rule_dto_1.UpdateProxyRuleDto]),
     __metadata("design:returntype", void 0)
 ], ProxyRulesController.prototype, "update", null);
+__decorate([
+    (0, common_1.Patch)(':id/toggle-lock'),
+    (0, swagger_1.ApiOperation)({ summary: 'Travar/destravar regra de proxy' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProxyRulesController.prototype, "toggleLock", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Remover regra de proxy' }),

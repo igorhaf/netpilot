@@ -29,6 +29,9 @@ export class ProxyRule {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isLocked: boolean;
+
   @Column({ default: true })
   maintainQueryStrings: boolean;
 

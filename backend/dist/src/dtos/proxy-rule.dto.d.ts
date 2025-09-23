@@ -4,6 +4,7 @@ export declare class CreateProxyRuleDto {
     targetUrl: string;
     priority: number;
     isActive?: boolean;
+    isLocked?: boolean;
     maintainQueryStrings?: boolean;
     description?: string;
     domainId: string;

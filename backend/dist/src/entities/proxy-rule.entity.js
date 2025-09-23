@@ -40,6 +40,10 @@ __decorate([
     __metadata("design:type", Boolean)
 ], ProxyRule.prototype, "isActive", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], ProxyRule.prototype, "isLocked", void 0);
+__decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], ProxyRule.prototype, "maintainQueryStrings", void 0);

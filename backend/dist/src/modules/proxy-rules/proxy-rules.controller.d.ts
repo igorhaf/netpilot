@@ -11,5 +11,6 @@ export declare class ProxyRulesController {
     }>;
     findOne(id: string): Promise<import("../../entities/proxy-rule.entity").ProxyRule>;
     update(id: string, updateProxyRuleDto: UpdateProxyRuleDto): Promise<import("../../entities/proxy-rule.entity").ProxyRule>;
+    toggleLock(id: string): Promise<import("../../entities/proxy-rule.entity").ProxyRule>;
     remove(id: string): Promise<void>;
 }

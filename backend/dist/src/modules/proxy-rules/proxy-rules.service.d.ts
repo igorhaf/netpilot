@@ -10,6 +10,7 @@ export declare class ProxyRulesService {
     findAll(search?: string, status?: string): Promise<ProxyRule[]>;
     findOne(id: string): Promise<ProxyRule>;
     update(id: string, updateProxyRuleDto: UpdateProxyRuleDto): Promise<ProxyRule>;
+    toggleLock(id: string): Promise<ProxyRule>;
     remove(id: string): Promise<void>;
     applyConfiguration(): Promise<{
         success: boolean;

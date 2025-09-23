@@ -6,6 +6,7 @@ export declare class ProxyRule {
     targetUrl: string;
     priority: number;
     isActive: boolean;
+    isLocked: boolean;
     maintainQueryStrings: boolean;
     description: string;
     domain: Domain;

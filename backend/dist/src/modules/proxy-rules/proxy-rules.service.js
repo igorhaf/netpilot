@@ -57,14 +57,26 @@ let ProxyRulesService = class ProxyRulesService {
     }
     async update(id, updateProxyRuleDto) {
         const proxyRule = await this.findOne(id);
+        if (proxyRule.isLocked && !updateProxyRuleDto.hasOwnProperty('isLocked')) {
+            throw new common_1.BadRequestException('Esta regra de proxy está travada e não pode ser editada. Destravar primeiro.');
+        }
         Object.assign(proxyRule, updateProxyRuleDto);
         await this.proxyRuleRepository.save(proxyRule);
         await this.configGenerationService.generateNginxConfig();
         await this.configGenerationService.generateTraefikConfig();
         return this.findOne(id);
     }
+    async toggleLock(id) {
+        const proxyRule = await this.findOne(id);
+        proxyRule.isLocked = !proxyRule.isLocked;
+        await this.proxyRuleRepository.save(proxyRule);
+        return this.findOne(id);
+    }
     async remove(id) {
         const proxyRule = await this.findOne(id);
+        if (proxyRule.isLocked) {
+            throw new common_1.BadRequestException('Esta regra de proxy está travada e não pode ser excluída. Destravar primeiro.');
+        }
         await this.proxyRuleRepository.remove(proxyRule);
         await this.configGenerationService.generateNginxConfig();
         await this.configGenerationService.generateTraefikConfig();

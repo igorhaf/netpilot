@@ -24,6 +24,11 @@ export class CreateProxyRuleDto {
   @IsBoolean()
   isActive?: boolean;
 
+  @ApiProperty({ example: false, required: false, description: 'Trava edição para evitar alterações acidentais' })
+  @IsOptional()
+  @IsBoolean()
+  isLocked?: boolean;
+
   @ApiProperty({ example: true, required: false })
   @IsOptional()
   @IsBoolean()
