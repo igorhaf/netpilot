@@ -43,6 +43,12 @@ __decorate([
     __metadata("design:type", Boolean)
 ], CreateProxyRuleDto.prototype, "isActive", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: false, required: false, description: 'Trava edição para evitar alterações acidentais' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateProxyRuleDto.prototype, "isLocked", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ example: true, required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),

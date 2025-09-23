@@ -32,6 +32,7 @@ export interface ProxyRule {
   targetUrl: string
   priority: number
   isActive: boolean
+  isLocked: boolean
   maintainQueryStrings: boolean
   description?: string
   domain: Domain
@@ -140,6 +141,7 @@ export interface CreateProxyRuleDto {
   targetUrl: string
   priority: number
   isActive?: boolean
+  isLocked?: boolean
   maintainQueryStrings?: boolean
   description?: string
   domainId: string

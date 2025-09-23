@@ -56,6 +56,12 @@ export class ProxyRulesController {
     return this.proxyRulesService.update(id, updateProxyRuleDto);
   }
 
+  @Patch(':id/toggle-lock')
+  @ApiOperation({ summary: 'Travar/destravar regra de proxy' })
+  toggleLock(@Param('id') id: string) {
+    return this.proxyRulesService.toggleLock(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Remover regra de proxy' })
   remove(@Param('id') id: string) {

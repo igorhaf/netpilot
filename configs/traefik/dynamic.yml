@@ -34,6 +34,18 @@
           web
         ]
       
+      deit-meadadigital-com-: 
+        rule: Host(`deit.meadadigital.com`) && PathPrefix(``)
+        service: deit-meadadigital-com--service
+        middlewares: []
+        priority: 1
+        entryPoints: [
+          websecure
+        ]
+        tls: 
+          certResolver: letsencrypt
+        
+      
       deit-meadadigital-com-redirect: 
         rule: Host(`deit.meadadigital.com`)
         middlewares: [
@@ -68,6 +80,15 @@
           servers: [
             
               url: http://frontend:3000
+            
+          ]
+        
+      
+      deit-meadadigital-com--service: 
+        loadBalancer: 
+          servers: [
+            
+              url: http://deit_deit-frontend_1:3008
             
           ]
         
