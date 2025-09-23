@@ -34,19 +34,7 @@
           web
         ]
       
-      deit-meadadigital-com:
-        rule: Host(`deit.meadadigital.com`)
-        service: deit-meadadigital-com-service
-        middlewares: []
-        priority: 1
-        entryPoints: [
-          websecure
-        ]
-        tls:
-          certResolver: letsencrypt
-
-
-      deit-meadadigital-com-redirect:
+      deit-meadadigital-com-redirect: 
         rule: Host(`deit.meadadigital.com`)
         middlewares: [
           deit-meadadigital-com-redirect-https
@@ -75,24 +63,15 @@
           ]
         
       
-      netpilot-meadadigital-com-service:
-        loadBalancer:
+      netpilot-meadadigital-com-service: 
+        loadBalancer: 
           servers: [
-
+            
               url: http://frontend:3000
-
+            
           ]
-
-
-      deit-meadadigital-com-service:
-        loadBalancer:
-          servers: [
-
-              url: http://frontend:3000
-
-          ]
-
-
+        
+      
     
     middlewares: 
       netpilot-meadadigital-com-redirect-https: 
