@@ -66,12 +66,31 @@ const navigationItems = [
   }
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean
+  onClose: () => void
+  isMobile: boolean
+}
+
+export function Sidebar({ isOpen, onClose, isMobile }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuthStore()
 
+  // No desktop, sempre mostra. No mobile, usa o estado isOpen
+  const sidebarClasses = isMobile
+    ? `fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col bg-sidebar border-r border-border transform transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`
+    : 'flex h-full w-64 flex-col bg-sidebar border-r border-border'
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="flex h-full w-64 flex-col bg-sidebar border-r border-border">
+    <div className={sidebarClasses}>
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b border-border">
         <div className="flex items-center gap-2">
@@ -92,6 +111,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={handleLinkClick}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
@@ -127,6 +147,7 @@ export function Sidebar() {
         <div className="mt-2 space-y-1">
           <Link
             href="/settings"
+            onClick={handleLinkClick}
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             <Settings className="h-4 w-4" />

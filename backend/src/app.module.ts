@@ -36,7 +36,7 @@ import { ConsoleLog } from './entities/console-log.entity';
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
         entities: [User, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog],
-        synchronize: false, // Temporarily disabled to avoid migration issues
+        synchronize: true, // Temporarily enabled to recognize new isLocked column
         logging: process.env.NODE_ENV === 'development',
       }),
       inject: [ConfigService],
