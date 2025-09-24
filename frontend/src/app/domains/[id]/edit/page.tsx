@@ -3,12 +3,21 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Server, Shield, Globe, Lock } from 'lucide-react'
+import { ArrowLeft, Server, Shield, Globe, Lock, Container, Eye, Play, Square, RotateCcw, Terminal, FileText, Activity, Trash2, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { api } from '@/lib/api'
 import { useRequireAuth } from '@/hooks/useAuth'
+import { DockerApiService, DockerContainer } from '@/lib/docker-api'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import Link from 'next/link'
 
 interface UpdateDomainData {
   name: string
@@ -44,6 +53,44 @@ export default function EditDomainPage() {
     queryFn: () => api.get(`/domains/${domainId}`).then(res => res.data),
     enabled: !!domainId,
   })
+
+  const { data: containersResponse, isLoading: containersLoading } = useQuery({
+    queryKey: ['docker', 'containers'],
+    queryFn: () => DockerApiService.listContainers(),
+    refetchInterval: 10000 // Refresh a cada 10s
+  })
+
+  const containerActionMutation = useMutation({
+    mutationFn: async ({ id, action }: { id: string; action: string }) => {
+      switch (action) {
+        case 'start':
+          return await DockerApiService.startContainer(id);
+        case 'stop':
+          return await DockerApiService.stopContainer(id);
+        case 'restart':
+          return await DockerApiService.restartContainer(id);
+        case 'remove':
+          return await DockerApiService.removeContainer(id);
+        default:
+          throw new Error(`Ação não suportada: ${action}`);
+      }
+    },
+    onSuccess: (result, { action }) => {
+      if (result.success) {
+        toast.success(result.message || `Container ${action} executado com sucesso`);
+      } else {
+        toast.error(result.message || 'Erro ao executar ação');
+      }
+      queryClient.invalidateQueries({ queryKey: ['docker', 'containers'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Falha ao executar ação');
+    }
+  })
+
+  const handleContainerAction = (containerId: string, action: string) => {
+    containerActionMutation.mutate({ id: containerId, action });
+  }
 
   useEffect(() => {
     if (domain) {
@@ -146,202 +193,385 @@ export default function EditDomainPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Informações Básicas */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Server className="h-5 w-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Informações Básicas
-                </h2>
+                <span>Informações Básicas</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">
+                  Nome do Domínio <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="exemplo.com"
+                  required
+                />
+                <p className="text-sm text-muted-foreground">
+                  Nome do domínio (ex: exemplo.com, www.exemplo.com)
+                </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
-                    Nome do Domínio <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="exemplo.com"
-                    className="input w-full"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Nome do domínio (ex: exemplo.com, www.exemplo.com)
-                  </p>
-                </div>
-
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
-                    Descrição
-                  </label>
-                  <textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Descrição do domínio e sua finalidade..."
-                    rows={3}
-                    className="input w-full resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Descrição opcional para identificar o domínio
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Descrição do domínio e sua finalidade..."
+                  rows={3}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Descrição opcional para identificar o domínio
+                </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Configurações de Ativação */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Globe className="h-5 w-5 text-green-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações de Ativação
-                </h2>
+                <span>Configurações de Ativação</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="isActive"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Ativar Domínio
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Quando ativo, o domínio ficará disponível para receber tráfego e configurar redirects
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="isActive"
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Ativar Domínio
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Quando ativo, o domínio ficará disponível para receber tráfego e configurar redirects
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="autoTls"
-                    type="checkbox"
-                    checked={formData.autoTls}
-                    onChange={(e) => setFormData({ ...formData, autoTls: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      SSL Automático (Let&apos;s Encrypt)
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Gerar e renovar automaticamente certificados SSL gratuitos via Let&apos;s Encrypt
-                    </p>
-                  </div>
-                </label>
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="autoTls"
+                  checked={formData.autoTls}
+                  onCheckedChange={(checked) => setFormData({ ...formData, autoTls: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="autoTls"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    SSL Automático (Let&apos;s Encrypt)
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Gerar e renovar automaticamente certificados SSL gratuitos via Let&apos;s Encrypt
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Configurações de Segurança */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Shield className="h-5 w-5 text-red-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações de Segurança
-                </h2>
+                <span>Configurações de Segurança</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="forceHttps"
+                  checked={formData.forceHttps}
+                  onCheckedChange={(checked) => setFormData({ ...formData, forceHttps: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="forceHttps"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Forçar HTTPS (Redirecionamento HTTP → HTTPS)
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Redireciona automaticamente todo tráfego HTTP para HTTPS (recomendado)
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="forceHttps"
-                    type="checkbox"
-                    checked={formData.forceHttps}
-                    onChange={(e) => setFormData({ ...formData, forceHttps: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Forçar HTTPS (Redirecionamento HTTP → HTTPS)
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Redireciona automaticamente todo tráfego HTTP para HTTPS (recomendado)
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="blockExternalAccess"
-                    type="checkbox"
-                    checked={formData.blockExternalAccess}
-                    onChange={(e) => setFormData({ ...formData, blockExternalAccess: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Bloquear Acesso Externo Direto
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Impede acesso direto às portas da aplicação (ex: meadadigital.com:8484) de IPs externos
-                    </p>
-                  </div>
-                </label>
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="blockExternalAccess"
+                  checked={formData.blockExternalAccess}
+                  onCheckedChange={(checked) => setFormData({ ...formData, blockExternalAccess: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="blockExternalAccess"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Bloquear Acesso Externo Direto
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Impede acesso direto às portas da aplicação (ex: meadadigital.com:8484) de IPs externos
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Redirecionamento WWW */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Lock className="h-5 w-5 text-purple-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Redirecionamento WWW
-                </h2>
+                <span>Redirecionamento WWW</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="enableWwwRedirect"
+                  checked={formData.enableWwwRedirect}
+                  onCheckedChange={(checked) => setFormData({ ...formData, enableWwwRedirect: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="enableWwwRedirect"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Ativar Redirecionamento WWW
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Redireciona entre www.dominio.com e dominio.com
+                  </p>
+                </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="space-y-4">
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="enableWwwRedirect"
-                    type="checkbox"
-                    checked={formData.enableWwwRedirect}
-                    onChange={(e) => setFormData({ ...formData, enableWwwRedirect: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Ativar Redirecionamento WWW
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Redireciona entre www.dominio.com e dominio.com
-                    </p>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
+          {/* Containers Atrelados */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Container className="h-5 w-5 text-blue-500" />
+                <span>Containers Atrelados ao Domínio</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {containersLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Imagem</TableHead>
+                        <TableHead>Portas</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {containersResponse?.data?.map((container: DockerContainer) => (
+                        <TableRow key={container.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-2 h-2 rounded-full ${
+                                container.state === 'running'
+                                  ? 'bg-green-500'
+                                  : container.state === 'exited'
+                                    ? 'bg-red-500'
+                                    : 'bg-yellow-500'
+                              }`}></div>
+                              <Link
+                                href={`/docker/containers/${container.id}`}
+                                className="font-medium hover:underline"
+                              >
+                                <span
+                                  className="max-w-[120px] truncate inline-block"
+                                  title={container.names?.[0]?.replace(/^\//, '') || container.id}
+                                >
+                                  {container.names?.[0]?.replace(/^\//, '') || container.id.substring(0, 12)}
+                                </span>
+                              </Link>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {container.image.length > 30
+                                ? container.image.substring(0, 30) + '...'
+                                : container.image
+                              }
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {container.ports?.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {container.ports.slice(0, 2).map((port: any, idx: number) => (
+                                  <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
+                                    {port.PublicPort ? `${port.PublicPort}:` : ''}{port.PrivatePort}
+                                  </span>
+                                ))}
+                                {container.ports.length > 2 && (
+                                  <span className="text-xs bg-muted px-2 py-1 rounded">
+                                    +{container.ports.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Link href={`/docker/containers/${container.id}`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title="Ver detalhes"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+
+                              <Link href={`/docker/images`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title={`Ver imagem: ${container.image}`}
+                                >
+                                  <ImageIcon className="h-4 w-4" />
+                                </Button>
+                              </Link>
+
+                              {container.state === 'running' ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleContainerAction(container.id, 'stop')}
+                                  disabled={containerActionMutation.isPending}
+                                  title="Parar"
+                                >
+                                  <Square className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleContainerAction(container.id, 'start')}
+                                  disabled={containerActionMutation.isPending}
+                                  title="Iniciar"
+                                >
+                                  <Play className="h-4 w-4" />
+                                </Button>
+                              )}
+
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleContainerAction(container.id, 'restart')}
+                                disabled={containerActionMutation.isPending}
+                                title="Reiniciar"
+                              >
+                                <RotateCcw className="h-4 w-4" />
+                              </Button>
+
+                              <Link href={`/docker/containers/${container.id}/logs`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title="Ver logs"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </Button>
+                              </Link>
+
+                              {container.state === 'running' && (
+                                <>
+                                  <Link href={`/docker/containers/${container.id}/terminal`}>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      title="Terminal"
+                                    >
+                                      <Terminal className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+
+                                  <Link href={`/docker/containers/${container.id}/stats`}>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      title="Estatísticas"
+                                    >
+                                      <Activity className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                </>
+                              )}
+
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleContainerAction(container.id, 'remove')}
+                                disabled={containerActionMutation.isPending}
+                                className="text-red-600 hover:text-red-700"
+                                title="Remover"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {(containersResponse?.data?.length || 0) === 0 && (
+                    <div className="text-center py-8">
+                      <Container className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h3 className="text-lg font-medium mb-2">Nenhum container encontrado</h3>
+                      <p className="text-muted-foreground">
+                        Containers ativos aparecerão aqui quando estiverem rodando.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Botões de Ação */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-border">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleBack}
-              className="btn-secondary"
             >
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={updateDomainMutation.isPending}
-              className="btn-primary"
             >
               {updateDomainMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

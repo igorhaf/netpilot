@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Search, Globe, CheckCircle, XCircle, Settings, Trash2 } from 'lucide-react'
+import { Plus, Search, Globe, CheckCircle, XCircle, Settings, Trash2, Eye, Play, Square, RotateCcw, Shield, Network } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
@@ -38,6 +38,18 @@ export default function DomainsPage() {
     },
   })
 
+  const toggleDomainMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      api.patch(`/domains/${id}`, { isActive: !isActive }),
+    onSuccess: (_, { isActive }) => {
+      queryClient.invalidateQueries({ queryKey: ['domains'] })
+      toast.success(`Domínio ${!isActive ? 'ativado' : 'desativado'} com sucesso!`)
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao alterar status do domínio')
+    },
+  })
+
   if (!auth) return null
 
   if (isLoading) {
@@ -58,6 +70,26 @@ export default function DomainsPage() {
 
   const handleDeleteDomain = (domain: Domain) => {
     setDomainToDelete(domain)
+  }
+
+  const handleToggleDomain = (domain: Domain) => {
+    toggleDomainMutation.mutate({ id: domain.id, isActive: domain.isActive })
+  }
+
+  const handleViewDomain = (domainId: string) => {
+    router.push(`/domains/${domainId}`)
+  }
+
+  const handleProxyRules = (domainId: string) => {
+    router.push(`/domains/${domainId}/proxy-rules`)
+  }
+
+  const handleRedirects = (domainId: string) => {
+    router.push(`/domains/${domainId}/redirects`)
+  }
+
+  const handleSSLCertificates = (domainId: string) => {
+    router.push(`/domains/${domainId}/ssl-certificates`)
   }
 
   const confirmDeleteDomain = () => {
@@ -146,7 +178,44 @@ export default function DomainsPage() {
                           {formatDate(domain.createdAt)}
                         </td>
                         <td className="py-3 px-6">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleViewDomain(domain.id)}
+                              className="btn-ghost btn-sm text-gray-500 hover:text-gray-600"
+                              title="Ver detalhes"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+
+                            <button
+                              onClick={() => handleProxyRules(domain.id)}
+                              className="btn-ghost btn-sm text-purple-500 hover:text-purple-600"
+                              title="Regras de Proxy"
+                            >
+                              <Network className="h-4 w-4" />
+                            </button>
+
+                            <button
+                              onClick={() => handleSSLCertificates(domain.id)}
+                              className="btn-ghost btn-sm text-green-500 hover:text-green-600"
+                              title="Certificados SSL"
+                            >
+                              <Shield className="h-4 w-4" />
+                            </button>
+
+                            <button
+                              onClick={() => handleToggleDomain(domain)}
+                              disabled={toggleDomainMutation.isPending}
+                              className={`btn-ghost btn-sm ${
+                                domain.isActive
+                                  ? 'text-red-500 hover:text-red-600'
+                                  : 'text-green-500 hover:text-green-600'
+                              }`}
+                              title={domain.isActive ? 'Desativar domínio' : 'Ativar domínio'}
+                            >
+                              {domain.isActive ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                            </button>
+
                             <button
                               onClick={() => handleEditDomain(domain.id)}
                               className="btn-ghost btn-sm text-blue-500 hover:text-blue-600"
@@ -154,6 +223,7 @@ export default function DomainsPage() {
                             >
                               <Settings className="h-4 w-4" />
                             </button>
+
                             <button
                               onClick={() => handleDeleteDomain(domain)}
                               className="btn-ghost btn-sm text-red-500 hover:text-red-600"

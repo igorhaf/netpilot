@@ -31,7 +31,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
-  Square as StopIcon
+  Square as StopIcon,
+  Eye
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
@@ -224,7 +225,6 @@ export default function ContainersPage() {
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[20px]"></TableHead>
                   <TableHead className="w-[160px]">Nome</TableHead>
                   <TableHead className="w-[110px]">Portas</TableHead>
                   <TableHead className="w-[80px]">ID</TableHead>
@@ -234,33 +234,27 @@ export default function ContainersPage() {
               <TableBody>
                 {data?.data?.map((container: DockerContainer) => (
                   <TableRow key={container.id}>
-                    <TableCell className="w-[20px] p-2">
-                      {container.state === 'running' ? (
-                        <div title="Rodando">
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        </div>
-                      ) : container.state === 'exited' ? (
-                        <div title="Parado">
-                          <StopIcon className="h-4 w-4 text-red-500" />
-                        </div>
-                      ) : (
-                        <div title="Pausado/Criando">
-                          <Clock className="h-4 w-4 text-yellow-500" />
-                        </div>
-                      )}
-                    </TableCell>
                     <TableCell>
-                      <Link
-                        href={`/docker/containers/${container.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        <span
-                          className="max-w-[140px] truncate inline-block"
-                          title={container.names?.[0]?.replace(/^\//, '') || container.id}
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          container.state === 'running'
+                            ? 'bg-green-500'
+                            : container.state === 'exited'
+                              ? 'bg-red-500'
+                              : 'bg-yellow-500'
+                        }`}></div>
+                        <Link
+                          href={`/docker/containers/${container.id}`}
+                          className="font-medium hover:underline"
                         >
-                          {container.names?.[0]?.replace(/^\//, '') || container.id.substring(0, 12)}
-                        </span>
-                      </Link>
+                          <span
+                            className="max-w-[120px] truncate inline-block"
+                            title={container.names?.[0]?.replace(/^\//, '') || container.id}
+                          >
+                            {container.names?.[0]?.replace(/^\//, '') || container.id.substring(0, 12)}
+                          </span>
+                        </Link>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {container.ports?.length > 0 ? (
@@ -287,6 +281,16 @@ export default function ContainersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Link href={`/docker/containers/${container.id}`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+
                         <Link href={`/docker/images`}>
                           <Button
                             size="sm"

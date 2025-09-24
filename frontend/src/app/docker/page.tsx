@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,12 +20,17 @@ import {
   Square,
   RotateCcw,
   Eye,
-  Trash2
+  Trash2,
+  Terminal,
+  FileText
 } from 'lucide-react';
 import Link from 'next/link';
 import { DockerApiService } from '@/lib/docker-api';
+import { toast } from '@/hooks/use-toast';
 
 export default function DockerDashboard() {
+  const queryClient = useQueryClient();
+
   const { data: summary, isLoading } = useQuery({
     queryKey: ['docker', 'summary'],
     queryFn: () => DockerApiService.getDashboardData(),
@@ -38,26 +43,48 @@ export default function DockerDashboard() {
     refetchInterval: 10000 // Refresh a cada 10s para containers
   });
 
-  const handleContainerAction = async (containerId: string, action: string) => {
-    try {
+  const actionMutation = useMutation({
+    mutationFn: async ({ id, action }: { id: string; action: string }) => {
       switch (action) {
         case 'start':
-          await DockerApiService.startContainer(containerId);
-          break;
+          return await DockerApiService.startContainer(id);
         case 'stop':
-          await DockerApiService.stopContainer(containerId);
-          break;
+          return await DockerApiService.stopContainer(id);
         case 'restart':
-          await DockerApiService.restartContainer(containerId);
-          break;
+          return await DockerApiService.restartContainer(id);
+        case 'remove':
+          return await DockerApiService.removeContainer(id);
+        default:
+          throw new Error(`Ação não suportada: ${action}`);
       }
-      // Refresh the container list after action
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error(`Error ${action} container:`, error);
+    },
+    onSuccess: (result, { action }) => {
+      if (result.success) {
+        toast({
+          title: 'Sucesso',
+          description: result.message
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: result.message,
+          variant: 'destructive'
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['docker', 'containers'] });
+      queryClient.invalidateQueries({ queryKey: ['docker', 'summary'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Falha ao executar ação',
+        variant: 'destructive'
+      });
     }
+  });
+
+  const handleAction = (containerId: string, action: string) => {
+    actionMutation.mutate({ id: containerId, action });
   };
 
   if (isLoading) {
@@ -179,7 +206,6 @@ export default function DockerDashboard() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Imagem</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Portas</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -188,11 +214,18 @@ export default function DockerDashboard() {
                   {containersResponse?.data?.filter((container: any) => container.state === 'running').slice(0, 10).map((container: any) => (
                     <TableRow key={container.id}>
                       <TableCell>
-                        <div className="font-medium">
-                          {container.names[0].replace('/', '')}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {container.id.substring(0, 12)}
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            container.state === 'running' ? 'bg-green-500' : 'bg-red-500'
+                          }`}></div>
+                          <div>
+                            <div className="font-medium">
+                              {container.names[0].replace('/', '')}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {container.id.substring(0, 12)}
+                            </div>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -201,14 +234,6 @@ export default function DockerDashboard() {
                             ? container.image.substring(0, 30) + '...'
                             : container.image
                           }
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          <Badge variant="default" className="bg-green-500">
-                            Rodando
-                          </Badge>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -225,27 +250,102 @@ export default function DockerDashboard() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-1">
+                        <div className="flex items-center justify-end gap-1">
                           <Link href={`/docker/containers/${container.id}`}>
-                            <Button variant="outline" size="sm" title="Detalhes">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              title="Ver detalhes"
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
+
+                          <Link href={`/docker/images`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              title={`Ver imagem: ${container.image}`}
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                            </Button>
+                          </Link>
+
+                          {container.state === 'running' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAction(container.id, 'stop')}
+                              disabled={actionMutation.isPending}
+                              title="Parar"
+                            >
+                              <Square className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAction(container.id, 'start')}
+                              disabled={actionMutation.isPending}
+                              title="Iniciar"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          )}
+
                           <Button
-                            variant="outline"
                             size="sm"
-                            title="Parar"
-                            onClick={() => handleContainerAction(container.id, 'stop')}
-                          >
-                            <Square className="h-4 w-4" />
-                          </Button>
-                          <Button
                             variant="outline"
-                            size="sm"
+                            onClick={() => handleAction(container.id, 'restart')}
+                            disabled={actionMutation.isPending}
                             title="Reiniciar"
-                            onClick={() => handleContainerAction(container.id, 'restart')}
                           >
                             <RotateCcw className="h-4 w-4" />
+                          </Button>
+
+                          <Link href={`/docker/containers/${container.id}/logs`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              title="Ver logs"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          </Link>
+
+                          {container.state === 'running' && (
+                            <>
+                              <Link href={`/docker/containers/${container.id}/terminal`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title="Terminal"
+                                >
+                                  <Terminal className="h-4 w-4" />
+                                </Button>
+                              </Link>
+
+                              <Link href={`/docker/containers/${container.id}/stats`}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title="Estatísticas"
+                                >
+                                  <Activity className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            </>
+                          )}
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAction(container.id, 'remove')}
+                            disabled={actionMutation.isPending}
+                            className="text-red-600 hover:text-red-700"
+                            title="Remover"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -253,6 +353,17 @@ export default function DockerDashboard() {
                   ))}
                 </TableBody>
               </Table>
+
+              {(containersResponse?.data?.filter((container: any) => container.state === 'running').length || 0) > 0 && (
+                <div className="flex justify-center mt-4">
+                  <Link href="/docker/containers">
+                    <Button variant="outline">
+                      Ver Todos os Containers
+                    </Button>
+                  </Link>
+                </div>
+              )}
+
               {(containersResponse?.data?.filter((container: any) => container.state === 'running').length || 0) === 0 && (
                 <div className="text-center py-8">
                   <Container className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
