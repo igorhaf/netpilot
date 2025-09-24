@@ -34,237 +34,7 @@ import {
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
 import { formatBytes } from '@/lib/utils';
-
-// Mock data para imagens Docker
-const mockImages = [
-  {
-    id: 'sha256:abc123def456',
-    repo_tags: ['nginx:alpine', 'nginx:1.21-alpine'],
-    repo_digests: ['nginx@sha256:xyz789'],
-    parent_id: '',
-    comment: '',
-    created: '2024-01-15T10:30:00Z',
-    container: '',
-    container_config: {},
-    docker_version: '20.10.21',
-    author: '',
-    config: {
-      hostname: '',
-      domainname: '',
-      user: '',
-      attach_stdin: false,
-      attach_stdout: false,
-      attach_stderr: false,
-      exposed_ports: {
-        '80/tcp': {}
-      },
-      tty: false,
-      open_stdin: false,
-      stdin_once: false,
-      env: [
-        'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-        'NGINX_VERSION=1.21.6'
-      ],
-      cmd: ['nginx', '-g', 'daemon off;'],
-      image: 'sha256:parent123',
-      volumes: null,
-      working_dir: '',
-      entrypoint: ['/docker-entrypoint.sh'],
-      network_disabled: false,
-      mac_address: '',
-      on_build: null,
-      labels: {
-        'maintainer': 'NGINX Docker Maintainers <docker-maint@nginx.com>'
-      }
-    },
-    architecture: 'amd64',
-    os: 'linux',
-    size: 23068856,
-    virtual_size: 23068856,
-    graph_driver: {
-      data: {
-        merged_dir: '/var/lib/docker/overlay2/abc123/merged',
-        upper_dir: '/var/lib/docker/overlay2/abc123/diff',
-        work_dir: '/var/lib/docker/overlay2/abc123/work'
-      },
-      name: 'overlay2'
-    },
-    root_fs: {
-      type: 'layers',
-      layers: [
-        'sha256:layer1',
-        'sha256:layer2',
-        'sha256:layer3'
-      ]
-    },
-    metadata: {
-      last_tag_time: '2024-01-15T10:30:00Z'
-    },
-    containers: 2
-  },
-  {
-    id: 'sha256:def456ghi789',
-    repo_tags: ['node:18-alpine'],
-    repo_digests: ['node@sha256:abc456'],
-    parent_id: '',
-    comment: '',
-    created: '2024-01-14T15:45:00Z',
-    container: '',
-    container_config: {},
-    docker_version: '20.10.21',
-    author: '',
-    config: {
-      hostname: '',
-      domainname: '',
-      user: 'node',
-      attach_stdin: false,
-      attach_stdout: false,
-      attach_stderr: false,
-      exposed_ports: {},
-      tty: false,
-      open_stdin: false,
-      stdin_once: false,
-      env: [
-        'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-        'NODE_VERSION=18.19.0'
-      ],
-      cmd: ['node'],
-      image: 'sha256:parent456',
-      volumes: null,
-      working_dir: '/app',
-      entrypoint: ['docker-entrypoint.sh'],
-      network_disabled: false,
-      mac_address: '',
-      on_build: null,
-      labels: {}
-    },
-    architecture: 'amd64',
-    os: 'linux',
-    size: 171234567,
-    virtual_size: 171234567,
-    graph_driver: {
-      data: {
-        merged_dir: '/var/lib/docker/overlay2/def456/merged',
-        upper_dir: '/var/lib/docker/overlay2/def456/diff',
-        work_dir: '/var/lib/docker/overlay2/def456/work'
-      },
-      name: 'overlay2'
-    },
-    root_fs: {
-      type: 'layers',
-      layers: [
-        'sha256:layer4',
-        'sha256:layer5',
-        'sha256:layer6',
-        'sha256:layer7'
-      ]
-    },
-    metadata: {
-      last_tag_time: '2024-01-14T15:45:00Z'
-    },
-    containers: 1
-  },
-  {
-    id: 'sha256:ghi789jkl012',
-    repo_tags: ['postgres:15-alpine'],
-    repo_digests: ['postgres@sha256:def789'],
-    parent_id: '',
-    comment: '',
-    created: '2024-01-13T08:20:00Z',
-    container: '',
-    container_config: {},
-    docker_version: '20.10.21',
-    author: '',
-    config: {
-      hostname: '',
-      domainname: '',
-      user: 'postgres',
-      attach_stdin: false,
-      attach_stdout: false,
-      attach_stderr: false,
-      exposed_ports: {
-        '5432/tcp': {}
-      },
-      tty: false,
-      open_stdin: false,
-      stdin_once: false,
-      env: [
-        'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/postgresql/15/bin',
-        'POSTGRES_VERSION=15.5'
-      ],
-      cmd: ['postgres'],
-      image: 'sha256:parent789',
-      volumes: {
-        '/var/lib/postgresql/data': {}
-      },
-      working_dir: '',
-      entrypoint: ['docker-entrypoint.sh'],
-      network_disabled: false,
-      mac_address: '',
-      on_build: null,
-      labels: {}
-    },
-    architecture: 'amd64',
-    os: 'linux',
-    size: 234567890,
-    virtual_size: 234567890,
-    graph_driver: {
-      data: {
-        merged_dir: '/var/lib/docker/overlay2/ghi789/merged',
-        upper_dir: '/var/lib/docker/overlay2/ghi789/diff',
-        work_dir: '/var/lib/docker/overlay2/ghi789/work'
-      },
-      name: 'overlay2'
-    },
-    root_fs: {
-      type: 'layers',
-      layers: [
-        'sha256:layer8',
-        'sha256:layer9',
-        'sha256:layer10'
-      ]
-    },
-    metadata: {
-      last_tag_time: '2024-01-13T08:20:00Z'
-    },
-    containers: 1
-  },
-  {
-    id: 'sha256:jkl012mno345',
-    repo_tags: ['<none>:<none>'],
-    repo_digests: [],
-    parent_id: 'sha256:abc123def456',
-    comment: '',
-    created: '2024-01-10T12:00:00Z',
-    container: '',
-    container_config: {},
-    docker_version: '20.10.21',
-    author: '',
-    config: {},
-    architecture: 'amd64',
-    os: 'linux',
-    size: 45678901,
-    virtual_size: 45678901,
-    graph_driver: {
-      data: {
-        merged_dir: '/var/lib/docker/overlay2/jkl012/merged',
-        upper_dir: '/var/lib/docker/overlay2/jkl012/diff',
-        work_dir: '/var/lib/docker/overlay2/jkl012/work'
-      },
-      name: 'overlay2'
-    },
-    root_fs: {
-      type: 'layers',
-      layers: [
-        'sha256:layer11'
-      ]
-    },
-    metadata: {
-      last_tag_time: '0001-01-01T00:00:00Z'
-    },
-    containers: 0
-  }
-];
+import { DockerApiService } from '@/lib/docker-api';
 
 export default function ImagesPage() {
   const [filters, setFilters] = useState({
@@ -277,67 +47,58 @@ export default function ImagesPage() {
 
   const queryClient = useQueryClient();
 
-  // Simulação da query para listar imagens
   const { data, isLoading, error } = useQuery({
     queryKey: ['docker', 'images', filters],
-    queryFn: () => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          let filteredImages = [...mockImages];
+    queryFn: async () => {
+      const result = await DockerApiService.listImages();
+      let filteredImages = result.data || [];
 
-          // Aplicar filtros
-          if (filters.dangling === 'true') {
-            filteredImages = filteredImages.filter(img => img.repo_tags.includes('<none>:<none>'));
-          } else if (filters.dangling === 'false') {
-            filteredImages = filteredImages.filter(img => !img.repo_tags.includes('<none>:<none>'));
-          }
+      // Aplicar filtros
+      if (filters.dangling === 'true') {
+        filteredImages = filteredImages.filter((img: any) =>
+          !img.repoTags || img.repoTags.length === 0 || img.repoTags.includes('<none>:<none>')
+        );
+      } else if (filters.dangling === 'false') {
+        filteredImages = filteredImages.filter((img: any) =>
+          img.repoTags && img.repoTags.length > 0 && !img.repoTags.includes('<none>:<none>')
+        );
+      }
 
-          if (filters.search) {
-            filteredImages = filteredImages.filter(img =>
-              img.repo_tags.some(tag => tag.toLowerCase().includes(filters.search.toLowerCase())) ||
-              img.id.toLowerCase().includes(filters.search.toLowerCase())
-            );
-          }
+      if (filters.search) {
+        filteredImages = filteredImages.filter((img: any) =>
+          (img.repoTags && img.repoTags.some((tag: string) => tag.toLowerCase().includes(filters.search.toLowerCase()))) ||
+          img.id.toLowerCase().includes(filters.search.toLowerCase())
+        );
+      }
 
-          const total = filteredImages.length;
-          const start = (filters.page - 1) * filters.limit;
-          const end = start + filters.limit;
-          const images = filteredImages.slice(start, end);
+      const total = filteredImages.length;
+      const start = (filters.page - 1) * filters.limit;
+      const end = start + filters.limit;
+      const images = filteredImages.slice(start, end);
 
-          resolve({
-            images,
-            pagination: {
-              page: filters.page,
-              limit: filters.limit,
-              total,
-              pages: Math.ceil(total / filters.limit)
-            },
-            summary: {
-              total_images: mockImages.length,
-              total_size: mockImages.reduce((acc, img) => acc + img.size, 0),
-              dangling: mockImages.filter(img => img.repo_tags.includes('<none>:<none>')).length
-            }
-          });
-        }, 500);
-      });
+      return {
+        images,
+        pagination: {
+          page: filters.page,
+          limit: filters.limit,
+          total,
+          pages: Math.ceil(total / filters.limit)
+        },
+        summary: {
+          total_images: (result.data || []).length,
+          total_size: result.totalSize || 0,
+          dangling: (result.data || []).filter((img: any) =>
+            !img.repoTags || img.repoTags.length === 0 || img.repoTags.includes('<none>:<none>')
+          ).length
+        }
+      };
     },
     refetchInterval: 30000
   });
 
-  // Mutação para remover imagem
   const removeMutation = useMutation({
     mutationFn: ({ id, force, noprune }: { id: string; force?: boolean; noprune?: boolean }) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Simular erro se imagem estiver em uso
-          const image = mockImages.find(img => img.id === id);
-          if (image?.containers && image.containers > 0 && !force) {
-            reject(new Error('Imagem está sendo usada por containers'));
-          } else {
-            resolve(`Imagem ${id} removida`);
-          }
-        }, 1000);
-      });
+      return DockerApiService.removeImage(id, force, noprune);
     },
     onSuccess: () => {
       toast({
@@ -355,12 +116,9 @@ export default function ImagesPage() {
     },
   });
 
-  // Mutação para fazer pull de imagem
   const pullMutation = useMutation({
     mutationFn: ({ name }: { name: string }) => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(`Pull de ${name} concluído`), 3000);
-      });
+      return DockerApiService.pullImage(name);
     },
     onSuccess: (_, variables) => {
       toast({
@@ -379,6 +137,9 @@ export default function ImagesPage() {
   });
 
   const formatImageName = (repoTags: string[]) => {
+    if (!repoTags || repoTags.length === 0) {
+      return '<none>:<none>';
+    }
     const validTags = repoTags.filter(tag => tag !== '<none>:<none>');
     if (validTags.length === 0) {
       return '<none>:<none>';
@@ -602,10 +363,10 @@ export default function ImagesPage() {
                       <TableRow key={image.id}>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{formatImageName(image.repo_tags)}</p>
-                            {image.repo_tags.length > 1 && !image.repo_tags.includes('<none>:<none>') && (
+                            <p className="font-medium">{formatImageName(image.repoTags)}</p>
+                            {image.repoTags && image.repoTags.length > 1 && !image.repoTags.includes('<none>:<none>') && (
                               <div className="text-xs text-muted-foreground mt-1">
-                                +{image.repo_tags.length - 1} tags adicionais
+                                +{image.repoTags.length - 1} tags adicionais
                               </div>
                             )}
                           </div>
@@ -616,7 +377,7 @@ export default function ImagesPage() {
                           </code>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium">{formatBytes(image.size)}</span>
+                          <span className="font-medium">{formatBytes(image.size || 0)}</span>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
@@ -627,7 +388,7 @@ export default function ImagesPage() {
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             <span className="text-sm">{image.containers || 0}</span>
-                            {image.containers > 0 && (
+                            {(image.containers || 0) > 0 && (
                               <Badge variant="outline" className="text-blue-600">
                                 <Play className="h-3 w-3 mr-1" />
                                 Em uso
@@ -636,7 +397,7 @@ export default function ImagesPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {image.repo_tags.includes('<none>:<none>') ? (
+                          {(!image.repoTags || image.repoTags.length === 0 || image.repoTags.includes('<none>:<none>')) ? (
                             <Badge variant="outline" className="text-orange-600">
                               <AlertTriangle className="h-3 w-3 mr-1" />
                               Órfã
@@ -658,7 +419,7 @@ export default function ImagesPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleRemove(image.id, formatImageName(image.repo_tags), image.containers)}
+                              onClick={() => handleRemove(image.id, formatImageName(image.repoTags), image.containers || 0)}
                               disabled={removeMutation.isPending}
                             >
                               <Trash2 className="h-4 w-4" />

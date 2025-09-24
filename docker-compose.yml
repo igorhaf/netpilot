@@ -131,9 +131,9 @@ services:
     container_name: netpilot-frontend
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://netpilot.meadadigital.com
-    expose:
-      - "3000"
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3000:3000"
     networks:
       - netpilot-network
     depends_on:

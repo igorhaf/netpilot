@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MainLayout } from '@/components/layout/main-layout';
 import {
   Container,
@@ -14,46 +15,50 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Plus
+  Plus,
+  Play,
+  Square,
+  RotateCcw,
+  Eye,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
-
-// Mock da API por enquanto
-const mockDashboardData = {
-  containers: {
-    total: 8,
-    running: 5,
-    stopped: 3
-  },
-  volumes: {
-    total: 6,
-    used_space: '2.4 GB'
-  },
-  networks: {
-    total: 4,
-    custom: 2
-  },
-  images: {
-    total: 12,
-    total_size: '4.8 GB'
-  },
-  active_jobs: [
-    {
-      id: 'job-1',
-      type: 'backup',
-      resource_id: 'web-data',
-      message: 'Comprimindo dados...',
-      progress: 65
-    }
-  ]
-};
+import { DockerApiService } from '@/lib/docker-api';
 
 export default function DockerDashboard() {
   const { data: summary, isLoading } = useQuery({
     queryKey: ['docker', 'summary'],
-    queryFn: () => Promise.resolve(mockDashboardData),
+    queryFn: () => DockerApiService.getDashboardData(),
     refetchInterval: 30000 // Refresh a cada 30s
   });
+
+  const { data: containersResponse, isLoading: containersLoading } = useQuery({
+    queryKey: ['docker', 'containers'],
+    queryFn: () => DockerApiService.listContainers(),
+    refetchInterval: 10000 // Refresh a cada 10s para containers
+  });
+
+  const handleContainerAction = async (containerId: string, action: string) => {
+    try {
+      switch (action) {
+        case 'start':
+          await DockerApiService.startContainer(containerId);
+          break;
+        case 'stop':
+          await DockerApiService.stopContainer(containerId);
+          break;
+        case 'restart':
+          await DockerApiService.restartContainer(containerId);
+          break;
+      }
+      // Refresh the container list after action
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error(`Error ${action} container:`, error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -146,6 +151,121 @@ export default function DockerDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Grid de Containers */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <Container className="h-5 w-5" />
+              <span>Containers Ativos</span>
+            </CardTitle>
+            <Link href="/docker/containers">
+              <Button variant="outline" size="sm">
+                Ver Todos
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {containersLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Imagem</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Portas</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {containersResponse?.data?.filter((container: any) => container.state === 'running').slice(0, 10).map((container: any) => (
+                    <TableRow key={container.id}>
+                      <TableCell>
+                        <div className="font-medium">
+                          {container.names[0].replace('/', '')}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {container.id.substring(0, 12)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {container.image.length > 30
+                            ? container.image.substring(0, 30) + '...'
+                            : container.image
+                          }
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <Badge variant="default" className="bg-green-500">
+                            Rodando
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {container.ports?.length > 0 ? (
+                            container.ports.slice(0, 2).map((port: any, index: number) => (
+                              <div key={index}>
+                                {port.PublicPort ? `${port.PublicPort}:${port.PrivatePort}` : port.PrivatePort}
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          <Link href={`/docker/containers/${container.id}`}>
+                            <Button variant="outline" size="sm" title="Detalhes">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            title="Parar"
+                            onClick={() => handleContainerAction(container.id, 'stop')}
+                          >
+                            <Square className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            title="Reiniciar"
+                            onClick={() => handleContainerAction(container.id, 'restart')}
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {(containersResponse?.data?.filter((container: any) => container.state === 'running').length || 0) === 0 && (
+                <div className="text-center py-8">
+                  <Container className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-medium mb-2">Nenhum container ativo</h3>
+                  <p className="text-muted-foreground">
+                    Containers ativos aparecerão aqui quando estiverem rodando.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Jobs Ativos */}
       {summary?.active_jobs && summary.active_jobs.length > 0 && (

@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import toast from 'react-hot-toast'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { toast } from '@/hooks/use-toast'
 import { useAuthStore } from '@/store/auth'
-import api from '@/lib/api'
-import { AuthResponse } from '@/types'
+import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -35,12 +37,19 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true)
     try {
-      const response = await api.post<AuthResponse>('/auth/login', data)
+      const response = await api.post('/auth/login', data)
       login(response.data.access_token, response.data.user)
-      toast.success('Login realizado com sucesso!')
+      toast({
+        title: 'Login realizado com sucesso!',
+        description: 'Redirecionando para o dashboard...',
+      })
       router.push('/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Erro ao fazer login')
+      toast({
+        title: 'Erro ao fazer login',
+        description: error.response?.data?.message || 'Erro ao fazer login',
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -61,24 +70,23 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title text-center">Fazer Login</h3>
-            <p className="card-description text-center">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle>Fazer Login</CardTitle>
+            <CardDescription>
               Entre com suas credenciais para acessar o sistema
-            </p>
-          </div>
-          <div className="card-content">
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                   Email
                 </label>
-                <input
+                <Input
                   {...register('email')}
                   type="email"
                   id="email"
-                  className="input w-full"
                   placeholder="admin@netpilot.local"
                   disabled={isLoading}
                 />
@@ -92,11 +100,11 @@ export default function LoginPage() {
                   Senha
                 </label>
                 <div className="relative">
-                  <input
+                  <Input
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
                     id="password"
-                    className="input w-full pr-10"
+                    className="pr-10"
                     placeholder="••••••••"
                     disabled={isLoading}
                   />
@@ -118,10 +126,10 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary w-full"
+                className="w-full"
               >
                 {isLoading ? (
                   <>
@@ -131,10 +139,10 @@ export default function LoginPage() {
                 ) : (
                   'Entrar'
                 )}
-              </button>
+              </Button>
             </form>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <p className="text-center text-sm text-muted-foreground">
           Primeira vez? Use admin@netpilot.local / admin123

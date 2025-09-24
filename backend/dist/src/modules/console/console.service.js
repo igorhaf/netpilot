@@ -28,6 +28,91 @@ let ConsoleService = class ConsoleService {
         this.connectionTimeout = 30 * 60 * 1000;
         setInterval(() => this.cleanupInactiveConnections(), 5 * 60 * 1000);
     }
+    async onModuleInit() {
+        await this.ensureDefaultSshSession();
+    }
+    async ensureDefaultSshSession() {
+        try {
+            const defaultHost = process.env.SSH_DEFAULT_HOST;
+            const defaultPort = process.env.SSH_DEFAULT_PORT || '22';
+            const defaultUser = process.env.SSH_DEFAULT_USER || 'root';
+            const defaultAuthType = (process.env.SSH_DEFAULT_AUTH_TYPE || 'password');
+            const defaultPassword = process.env.SSH_DEFAULT_PASSWORD;
+            const defaultPrivateKeyPath = process.env.SSH_DEFAULT_PRIVATE_KEY_PATH;
+            const defaultPassphrase = process.env.SSH_DEFAULT_PASSPHRASE;
+            if (!defaultHost) {
+                console.log('⚠️  SSH_DEFAULT_HOST not found in .env, skipping default session creation');
+                return;
+            }
+            if (defaultAuthType === 'password' && !defaultPassword) {
+                console.log('⚠️  SSH password authentication selected but SSH_DEFAULT_PASSWORD not found in .env');
+                return;
+            }
+            if (defaultAuthType === 'key' && !defaultPrivateKeyPath) {
+                console.log('⚠️  SSH key authentication selected but SSH_DEFAULT_PRIVATE_KEY_PATH not found in .env');
+                return;
+            }
+            const existingSession = await this.sshSessionRepository.findOne({
+                where: {
+                    hostname: defaultHost,
+                    port: parseInt(defaultPort),
+                    username: defaultUser,
+                    sessionName: 'Local Server'
+                }
+            });
+            if (existingSession) {
+                console.log('ℹ️  Default SSH session already exists');
+                return;
+            }
+            const adminUser = await this.sshSessionRepository.manager.findOne('User', {
+                where: { email: 'admin@netpilot.local' }
+            });
+            if (!adminUser) {
+                console.log('⚠️  Admin user not found, cannot create default SSH session');
+                return;
+            }
+            let encryptedPassword = null;
+            let encryptedPrivateKey = null;
+            let encryptedPassphrase = null;
+            if (defaultAuthType === 'password') {
+                encryptedPassword = this.encrypt(defaultPassword);
+            }
+            else {
+                const fs = require('fs');
+                if (!fs.existsSync(defaultPrivateKeyPath)) {
+                    console.log(`⚠️  Private key file not found at: ${defaultPrivateKeyPath}`);
+                    return;
+                }
+                const privateKeyContent = fs.readFileSync(defaultPrivateKeyPath, 'utf8');
+                encryptedPrivateKey = this.encrypt(privateKeyContent);
+                if (defaultPassphrase) {
+                    encryptedPassphrase = this.encrypt(defaultPassphrase);
+                }
+            }
+            const defaultSession = this.sshSessionRepository.create({
+                sessionName: 'External Server',
+                hostname: defaultHost,
+                port: parseInt(defaultPort),
+                username: defaultUser,
+                authType: defaultAuthType,
+                password: encryptedPassword,
+                privateKey: encryptedPrivateKey,
+                passphrase: encryptedPassphrase,
+                isActive: true,
+                description: `Sessão SSH padrão para servidor externo (${defaultHost})`,
+                userId: adminUser.id,
+                connectionOptions: {
+                    readyTimeout: 20000,
+                    keepaliveInterval: 60000
+                }
+            });
+            await this.sshSessionRepository.save(defaultSession);
+            console.log(`✅ Default SSH session created for external server: ${defaultHost} (${defaultAuthType})`);
+        }
+        catch (error) {
+            console.error('❌ Error creating default SSH session:', error.message);
+        }
+    }
     async createSession(userId, createDto) {
         const encryptedPassword = createDto.password ? this.encrypt(createDto.password) : null;
         const encryptedPrivateKey = createDto.privateKey ? this.encrypt(createDto.privateKey) : null;

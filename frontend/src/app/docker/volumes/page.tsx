@@ -26,38 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
-
-// Mock data
-const mockVolumes = [
-  {
-    name: 'web-data',
-    driver: 'local',
-    mountpoint: '/var/lib/docker/volumes/web-data/_data',
-    created: new Date('2024-01-15T10:00:00Z'),
-    labels: { app: 'web' },
-    options: {},
-    usage: { size: 1073741824, ref_count: 2 } // 1GB, 2 containers usando
-  },
-  {
-    name: 'database-vol',
-    driver: 'local',
-    mountpoint: '/var/lib/docker/volumes/database-vol/_data',
-    created: new Date('2024-01-14T15:00:00Z'),
-    labels: { app: 'database' },
-    options: {},
-    usage: { size: 536870912, ref_count: 1 } // 512MB, 1 container usando
-  },
-  {
-    name: 'backup-storage',
-    driver: 'local',
-    mountpoint: '/var/lib/docker/volumes/backup-storage/_data',
-    created: new Date('2024-01-13T09:00:00Z'),
-    labels: { type: 'backup' },
-    options: {},
-    usage: { size: 2147483648, ref_count: 0 } // 2GB, não usado
-  }
-];
-
+import { DockerApiService } from '@/lib/docker-api';
 export default function VolumesPage() {
   const [filters, setFilters] = useState({
     driver: '',
@@ -66,25 +35,36 @@ export default function VolumesPage() {
 
   const queryClient = useQueryClient();
 
-  const { data: volumes, isLoading, error } = useQuery({
+  const { data: response, isLoading, error } = useQuery({
     queryKey: ['docker', 'volumes', filters],
-    queryFn: () => Promise.resolve(mockVolumes),
+    queryFn: async () => {
+      const result = await DockerApiService.listVolumes();
+
+      let filteredData = result.data || [];
+
+      // Apply filters
+      if (filters.name) {
+        filteredData = filteredData.filter((volume: any) =>
+          volume.name.toLowerCase().includes(filters.name.toLowerCase())
+        );
+      }
+
+      if (filters.driver) {
+        filteredData = filteredData.filter((volume: any) =>
+          volume.driver === filters.driver
+        );
+      }
+
+      return { data: filteredData, total: filteredData.length };
+    },
     refetchInterval: 10000
   });
 
+  const volumes = response?.data || [];
+
   const removeMutation = useMutation({
     mutationFn: ({ name, force }: { name: string; force?: boolean }) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Simular erro se volume estiver em uso
-          const volume = mockVolumes.find(v => v.name === name);
-          if (volume?.usage?.ref_count && volume.usage.ref_count > 0 && !force) {
-            reject(new Error('Volume está em uso por containers'));
-          } else {
-            resolve(`Volume ${name} removido`);
-          }
-        }, 1000);
-      });
+      return DockerApiService.removeVolume(name, force);
     },
     onSuccess: (_, { name }) => {
       toast({
@@ -104,9 +84,7 @@ export default function VolumesPage() {
 
   const backupMutation = useMutation({
     mutationFn: (volumeName: string) => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve({ job_id: 'backup-123' }), 1000);
-      });
+      return DockerApiService.backupVolume(volumeName);
     },
     onSuccess: (_, volumeName) => {
       toast({
@@ -241,18 +219,18 @@ export default function VolumesPage() {
                       <Badge variant="outline">{volume.driver}</Badge>
                     </TableCell>
                     <TableCell>
-                      {formatBytes(volume.usage.size)}
+                      {volume.usage?.size ? formatBytes(volume.usage.size) : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
                         <span className={`w-2 h-2 rounded-full ${
-                          volume.usage.ref_count > 0 ? 'bg-green-500' : 'bg-gray-300'
+                          (volume.usage?.ref_count || 0) > 0 ? 'bg-green-500' : 'bg-gray-300'
                         }`}></span>
-                        <span>{volume.usage.ref_count} container(s)</span>
+                        <span>{volume.usage?.ref_count || 0} container(s)</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(volume.created).toLocaleDateString('pt-BR')}
+                      {volume.created ? new Date(volume.created).toLocaleDateString('pt-BR') : '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-1">
@@ -277,7 +255,7 @@ export default function VolumesPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleRemove(volume.name, volume.usage.ref_count)}
+                          onClick={() => handleRemove(volume.name, volume.usage?.ref_count || 0)}
                           disabled={removeMutation.isPending}
                           className="text-red-600 hover:text-red-700"
                           title="Remover volume"
@@ -315,7 +293,7 @@ export default function VolumesPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Em Uso</p>
                 <p className="text-2xl font-bold">
-                  {volumes?.filter(v => v.usage.ref_count > 0).length || 0}
+                  {volumes?.filter((v: any) => (v.usage?.ref_count || 0) > 0).length || 0}
                 </p>
               </div>
             </div>
@@ -329,7 +307,7 @@ export default function VolumesPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Espaço Total</p>
                 <p className="text-2xl font-bold">
-                  {formatBytes(volumes?.reduce((total, v) => total + v.usage.size, 0) || 0)}
+                  {formatBytes(volumes?.reduce((total: number, v: any) => total + (v.usage?.size || 0), 0) || 0)}
                 </p>
               </div>
             </div>

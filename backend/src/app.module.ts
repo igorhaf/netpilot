@@ -11,7 +11,7 @@ import { SslCertificatesModule } from './modules/ssl-certificates/ssl-certificat
 import { LogsModule } from './modules/logs/logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ConsoleModule } from './modules/console/console.module';
-// Docker module imports removed due to initialization issues
+import { DockerMinimalModule } from './modules/docker/docker-minimal.module';
 import { WebSocketModule } from './modules/websocket/websocket.module';
 import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
@@ -23,7 +23,7 @@ import { SslCertificate } from './entities/ssl-certificate.entity';
 import { Log } from './entities/log.entity';
 import { SshSession } from './entities/ssh-session.entity';
 import { ConsoleLog } from './entities/console-log.entity';
-// Docker entities removed temporarily due to module issues
+// Docker entities temporarily removed
 
 @Module({
   imports: [
@@ -70,7 +70,7 @@ import { ConsoleLog } from './entities/console-log.entity';
     LogsModule,
     DashboardModule,
     ConsoleModule,
-    // DockerModule temporarily disabled due to initialization issues
+    DockerMinimalModule,
     WebSocketModule,
     SeedModule,
   ],
