@@ -4,14 +4,33 @@ export interface DockerContainer {
   id: string
   names: string[]
   image: string
+  imageID?: string
   status: string
   state: string
+  command?: string
+  created?: string
   ports: Array<{
     PrivatePort: number
     PublicPort?: number
     Type: string
     IP?: string
   }>
+  labels?: { [key: string]: string }
+  mounts?: Array<{
+    Type: string
+    Source?: string
+    Name?: string
+    Destination: string
+    RW: boolean
+  }>
+  networkSettings?: {
+    Networks: {
+      [key: string]: {
+        IPAddress?: string
+        Gateway?: string
+      }
+    }
+  }
 }
 
 export interface DockerContainersResponse {
@@ -86,11 +105,28 @@ export class DockerApiService {
   }
 
   /**
+   * Remove um container
+   */
+  static async removeContainer(containerId: string, force?: boolean): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await api.delete(`/docker/containers/${containerId}`, {
+        data: { force }
+      })
+      return response.data
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to remove container'
+      }
+    }
+  }
+
+  /**
    * Obtém logs de um container
    */
   static async getContainerLogs(containerId: string): Promise<{ logs: string; error?: string }> {
     try {
-      const response = await api.get(`/api/docker/containers/${containerId}/logs`)
+      const response = await api.get(`/docker/containers/${containerId}/logs`)
       return { logs: response.data.logs || '' }
     } catch (error: any) {
       return {

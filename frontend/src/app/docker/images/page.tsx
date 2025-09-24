@@ -346,16 +346,16 @@ export default function ImagesPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Imagem</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Tamanho</TableHead>
-                      <TableHead>Criada</TableHead>
-                      <TableHead>Containers</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
+                      <TableHead className="w-[200px]">Imagem</TableHead>
+                      <TableHead className="w-[100px]">ID</TableHead>
+                      <TableHead className="w-[80px]">Tamanho</TableHead>
+                      <TableHead className="w-[120px]">Criada</TableHead>
+                      <TableHead className="w-[80px]">Containers</TableHead>
+                      <TableHead className="w-[100px]">Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -363,7 +363,12 @@ export default function ImagesPage() {
                       <TableRow key={image.id}>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{formatImageName(image.repoTags)}</p>
+                            <p
+                              className="font-medium truncate"
+                              title={formatImageName(image.repoTags)}
+                            >
+                              {formatImageName(image.repoTags)}
+                            </p>
                             {image.repoTags && image.repoTags.length > 1 && !image.repoTags.includes('<none>:<none>') && (
                               <div className="text-xs text-muted-foreground mt-1">
                                 +{image.repoTags.length - 1} tags adicionais
