@@ -26,59 +26,17 @@ import {
   Activity,
   Plus,
   Search,
-  Filter
+  Filter,
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  Square as StopIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
+import { DockerApiService, DockerContainer } from '@/lib/docker-api';
 
-// Mock data
-const mockContainers = [
-  {
-    id: 'container_1',
-    name: 'web-nginx',
-    image: 'nginx:alpine',
-    image_id: 'sha256:abc123',
-    status: 'Up 2 hours',
-    state: 'running',
-    created: new Date('2024-01-15T10:00:00Z'),
-    ports: [
-      { private_port: 80, public_port: 8080, type: 'tcp' }
-    ],
-    labels: { app: 'web' },
-    networks: ['bridge'],
-    mounts: []
-  },
-  {
-    id: 'container_2',
-    name: 'api-backend',
-    image: 'node:18-alpine',
-    image_id: 'sha256:def456',
-    status: 'Exited (0) 5 minutes ago',
-    state: 'exited',
-    created: new Date('2024-01-15T09:30:00Z'),
-    ports: [
-      { private_port: 3000, public_port: 3000, type: 'tcp' }
-    ],
-    labels: { app: 'api' },
-    networks: ['bridge'],
-    mounts: []
-  },
-  {
-    id: 'container_3',
-    name: 'database-postgres',
-    image: 'postgres:15',
-    image_id: 'sha256:ghi789',
-    status: 'Up 1 day',
-    state: 'running',
-    created: new Date('2024-01-14T15:00:00Z'),
-    ports: [
-      { private_port: 5432, public_port: 5432, type: 'tcp' }
-    ],
-    labels: { app: 'database' },
-    networks: ['bridge'],
-    mounts: []
-  }
-];
 
 export default function ContainersPage() {
   const [filters, setFilters] = useState({
@@ -92,30 +50,73 @@ export default function ContainersPage() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['docker', 'containers', filters],
-    queryFn: () => Promise.resolve({
-      data: mockContainers,
-      pagination: {
-        page: 1,
-        limit: 50,
-        total: mockContainers.length,
-        pages: 1
+    queryFn: async () => {
+      const response = await DockerApiService.listContainers();
+
+      let filteredData = response.data;
+
+      // Aplicar filtros localmente
+      if (filters.name) {
+        filteredData = filteredData.filter(container =>
+          container.names.some(name =>
+            name.toLowerCase().includes(filters.name.toLowerCase())
+          )
+        );
       }
-    }),
+
+      if (filters.image) {
+        filteredData = filteredData.filter(container =>
+          container.image.toLowerCase().includes(filters.image.toLowerCase())
+        );
+      }
+
+      if (filters.status) {
+        filteredData = filteredData.filter(container =>
+          container.state === filters.status
+        );
+      }
+
+      return {
+        data: filteredData,
+        pagination: {
+          page: 1,
+          limit: 50,
+          total: filteredData.length,
+          pages: 1
+        },
+        message: response.message,
+        error: response.error
+      };
+    },
     refetchInterval: 5000 // Refresh a cada 5s
   });
 
   const actionMutation = useMutation({
-    mutationFn: ({ id, action }: { id: string; action: string }) => {
-      // Mock API call
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(`${action} executed`), 1000);
-      });
+    mutationFn: async ({ id, action }: { id: string; action: string }) => {
+      switch (action) {
+        case 'start':
+          return await DockerApiService.startContainer(id);
+        case 'stop':
+          return await DockerApiService.stopContainer(id);
+        case 'restart':
+          return await DockerApiService.restartContainer(id);
+        default:
+          throw new Error(`Ação não suportada: ${action}`);
+      }
     },
-    onSuccess: (_, { action }) => {
-      toast({
-        title: 'Sucesso',
-        description: `Container ${action} executado com sucesso`
-      });
+    onSuccess: (result, { action }) => {
+      if (result.success) {
+        toast({
+          title: 'Sucesso',
+          description: result.message
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: result.message,
+          variant: 'destructive'
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['docker', 'containers'] });
     },
     onError: (error: any) => {
@@ -127,18 +128,6 @@ export default function ContainersPage() {
     }
   });
 
-  const getStatusBadge = (status: string, state: string) => {
-    if (state === 'running') {
-      return <Badge variant="default" className="bg-green-500">Rodando</Badge>;
-    }
-    if (state === 'exited') {
-      return <Badge variant="secondary">Parado</Badge>;
-    }
-    if (state === 'paused') {
-      return <Badge variant="outline">Pausado</Badge>;
-    }
-    return <Badge variant="destructive">Erro</Badge>;
-  };
 
   const handleAction = (containerId: string, action: string) => {
     actionMutation.mutate({ id: containerId, action });
@@ -232,40 +221,53 @@ export default function ContainersPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           ) : (
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Imagem</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Portas</TableHead>
-                  <TableHead>Criado</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="w-[20px]"></TableHead>
+                  <TableHead className="w-[160px]">Nome</TableHead>
+                  <TableHead className="w-[110px]">Portas</TableHead>
+                  <TableHead className="w-[80px]">ID</TableHead>
+                  <TableHead className="text-right w-[220px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.data?.map((container: any) => (
+                {data?.data?.map((container: DockerContainer) => (
                   <TableRow key={container.id}>
+                    <TableCell className="w-[20px] p-2">
+                      {container.state === 'running' ? (
+                        <div title="Rodando">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        </div>
+                      ) : container.state === 'exited' ? (
+                        <div title="Parado">
+                          <StopIcon className="h-4 w-4 text-red-500" />
+                        </div>
+                      ) : (
+                        <div title="Pausado/Criando">
+                          <Clock className="h-4 w-4 text-yellow-500" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Link
                         href={`/docker/containers/${container.id}`}
                         className="font-medium hover:underline"
                       >
-                        {container.name}
+                        <span
+                          className="max-w-[140px] truncate inline-block"
+                          title={container.names?.[0]?.replace(/^\//, '') || container.id}
+                        >
+                          {container.names?.[0]?.replace(/^\//, '') || container.id.substring(0, 12)}
+                        </span>
                       </Link>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {container.image}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(container.status, container.state)}
                     </TableCell>
                     <TableCell>
                       {container.ports?.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {container.ports.slice(0, 2).map((port: any, idx: number) => (
                             <Badge key={idx} variant="outline" className="text-xs">
-                              {port.public_port ? `${port.public_port}:` : ''}{port.private_port}
+                              {port.PublicPort ? `${port.PublicPort}:` : ''}{port.PrivatePort}
                             </Badge>
                           ))}
                           {container.ports.length > 2 && (
@@ -279,10 +281,22 @@ export default function ContainersPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(container.created).toLocaleDateString('pt-BR')}
+                      <span className="font-mono text-xs" title={container.id}>
+                        {container.id.substring(0, 8)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-1">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/docker/images`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            title={`Ver imagem: ${container.image}`}
+                          >
+                            <ImageIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+
                         {container.state === 'running' ? (
                           <Button
                             size="sm"

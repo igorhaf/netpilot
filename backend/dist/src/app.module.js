@@ -19,6 +19,7 @@ const ssl_certificates_module_1 = require("./modules/ssl-certificates/ssl-certif
 const logs_module_1 = require("./modules/logs/logs.module");
 const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const console_module_1 = require("./modules/console/console.module");
+const docker_minimal_module_1 = require("./modules/docker/docker-minimal.module");
 const websocket_module_1 = require("./modules/websocket/websocket.module");
 const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
@@ -44,7 +45,7 @@ exports.AppModule = AppModule = __decorate([
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
                     entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog],
-                    synchronize: false,
+                    synchronize: true,
                     logging: process.env.NODE_ENV === 'development',
                 }),
                 inject: [config_1.ConfigService],
@@ -77,6 +78,7 @@ exports.AppModule = AppModule = __decorate([
             logs_module_1.LogsModule,
             dashboard_module_1.DashboardModule,
             console_module_1.ConsoleModule,
+            docker_minimal_module_1.DockerMinimalModule,
             websocket_module_1.WebSocketModule,
             seed_module_1.SeedModule,
         ],

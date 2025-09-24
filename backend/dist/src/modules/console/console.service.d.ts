@@ -1,13 +1,16 @@
+import { OnModuleInit } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { SshSession } from '../../entities/ssh-session.entity';
 import { ConsoleLog } from '../../entities/console-log.entity';
 import { CreateSshSessionDto, UpdateSshSessionDto, ExecuteCommandDto } from '../../dtos/ssh-session.dto';
-export declare class ConsoleService {
+export declare class ConsoleService implements OnModuleInit {
     private readonly sshSessionRepository;
     private readonly consoleLogRepository;
     private activeConnections;
     private readonly connectionTimeout;
     constructor(sshSessionRepository: Repository<SshSession>, consoleLogRepository: Repository<ConsoleLog>);
+    onModuleInit(): Promise<void>;
+    private ensureDefaultSshSession;
     createSession(userId: string, createDto: CreateSshSessionDto): Promise<SshSession>;
     findUserSessions(userId: string): Promise<SshSession[]>;
     findSessionById(userId: string, sessionId: string): Promise<SshSession>;

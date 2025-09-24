@@ -24,19 +24,10 @@ interface AuthenticatedSocket extends Socket {
     namespace: '/console',
     cors: {
         origin: [
-            // URLs existentes (mantidas para compatibilidade)
             'https://netpilot.meadadigital.com',
             'https://netpilot.meadadigital.com:3000',
             'http://netpilot.meadadigital.com',
-            'http://netpilot.meadadigital.com:3000',
-            // URLs adicionais para WebSocket
-            'http://meadadigital.com:3000',
-            'https://meadadigital.com:3000',
-            'http://meadadigital.com:3001',
-            'https://meadadigital.com:3001',
-            // Localhost para desenvolvimento
-            'http://localhost:3000',
-            'https://localhost:3000'
+            'http://netpilot.meadadigital.com:3000'
         ],
         credentials: true,
     },

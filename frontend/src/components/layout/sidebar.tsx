@@ -55,14 +55,14 @@ const navigationItems = [
     icon: Clock
   },
   {
-    name: 'Logs',
-    href: '/logs',
-    icon: FileText
-  },
-  {
     name: 'Console SSH',
     href: '/console',
     icon: Terminal
+  },
+  {
+    name: 'Logs',
+    href: '/logs',
+    icon: FileText
   }
 ]
 
@@ -93,11 +93,11 @@ export function Sidebar({ isOpen, onClose, isMobile }: SidebarProps) {
     <div className={sidebarClasses}>
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b border-border">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">NP</span>
           </div>
-          <span className="text-xl font-bold text-foreground">NetPilot</span>
+          <span className="text-xl font-bold text-foreground tracking-wide">NetPilot</span>
         </div>
       </div>
 

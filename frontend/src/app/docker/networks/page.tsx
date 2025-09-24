@@ -31,93 +31,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
-
-// Mock data para redes Docker
-const mockNetworks = [
-  {
-    id: 'network_1',
-    name: 'bridge',
-    driver: 'bridge',
-    scope: 'local',
-    internal: false,
-    attachable: false,
-    ingress: false,
-    ipam: {
-      driver: 'default',
-      config: [
-        {
-          subnet: '172.17.0.0/16',
-          gateway: '172.17.0.1'
-        }
-      ]
-    },
-    containers: ['web-nginx', 'api-backend'],
-    created_at: '2024-01-15T10:30:00Z',
-    labels: {}
-  },
-  {
-    id: 'network_2',
-    name: 'host',
-    driver: 'host',
-    scope: 'local',
-    internal: false,
-    attachable: false,
-    ingress: false,
-    ipam: {
-      driver: 'default',
-      config: []
-    },
-    containers: [],
-    created_at: '2024-01-15T10:30:00Z',
-    labels: {}
-  },
-  {
-    id: 'network_3',
-    name: 'app-network',
-    driver: 'bridge',
-    scope: 'local',
-    internal: false,
-    attachable: true,
-    ingress: false,
-    ipam: {
-      driver: 'default',
-      config: [
-        {
-          subnet: '192.168.1.0/24',
-          gateway: '192.168.1.1'
-        }
-      ]
-    },
-    containers: ['database', 'redis'],
-    created_at: '2024-01-16T14:20:00Z',
-    labels: {
-      'com.docker.compose.project': 'myapp'
-    }
-  },
-  {
-    id: 'network_4',
-    name: 'isolated-net',
-    driver: 'bridge',
-    scope: 'local',
-    internal: true,
-    attachable: false,
-    ingress: false,
-    ipam: {
-      driver: 'default',
-      config: [
-        {
-          subnet: '10.0.0.0/24',
-          gateway: '10.0.0.1'
-        }
-      ]
-    },
-    containers: ['secure-service'],
-    created_at: '2024-01-17T09:15:00Z',
-    labels: {
-      'environment': 'production'
-    }
-  }
-];
+import { DockerApiService } from '@/lib/docker-api';
 
 export default function NetworksPage() {
   const [filters, setFilters] = useState({
@@ -130,62 +44,48 @@ export default function NetworksPage() {
 
   const queryClient = useQueryClient();
 
-  // Simulação da query para listar redes
   const { data, isLoading, error } = useQuery({
     queryKey: ['docker', 'networks', filters],
-    queryFn: () => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          let filteredNetworks = [...mockNetworks];
+    queryFn: async () => {
+      const result = await DockerApiService.listNetworks();
 
-          // Aplicar filtros
-          if (filters.driver) {
-            filteredNetworks = filteredNetworks.filter(net => net.driver === filters.driver);
-          }
-          if (filters.scope) {
-            filteredNetworks = filteredNetworks.filter(net => net.scope === filters.scope);
-          }
-          if (filters.search) {
-            filteredNetworks = filteredNetworks.filter(net =>
-              net.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-              net.id.toLowerCase().includes(filters.search.toLowerCase())
-            );
-          }
+      let filteredNetworks = result.data || [];
 
-          const total = filteredNetworks.length;
-          const start = (filters.page - 1) * filters.limit;
-          const end = start + filters.limit;
-          const networks = filteredNetworks.slice(start, end);
+      // Apply filters
+      if (filters.driver) {
+        filteredNetworks = filteredNetworks.filter((net: any) => net.driver === filters.driver);
+      }
+      if (filters.scope) {
+        filteredNetworks = filteredNetworks.filter((net: any) => net.scope === filters.scope);
+      }
+      if (filters.search) {
+        filteredNetworks = filteredNetworks.filter((net: any) =>
+          net.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          net.id.toLowerCase().includes(filters.search.toLowerCase())
+        );
+      }
 
-          resolve({
-            networks,
-            pagination: {
-              page: filters.page,
-              limit: filters.limit,
-              total,
-              pages: Math.ceil(total / filters.limit)
-            }
-          });
-        }, 500);
-      });
+      const total = filteredNetworks.length;
+      const start = (filters.page - 1) * filters.limit;
+      const end = start + filters.limit;
+      const networks = filteredNetworks.slice(start, end);
+
+      return {
+        networks,
+        pagination: {
+          page: filters.page,
+          limit: filters.limit,
+          total,
+          pages: Math.ceil(total / filters.limit)
+        }
+      };
     },
     refetchInterval: 30000
   });
 
-  // Mutação para remover rede
   const removeMutation = useMutation({
     mutationFn: ({ id, force }: { id: string; force?: boolean }) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Simular erro se rede estiver em uso
-          const network = mockNetworks.find(n => n.id === id);
-          if (network?.containers && network.containers.length > 0 && !force) {
-            reject(new Error('Rede está sendo usada por containers'));
-          } else {
-            resolve(`Rede ${id} removida`);
-          }
-        }, 1000);
-      });
+      return DockerApiService.removeNetwork(id, force);
     },
     onSuccess: (_, { id }) => {
       toast({
@@ -227,7 +127,9 @@ export default function NetworksPage() {
   const handleRemove = (id: string, name: string, containersCount: number) => {
     if (containersCount > 0) {
       const force = confirm(`A rede "${name}" está sendo usada por ${containersCount} container(s). Desconectar e remover?`);
-      removeMutation.mutate({ id, force });
+      if (force) {
+        removeMutation.mutate({ id, force: true });
+      }
     } else {
       const confirm_remove = confirm(`Tem certeza que deseja remover a rede "${name}"?`);
       if (confirm_remove) {
@@ -393,13 +295,7 @@ export default function NetworksPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm">{network.containers.length}</span>
-                            {network.containers.length > 0 && (
-                              <div className="text-xs text-muted-foreground">
-                                {network.containers.slice(0, 2).join(', ')}
-                                {network.containers.length > 2 && ` +${network.containers.length - 2}`}
-                              </div>
-                            )}
+                            <span className="text-sm">{network.containers || 0}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -428,7 +324,7 @@ export default function NetworksPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleRemove(network.id, network.name, network.containers.length)}
+                                onClick={() => handleRemove(network.id, network.name, network.containers || 0)}
                                 disabled={removeMutation.isPending}
                               >
                                 <Trash2 className="h-4 w-4" />

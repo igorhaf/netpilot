@@ -66,24 +66,34 @@ export function useConsoleSocket(): UseConsoleSocketReturn {
         }
 
         try {
+            // Múltiplas URLs para garantir compatibilidade
+            const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL ||
+                                process.env.NEXT_PUBLIC_API_URL ||
+                                'https://netpilot.meadadigital.com'
+
+            console.log('Tentando conectar WebSocket em:', `${websocketUrl}/console`)
+
             // Conectar ao namespace console com token JWT
-            const socket = io(`${process.env.NEXT_PUBLIC_API_URL}/console`, {
+            const socket = io(`${websocketUrl}/console`, {
                 auth: {
                     token: token
                 },
-                transports: ['websocket'],
+                transports: ['websocket', 'polling'], // Adicionar polling como fallback
                 autoConnect: true,
                 reconnection: true,
                 reconnectionAttempts: 5,
                 reconnectionDelay: 1000,
                 timeout: 20000,
+                forceNew: true, // Força nova conexão
             })
 
             socketRef.current = socket
 
             // Event listeners de conexão
             socket.on('connect', () => {
-                console.log('Console WebSocket conectado:', socket.id)
+                console.log('✅ Console WebSocket conectado com sucesso!')
+                console.log('Socket ID:', socket.id)
+                console.log('URL usada:', websocketUrl)
                 setIsConnected(true)
                 setError(null)
             })
@@ -94,7 +104,9 @@ export function useConsoleSocket(): UseConsoleSocketReturn {
             })
 
             socket.on('connect_error', (error: any) => {
-                console.error('Erro de conexão WebSocket:', error.message)
+                console.error('❌ Erro de conexão WebSocket:', error)
+                console.error('URL tentada:', websocketUrl)
+                console.error('Detalhes do erro:', error.message)
                 setError(`Erro de conexão: ${error.message}`)
                 setIsConnected(false)
             })

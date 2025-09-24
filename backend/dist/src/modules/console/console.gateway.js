@@ -282,7 +282,13 @@ exports.ConsoleGateway = ConsoleGateway = ConsoleGateway_1 = __decorate([
                 'https://netpilot.meadadigital.com',
                 'https://netpilot.meadadigital.com:3000',
                 'http://netpilot.meadadigital.com',
-                'http://netpilot.meadadigital.com:3000'
+                'http://netpilot.meadadigital.com:3000',
+                'http://meadadigital.com:3000',
+                'https://meadadigital.com:3000',
+                'http://meadadigital.com:3001',
+                'https://meadadigital.com:3001',
+                'http://localhost:3000',
+                'https://localhost:3000'
             ],
             credentials: true,
         },
