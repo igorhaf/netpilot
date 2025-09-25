@@ -7,6 +7,9 @@ import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { useRequireAuth } from '@/hooks/useAuth'
 import { formatDate, getStatusBadge, formatRelativeTime } from '@/lib/utils'
 import api from '@/lib/api'
@@ -112,8 +115,12 @@ export default function SslCertificatesPage() {
     }
   }
 
+  const breadcrumbs = [
+    { label: 'Certificados SSL', current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -122,85 +129,83 @@ export default function SslCertificatesPage() {
               Gerencie certificados SSL e renovações automáticas
             </p>
           </div>
-          <button
+          <Button
             onClick={handleRenewExpired}
             disabled={renewExpiredMutation.isPending}
-            className="btn-primary"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {renewExpiredMutation.isPending ? 'Renovando...' : 'Renovar Expirados'}
-          </button>
+          </Button>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="grid gap-4 md:grid-cols-4">
-            <div className="card">
-              <div className="card-content">
+            <Card>
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total</p>
                     <p className="text-2xl font-bold text-foreground">{stats.total}</p>
                   </div>
-                  <Shield className="h-8 w-8 text-gray-400" />
+                  <Shield className="h-8 w-8 text-blue-500" />
                 </div>
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-content">
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Válidos</p>
-                    <p className="text-2xl font-bold text-green-400">{stats.valid}</p>
+                    <p className="text-2xl font-bold text-green-500">{stats.valid}</p>
                   </div>
-                  <CheckCircle className="h-8 w-8 text-green-400" />
+                  <CheckCircle className="h-8 w-8 text-green-500" />
                 </div>
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-content">
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Expirando</p>
-                    <p className="text-2xl font-bold text-yellow-400">{stats.expiring}</p>
+                    <p className="text-2xl font-bold text-orange-500">{stats.expiring}</p>
                   </div>
-                  <AlertTriangle className="h-8 w-8 text-yellow-400" />
+                  <AlertTriangle className="h-8 w-8 text-orange-500" />
                 </div>
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-content">
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Expirados</p>
-                    <p className="text-2xl font-bold text-red-400">{stats.expired}</p>
+                    <p className="text-2xl font-bold text-red-500">{stats.expired}</p>
                   </div>
-                  <XCircle className="h-8 w-8 text-red-400" />
+                  <XCircle className="h-8 w-8 text-red-500" />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        <div className="relative">
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Buscar certificados..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-10 w-full max-w-md"
+            className="pl-10"
           />
         </div>
 
-        <div className="card">
-          <div className="card-content p-0">
+        <Card>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio Principal</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">SAN Domains</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Expira em</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Auto Renovação</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
@@ -211,57 +216,69 @@ export default function SslCertificatesPage() {
                     certificates.map((cert) => (
                       <tr key={cert.id} className="border-b border-border hover:bg-muted/50">
                         <td className="py-3 px-6">
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(cert.status)}
-                            <span className="font-medium">{cert.primaryDomain}</span>
+                          <div className="flex items-center gap-3">
+                            <div className={`h-2 w-2 rounded-full ${
+                              cert.status === 'valid' ? 'bg-green-500' :
+                              cert.status === 'expiring' ? 'bg-yellow-500' :
+                              cert.status === 'expired' ? 'bg-red-500' :
+                              'bg-gray-500'
+                            }`} />
+                            <div>
+                              <div className="font-medium text-foreground">{cert.primaryDomain}</div>
+                              {cert.sanDomains && cert.sanDomains.length > 0 && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  +{cert.sanDomains.length} domínio{cert.sanDomains.length > 1 ? 's' : ''}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </td>
-                        <td className="py-3 px-6 text-muted-foreground">
-                          {cert.sanDomains?.length ? cert.sanDomains.join(', ') : '-'}
-                        </td>
-                        <td className="py-3 px-6">
-                          <span className={getStatusBadge(cert.status)}>
-                            {cert.status === 'valid' ? 'Válido' :
-                             cert.status === 'expiring' ? 'Expirando' :
-                             cert.status === 'expired' ? 'Expirado' :
-                             cert.status}
-                          </span>
                         </td>
                         <td className="py-3 px-6 text-muted-foreground">
                           {cert.expiresAt ? formatRelativeTime(cert.expiresAt) : '-'}
                         </td>
                         <td className="py-3 px-6">
-                          {cert.autoRenew ? (
-                            <CheckCircle className="h-4 w-4 text-green-400" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-red-400" />
-                          )}
+                          <div className="flex items-center gap-2">
+                            {cert.autoRenew ? (
+                              <>
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                <span className="text-sm text-muted-foreground">Ativo</span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-muted-foreground">Desativo</span>
+                              </>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-6">
-                          <div className="flex items-center gap-2">
-                            <button
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => handleRenewCertificate(cert.id)}
                               disabled={renewCertificateMutation.isPending}
-                              className="btn-ghost btn-sm text-blue-500 hover:text-blue-600"
                               title="Renovar certificado"
                             >
                               <RefreshCw className="h-4 w-4" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => handleDeleteCertificate(cert)}
                               disabled={deleteCertificateMutation.isPending}
-                              className="btn-ghost btn-sm text-red-500 hover:text-red-600"
+                              className="text-red-600 hover:text-red-700"
                               title="Excluir certificado"
                             >
                               <Trash2 className="h-4 w-4" />
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                      <td colSpan={4} className="py-12 text-center text-muted-foreground">
                         Nenhum certificado encontrado
                       </td>
                     </tr>
@@ -269,8 +286,8 @@ export default function SslCertificatesPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Confirmation Modal */}
         <ConfirmationModal

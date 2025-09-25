@@ -40,7 +40,8 @@
       "Bash(for domain in meadadigital.com suinda.meadadigital.com bangalo.meadadigital.com)",
       "Bash(do)",
       "Bash(done)",
-      "Bash(npm run typeorm:*)"
+      "Bash(npm run typeorm:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": [],
     "ask": []

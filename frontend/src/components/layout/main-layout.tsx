@@ -3,24 +3,30 @@
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 import { Sidebar } from './sidebar'
+import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb'
 
 interface MainLayoutProps {
   children: React.ReactNode
+  breadcrumbs?: BreadcrumbItem[]
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   // Detectar se está em mobile
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-      // Em mobile, sidebar começa fechado
-      if (window.innerWidth < 768) {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      // Em mobile, sidebar começa fechado. No desktop, fica aberto por padrão
+      if (mobile) {
         setSidebarOpen(false)
       } else {
-        setSidebarOpen(true)
+        // No desktop, mantém o estado atual ou abre se for a primeira vez
+        if (window.innerWidth >= 768) {
+          setSidebarOpen(true)
+        }
       }
     }
 
@@ -51,12 +57,14 @@ export function MainLayout({ children }: MainLayoutProps) {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+        !isMobile && !sidebarOpen ? 'ml-0' : ''
+      }`}>
         {/* Header com botão hambúrguer */}
         <header className="h-16 bg-background border-b border-border flex items-center px-4 md:px-6">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors md:hidden"
+            className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
             aria-label="Toggle menu"
           >
             {sidebarOpen ? (
@@ -66,8 +74,8 @@ export function MainLayout({ children }: MainLayoutProps) {
             )}
           </button>
 
-          {/* Título da página ou breadcrumb pode ir aqui */}
-          <div className="flex-1 ml-4 md:ml-0">
+          {/* Título NetPilot apenas no mobile */}
+          <div className="flex-1 ml-4 md:hidden">
             <h1 className="text-lg font-semibold text-foreground">
               NetPilot
             </h1>
@@ -77,6 +85,12 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Área principal de conteúdo */}
         <main className="flex-1 overflow-auto">
           <div className="p-4 md:p-6">
+            {/* Breadcrumbs */}
+            {breadcrumbs && breadcrumbs.length > 0 && (
+              <div className="mb-6">
+                <Breadcrumb items={breadcrumbs} />
+              </div>
+            )}
             {children}
           </div>
         </main>

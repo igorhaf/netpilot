@@ -34,15 +34,15 @@
           web
         ]
       
-      deit-meadadigital-com:
-        rule: Host(`deit.meadadigital.com`)
-        service: deit-meadadigital-com-service
+      deit-meadadigital-com-: 
+        rule: Host(`deit.meadadigital.com`) && PathPrefix(``)
+        service: deit-meadadigital-com--service
         middlewares: []
         priority: 1
         entryPoints: [
           websecure
         ]
-        tls:
+        tls: 
           certResolver: letsencrypt
         
       
@@ -55,7 +55,7 @@
           web
         ]
       
-      api-netpilot-com-redirect:
+      api-netpilot-com-redirect: 
         rule: Host(`api.netpilot.com`)
         middlewares: [
           api-netpilot-com-redirect-https
@@ -63,51 +63,7 @@
         entryPoints: [
           web
         ]
-
-      # Nova rota específica para WebSocket
-      netpilot-websocket:
-        rule: Host(`netpilot.meadadigital.com`) && (PathPrefix(`/socket.io`) || PathPrefix(`/api/socket.io`))
-        service: netpilot-websocket-service
-        middlewares: []
-        priority: 15
-        entryPoints: [
-          websecure
-        ]
-        tls:
-          certResolver: letsencrypt
-
-      bangalo-meadadigital-com-api:
-        rule: Host(`bangalo.meadadigital.com`) && PathPrefix(`/api`)
-        service: bangalo-meadadigital-com-api-service
-        middlewares: []
-        priority: 10
-        entryPoints: [
-          websecure
-        ]
-        tls:
-          certResolver: letsencrypt
-
-      bangalo-meadadigital-com:
-        rule: Host(`bangalo.meadadigital.com`)
-        service: bangalo-meadadigital-com-service
-        middlewares: []
-        priority: 1
-        entryPoints: [
-          websecure
-        ]
-        tls:
-          certResolver: letsencrypt
-
-
-      bangalo-meadadigital-com-redirect:
-        rule: Host(`bangalo.meadadigital.com`)
-        middlewares: [
-          bangalo-meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-
+      
     
     services: 
       netpilot-meadadigital-com-api-service: 
@@ -128,40 +84,15 @@
           ]
         
       
-      deit-meadadigital-com-service:
-        loadBalancer:
+      deit-meadadigital-com--service: 
+        loadBalancer: 
           servers: [
-
+            
               url: http://deit_deit-frontend_1:3008
-
+            
           ]
-
-
-      # Serviço específico para WebSocket
-      netpilot-websocket-service:
-        loadBalancer:
-          servers: [
-
-              url: http://backend:3001
-
-          ]
-
-      bangalo-meadadigital-com-api-service:
-        loadBalancer:
-          servers: [
-
-              url: http://bangalo-backend:9881
-
-          ]
-
-      bangalo-meadadigital-com-service:
-        loadBalancer:
-          servers: [
-
-              url: http://bangalo-frontend:3081
-
-          ]
-
+        
+      
     
     middlewares: 
       netpilot-meadadigital-com-redirect-https: 
@@ -176,17 +107,11 @@
           permanent: true
         
       
-      api-netpilot-com-redirect-https:
-        redirectScheme:
+      api-netpilot-com-redirect-https: 
+        redirectScheme: 
           scheme: https
           permanent: true
-
-
-      bangalo-meadadigital-com-redirect-https:
-        redirectScheme:
-          scheme: https
-          permanent: true
-
-
+        
+      
     
   

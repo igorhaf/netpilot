@@ -160,8 +160,14 @@ export default function CreateContainerPage() {
     createMutation.mutate(submitData);
   };
 
+  const breadcrumbs = [
+    { label: 'Docker', href: '/docker' },
+    { label: 'Containers', href: '/docker/containers' },
+    { label: 'Criar Container', current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
       <div className="flex items-center space-x-4">
         <Link href="/docker/containers">

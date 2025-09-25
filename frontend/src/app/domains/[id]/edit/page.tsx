@@ -143,9 +143,14 @@ export default function EditDomainPage() {
     router.push('/domains')
   }
 
+  const breadcrumbs = [
+    { label: 'Domínios', href: '/domains' },
+    { label: domain?.name || 'Carregando...', current: true }
+  ]
+
   if (isLoading) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={breadcrumbs}>
         <PageLoading />
       </MainLayout>
     )
@@ -153,7 +158,7 @@ export default function EditDomainPage() {
 
   if (!domain) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={breadcrumbs}>
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-foreground">Domínio não encontrado</h2>
           <p className="text-muted-foreground mt-2">O domínio solicitado não foi encontrado.</p>
@@ -169,7 +174,7 @@ export default function EditDomainPage() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -377,170 +382,282 @@ export default function EditDomainPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Imagem</TableHead>
-                        <TableHead>Portas</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {containersResponse?.data?.map((container: DockerContainer) => (
-                        <TableRow key={container.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <div className={`w-2 h-2 rounded-full ${
-                                container.state === 'running'
-                                  ? 'bg-green-500'
-                                  : container.state === 'exited'
-                                    ? 'bg-red-500'
-                                    : 'bg-yellow-500'
-                              }`}></div>
-                              <Link
-                                href={`/docker/containers/${container.id}`}
-                                className="font-medium hover:underline"
-                              >
-                                <span
-                                  className="max-w-[120px] truncate inline-block"
-                                  title={container.names?.[0]?.replace(/^\//, '') || container.id}
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Portas</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {containersResponse?.data?.map((container: DockerContainer) => (
+                          <TableRow key={container.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  container.state === 'running'
+                                    ? 'bg-green-500'
+                                    : container.state === 'exited'
+                                      ? 'bg-red-500'
+                                      : 'bg-yellow-500'
+                                }`}></div>
+                                <Link
+                                  href={`/docker/containers/${container.id}`}
+                                  className="font-medium hover:underline"
                                 >
-                                  {container.names?.[0]?.replace(/^\//, '') || container.id.substring(0, 12)}
-                                </span>
-                              </Link>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {container.image.length > 30
-                                ? container.image.substring(0, 30) + '...'
-                                : container.image
-                              }
-                            </div>
-                          </TableCell>
-                          <TableCell>
+                                  <span
+                                    className="max-w-[120px] truncate inline-block"
+                                    title={container.names?.[0]?.replace(/^\//, '') || container.id}
+                                  >
+                                    {container.names?.[0]?.replace(/^\//, '') || container.id.substring(0, 12)}
+                                  </span>
+                                </Link>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {container.ports?.length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {container.ports.slice(0, 2).map((port: any, idx: number) => (
+                                    <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
+                                      {port.PublicPort ? `${port.PublicPort}:` : ''}{port.PrivatePort}
+                                    </span>
+                                  ))}
+                                  {container.ports.length > 2 && (
+                                    <span className="text-xs bg-muted px-2 py-1 rounded">
+                                      +{container.ports.length - 2}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Link href={`/docker/containers/${container.id}`}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    title="Ver detalhes"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </Link>
+
+                                <Link href={`/docker/images`}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    title={`Ver imagem: ${container.image}`}
+                                  >
+                                    <ImageIcon className="h-4 w-4" />
+                                  </Button>
+                                </Link>
+
+                                {container.state === 'running' ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleContainerAction(container.id, 'stop')}
+                                    disabled={containerActionMutation.isPending}
+                                    title="Parar"
+                                  >
+                                    <Square className="h-4 w-4" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleContainerAction(container.id, 'start')}
+                                    disabled={containerActionMutation.isPending}
+                                    title="Iniciar"
+                                  >
+                                    <Play className="h-4 w-4" />
+                                  </Button>
+                                )}
+
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleContainerAction(container.id, 'restart')}
+                                  disabled={containerActionMutation.isPending}
+                                  title="Reiniciar"
+                                >
+                                  <RotateCcw className="h-4 w-4" />
+                                </Button>
+
+                                <Link href={`/docker/containers/${container.id}/logs`}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    title="Ver logs"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </Link>
+
+                                {container.state === 'running' && (
+                                  <>
+                                    <Link href={`/docker/containers/${container.id}/terminal`}>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        title="Terminal"
+                                      >
+                                        <Terminal className="h-4 w-4" />
+                                      </Button>
+                                    </Link>
+
+                                    <Link href={`/docker/containers/${container.id}/stats`}>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        title="Estatísticas"
+                                      >
+                                        <Activity className="h-4 w-4" />
+                                      </Button>
+                                    </Link>
+                                  </>
+                                )}
+
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleContainerAction(container.id, 'remove')}
+                                  disabled={containerActionMutation.isPending}
+                                  className="text-red-600 hover:text-red-700"
+                                  title="Remover"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-4">
+                    {containersResponse?.data?.map((container: DockerContainer) => (
+                      <div key={container.id} className="border rounded-lg p-4 space-y-3">
+                        {/* Container Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-3 h-3 rounded-full ${
+                              container.state === 'running'
+                                ? 'bg-green-500'
+                                : container.state === 'exited'
+                                  ? 'bg-red-500'
+                                  : 'bg-yellow-500'
+                            }`}></div>
+                            <Link
+                              href={`/docker/containers/${container.id}`}
+                              className="font-medium hover:underline"
+                            >
+                              <span className="text-sm">
+                                {container.names?.[0]?.replace(/^\//, '') || container.id.substring(0, 12)}
+                              </span>
+                            </Link>
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            container.state === 'running'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {container.state === 'running' ? 'Rodando' : 'Parado'}
+                          </span>
+                        </div>
+
+                        {/* Ports */}
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">Portas:</label>
+                          <div className="mt-1">
                             {container.ports?.length > 0 ? (
                               <div className="flex flex-wrap gap-1">
-                                {container.ports.slice(0, 2).map((port: any, idx: number) => (
+                                {container.ports.slice(0, 3).map((port: any, idx: number) => (
                                   <span key={idx} className="text-xs bg-muted px-2 py-1 rounded">
                                     {port.PublicPort ? `${port.PublicPort}:` : ''}{port.PrivatePort}
                                   </span>
                                 ))}
-                                {container.ports.length > 2 && (
+                                {container.ports.length > 3 && (
                                   <span className="text-xs bg-muted px-2 py-1 rounded">
-                                    +{container.ports.length - 2}
+                                    +{container.ports.length - 3}
                                   </span>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground">-</span>
+                              <span className="text-xs text-muted-foreground">-</span>
                             )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Link href={`/docker/containers/${container.id}`}>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  title="Ver detalhes"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </Link>
+                          </div>
+                        </div>
 
-                              <Link href={`/docker/images`}>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  title={`Ver imagem: ${container.image}`}
-                                >
-                                  <ImageIcon className="h-4 w-4" />
-                                </Button>
-                              </Link>
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2">
+                          <Link href={`/docker/containers/${container.id}`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Detalhes
+                            </Button>
+                          </Link>
 
-                              {container.state === 'running' ? (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleContainerAction(container.id, 'stop')}
-                                  disabled={containerActionMutation.isPending}
-                                  title="Parar"
-                                >
-                                  <Square className="h-4 w-4" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleContainerAction(container.id, 'start')}
-                                  disabled={containerActionMutation.isPending}
-                                  title="Iniciar"
-                                >
-                                  <Play className="h-4 w-4" />
-                                </Button>
-                              )}
+                          {container.state === 'running' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs"
+                              onClick={() => handleContainerAction(container.id, 'stop')}
+                              disabled={containerActionMutation.isPending}
+                            >
+                              <Square className="h-3 w-3 mr-1" />
+                              Parar
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs"
+                              onClick={() => handleContainerAction(container.id, 'start')}
+                              disabled={containerActionMutation.isPending}
+                            >
+                              <Play className="h-3 w-3 mr-1" />
+                              Iniciar
+                            </Button>
+                          )}
 
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleContainerAction(container.id, 'restart')}
-                                disabled={containerActionMutation.isPending}
-                                title="Reiniciar"
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                              </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => handleContainerAction(container.id, 'restart')}
+                            disabled={containerActionMutation.isPending}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Reiniciar
+                          </Button>
 
-                              <Link href={`/docker/containers/${container.id}/logs`}>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  title="Ver logs"
-                                >
-                                  <FileText className="h-4 w-4" />
-                                </Button>
-                              </Link>
-
-                              {container.state === 'running' && (
-                                <>
-                                  <Link href={`/docker/containers/${container.id}/terminal`}>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      title="Terminal"
-                                    >
-                                      <Terminal className="h-4 w-4" />
-                                    </Button>
-                                  </Link>
-
-                                  <Link href={`/docker/containers/${container.id}/stats`}>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      title="Estatísticas"
-                                    >
-                                      <Activity className="h-4 w-4" />
-                                    </Button>
-                                  </Link>
-                                </>
-                              )}
-
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleContainerAction(container.id, 'remove')}
-                                disabled={containerActionMutation.isPending}
-                                className="text-red-600 hover:text-red-700"
-                                title="Remover"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                          <Link href={`/docker/containers/${container.id}/logs`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              <FileText className="h-3 w-3 mr-1" />
+                              Logs
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
                   {(containersResponse?.data?.length || 0) === 0 && (
                     <div className="text-center py-8">

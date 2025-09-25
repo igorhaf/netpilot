@@ -2,12 +2,15 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Search, Globe, CheckCircle, XCircle, Settings, Trash2, Eye, Play, Square, RotateCcw, Shield, Network } from 'lucide-react'
+import { Plus, Search, Globe, CheckCircle, XCircle, Settings, Trash2, Eye, Play, Square, RotateCcw, Shield, ShieldX, Network, ExternalLink, Lock, Unlock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import { useRequireAuth } from '@/hooks/useAuth'
 import { formatDate, getStatusBadge } from '@/lib/utils'
 import api from '@/lib/api'
@@ -39,16 +42,64 @@ export default function DomainsPage() {
   })
 
   const toggleDomainMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      api.patch(`/domains/${id}`, { isActive: !isActive }),
+    mutationFn: ({ domain, isActive }: { domain: Domain; isActive: boolean }) =>
+      api.patch(`/domains/${domain.id}`, {
+        name: domain.name,
+        description: domain.description,
+        isActive,
+        autoTls: domain.autoTls,
+        forceHttps: domain.forceHttps,
+        blockExternalAccess: domain.blockExternalAccess,
+        enableWwwRedirect: domain.enableWwwRedirect,
+        bindIp: domain.bindIp,
+      }),
     onSuccess: (_, { isActive }) => {
       queryClient.invalidateQueries({ queryKey: ['domains'] })
-      toast.success(`Domínio ${!isActive ? 'ativado' : 'desativado'} com sucesso!`)
+      toast.success(`Domínio ${isActive ? 'ativado' : 'desativado'} com sucesso!`)
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Erro ao alterar status do domínio')
     },
   })
+
+  const toggleLockMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/domains/${id}/toggle-lock`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['domains'] })
+      toast.success('Status do travamento atualizado!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao atualizar travamento')
+    },
+  })
+
+  const restartDomainMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/domains/${id}/restart`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['domains'] })
+      toast.success('Domínio reiniciado com sucesso!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao reiniciar domínio')
+    },
+  })
+
+  const getSSLIcon = (domain: Domain) => {
+    if (!domain.sslCertificates || domain.sslCertificates.length === 0) {
+      return <Shield className="h-4 w-4" />
+    }
+
+    const hasValidCert = domain.sslCertificates.some(cert => cert.status === 'valid')
+    const hasExpiredCert = domain.sslCertificates.some(cert => cert.status === 'expired')
+
+    if (hasValidCert) {
+      return <Shield className="h-4 w-4" />
+    } else if (hasExpiredCert) {
+      return <ShieldX className="h-4 w-4" />
+    } else {
+      return <Shield className="h-4 w-4" />
+    }
+  }
 
   if (!auth) return null
 
@@ -73,7 +124,15 @@ export default function DomainsPage() {
   }
 
   const handleToggleDomain = (domain: Domain) => {
-    toggleDomainMutation.mutate({ id: domain.id, isActive: domain.isActive })
+    toggleDomainMutation.mutate({ domain, isActive: !domain.isActive })
+  }
+
+  const handleToggleLock = (domain: Domain) => {
+    toggleLockMutation.mutate(domain.id)
+  }
+
+  const handleRestartDomain = (domain: Domain) => {
+    restartDomainMutation.mutate(domain.id)
   }
 
   const handleViewDomain = (domainId: string) => {
@@ -98,8 +157,12 @@ export default function DomainsPage() {
     }
   }
 
+  const breadcrumbs = [
+    { label: 'Domínios', current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -109,135 +172,161 @@ export default function DomainsPage() {
               Gerencie seus domínios e configurações
             </p>
           </div>
-          <button
-            onClick={handleCreateDomain}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
+          <Button onClick={handleCreateDomain} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus className="h-4 w-4 mr-2" />
             Adicionar Domínio
-          </button>
+          </Button>
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Buscar domínios..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-10 w-full max-w-md"
+            className="pl-10"
           />
         </div>
 
         {/* Domains Table */}
-        <div className="card">
-          <div className="card-content p-0">
+        <Card>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Descrição</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Auto TLS</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Status</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Rotas</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Criado em</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
+                    <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground">Domínio</th>
+                    <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden sm:table-cell">Auto TLS</th>
+                    <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden md:table-cell">Rotas</th>
+                    <th className="text-right py-3 px-3 md:px-6 font-medium text-muted-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {domains && domains.length > 0 ? (
                     domains.map((domain) => (
-                      <tr key={domain.id} className="border-b border-border hover:bg-muted/50">
-                        <td className="py-3 px-6">
+                      <tr key={domain.id} className={`border-b border-border hover:bg-muted/50 ${
+                        domain.isLocked ? 'bg-gray-50 opacity-60' : ''
+                      }`}>
+                        <td className="py-3 px-3 md:px-6">
                           <div className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-blue-400" />
-                            <span className="font-medium">{domain.name}</span>
+                            <div className={`w-2 h-2 rounded-full ${
+                              domain.isActive ? 'bg-green-500' : 'bg-red-500'
+                            }`}></div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                              <span className="font-medium text-sm md:text-base">{domain.name}</span>
+                              <div className="flex items-center gap-2 sm:hidden">
+                                {domain.autoTls ? (
+                                  <CheckCircle className="h-3 w-3 text-green-400" />
+                                ) : (
+                                  <XCircle className="h-3 w-3 text-red-400" />
+                                )}
+                                <span className="text-xs text-muted-foreground">
+                                  {(domain.proxyRules?.length || 0) + (domain.redirects?.length || 0)} rotas
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => window.open(`https://${domain.name}`, '_blank')}
+                                className="h-5 w-5 p-0 sm:h-6 sm:w-6"
+                                title={`Acessar ${domain.name}`}
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3 px-6 text-muted-foreground">
-                          {domain.description || '-'}
-                        </td>
-                        <td className="py-3 px-6">
+                        <td className="py-3 px-3 md:px-6 hidden sm:table-cell">
                           {domain.autoTls ? (
                             <CheckCircle className="h-4 w-4 text-green-400" />
                           ) : (
                             <XCircle className="h-4 w-4 text-red-400" />
                           )}
                         </td>
-                        <td className="py-3 px-6">
-                          <span className={getStatusBadge(domain.isActive ? 'active' : 'inactive')}>
-                            {domain.isActive ? 'Ativo' : 'Inativo'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-6 text-muted-foreground">
+                        <td className="py-3 px-3 md:px-6 text-muted-foreground hidden md:table-cell">
                           {(domain.proxyRules?.length || 0) + (domain.redirects?.length || 0)}
                         </td>
-                        <td className="py-3 px-6 text-muted-foreground">
-                          {formatDate(domain.createdAt)}
-                        </td>
-                        <td className="py-3 px-6">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleViewDomain(domain.id)}
-                              className="btn-ghost btn-sm text-gray-500 hover:text-gray-600"
-                              title="Ver detalhes"
+                        <td className="py-3 px-3 md:px-6">
+                          <div className="flex items-center justify-end gap-0.5 md:gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleToggleLock(domain)}
+                              disabled={toggleLockMutation.isPending}
+                              className="h-8 w-8 md:h-9 md:w-9 p-0"
+                              title={domain.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
                             >
-                              <Eye className="h-4 w-4" />
-                            </button>
+                              {domain.isLocked ? (
+                                <Lock className="h-3 w-3 md:h-4 md:w-4" />
+                              ) : (
+                                <Unlock className="h-3 w-3 md:h-4 md:w-4" />
+                              )}
+                            </Button>
 
-                            <button
-                              onClick={() => handleProxyRules(domain.id)}
-                              className="btn-ghost btn-sm text-purple-500 hover:text-purple-600"
-                              title="Regras de Proxy"
-                            >
-                              <Network className="h-4 w-4" />
-                            </button>
+                            {!domain.isLocked && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleToggleDomain(domain)}
+                                  disabled={toggleDomainMutation.isPending}
+                                  className="h-8 w-8 md:h-9 md:w-9 p-0"
+                                  title={domain.isActive ? 'Parar domínio' : 'Iniciar domínio'}
+                                >
+                                  {domain.isActive ? <Square className="h-3 w-3 md:h-4 md:w-4" /> : <Play className="h-3 w-3 md:h-4 md:w-4" />}
+                                </Button>
 
-                            <button
-                              onClick={() => handleSSLCertificates(domain.id)}
-                              className="btn-ghost btn-sm text-green-500 hover:text-green-600"
-                              title="Certificados SSL"
-                            >
-                              <Shield className="h-4 w-4" />
-                            </button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRestartDomain(domain)}
+                                  disabled={restartDomainMutation.isPending}
+                                  className="h-8 w-8 md:h-9 md:w-9 p-0"
+                                  title="Reiniciar domínio"
+                                >
+                                  <RotateCcw className="h-3 w-3 md:h-4 md:w-4" />
+                                </Button>
 
-                            <button
-                              onClick={() => handleToggleDomain(domain)}
-                              disabled={toggleDomainMutation.isPending}
-                              className={`btn-ghost btn-sm ${
-                                domain.isActive
-                                  ? 'text-red-500 hover:text-red-600'
-                                  : 'text-green-500 hover:text-green-600'
-                              }`}
-                              title={domain.isActive ? 'Desativar domínio' : 'Ativar domínio'}
-                            >
-                              {domain.isActive ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                            </button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleViewDomain(domain.id)}
+                                  className="h-8 w-8 md:h-9 md:w-9 p-0"
+                                  title="Ver detalhes do domínio"
+                                >
+                                  <Eye className="h-3 w-3 md:h-4 md:w-4" />
+                                </Button>
 
-                            <button
-                              onClick={() => handleEditDomain(domain.id)}
-                              className="btn-ghost btn-sm text-blue-500 hover:text-blue-600"
-                              title="Editar domínio"
-                            >
-                              <Settings className="h-4 w-4" />
-                            </button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditDomain(domain.id)}
+                                  className="h-8 w-8 md:h-9 md:w-9 p-0"
+                                  title="Editar domínio"
+                                >
+                                  <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                                </Button>
 
-                            <button
-                              onClick={() => handleDeleteDomain(domain)}
-                              className="btn-ghost btn-sm text-red-500 hover:text-red-600"
-                              title="Excluir domínio"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteDomain(domain)}
+                                  className="text-red-600 hover:text-red-700 h-8 w-8 md:h-9 md:w-9 p-0"
+                                  title="Excluir domínio"
+                                >
+                                  <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-muted-foreground">
+                      <td colSpan={4} className="py-12 text-center text-muted-foreground">
                         Nenhum domínio encontrado
                       </td>
                     </tr>
@@ -245,8 +334,8 @@ export default function DomainsPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Confirmation Modal */}
         <ConfirmationModal

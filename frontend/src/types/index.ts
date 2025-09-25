@@ -14,6 +14,7 @@ export interface Domain {
   name: string
   description?: string
   isActive: boolean
+  isLocked?: boolean
   autoTls: boolean
   forceHttps: boolean
   blockExternalAccess: boolean
@@ -163,4 +164,69 @@ export interface CreateSslCertificateDto {
   autoRenew?: boolean
   renewBeforeDays?: number
   domainId: string
+}
+
+// Preset Library Types
+export interface PresetFile {
+  id: string
+  name: string
+  description?: string
+  type: 'docker' | 'persona' | 'template' | 'script' | 'config'
+  content: string
+  language?: string
+  filename?: string
+  tags: string[]
+  size: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Stack {
+  id: string
+  name: string
+  description: string
+  technology: string
+  color: string
+  icon: string
+  presets: PresetFile[]
+  isActive: boolean
+  version: string
+  author?: string
+  tags: string[]
+  totalPresets: number
+  totalSize: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface StackAssociation {
+  id: string
+  domainId: string
+  stackId: string
+  presetIds: string[]
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateStackDto {
+  name: string
+  description: string
+  technology: string
+  color: string
+  icon: string
+  version?: string
+  author?: string
+  tags: string[]
+}
+
+export interface CreatePresetDto {
+  name: string
+  description?: string
+  type: 'docker' | 'persona' | 'template' | 'script' | 'config'
+  content: string
+  language?: string
+  filename?: string
+  tags: string[]
+  stackId: string
 }

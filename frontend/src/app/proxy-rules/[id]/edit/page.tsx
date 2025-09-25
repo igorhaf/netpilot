@@ -110,9 +110,14 @@ export default function EditProxyRulePage() {
     router.push('/proxy-rules')
   }
 
+  const breadcrumbs = [
+    { label: 'Proxy Reverso', href: '/proxy-rules' },
+    { label: proxyRule?.sourcePath || 'Carregando...', current: true }
+  ]
+
   if (ruleLoading || domainsLoading) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={breadcrumbs}>
         <PageLoading />
       </MainLayout>
     )
@@ -120,7 +125,7 @@ export default function EditProxyRulePage() {
 
   if (!proxyRule) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={breadcrumbs}>
         <div className="text-center py-12">
           <p className="text-muted-foreground">Regra de proxy não encontrada</p>
         </div>
@@ -129,7 +134,7 @@ export default function EditProxyRulePage() {
   }
 
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

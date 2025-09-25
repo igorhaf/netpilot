@@ -91,14 +91,18 @@ export default function DockerDashboard() {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       </MainLayout>
     );
   }
 
+  const breadcrumbs = [
+    { label: 'Docker', current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -109,7 +113,7 @@ export default function DockerDashboard() {
         </div>
         <div className="flex space-x-2">
           <Link href="/docker/containers/create">
-            <Button>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Plus className="h-4 w-4 mr-2" />
               Novo Container
             </Button>
