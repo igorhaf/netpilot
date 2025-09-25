@@ -2,11 +2,15 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, Search, Play, Pause, Plus, Edit, Trash2, Lock, Unlock } from 'lucide-react'
+import { ArrowRight, Search, Play, Pause, Plus, Edit, Trash2, Lock, Unlock, Square } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import { useRequireAuth } from '@/hooks/useAuth'
 import { formatDate, getStatusBadge } from '@/lib/utils'
 import api from '@/lib/api'
@@ -16,6 +20,7 @@ export default function ProxyRulesPage() {
   const auth = useRequireAuth()
   const router = useRouter()
   const [search, setSearch] = useState('')
+  const [ruleToDelete, setRuleToDelete] = useState<ProxyRule | null>(null)
   const queryClient = useQueryClient()
 
   const { data: proxyRules, isLoading } = useQuery<ProxyRule[]>({
@@ -56,6 +61,18 @@ export default function ProxyRulesPage() {
     },
   })
 
+  // Mutation para descartar modificações
+  const discardChangesMutation = useMutation({
+    mutationFn: () => api.post('/proxy-rules/discard-changes'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proxy-rules'] })
+      toast.success('Modificações descartadas com sucesso!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao descartar modificações')
+    },
+  })
+
   // Mutation para travar/destravar regra
   const toggleLockMutation = useMutation({
     mutationFn: (id: string) => api.patch(`/proxy-rules/${id}/toggle-lock`),
@@ -74,6 +91,7 @@ export default function ProxyRulesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proxy-rules'] })
       toast.success('Regra de proxy excluída com sucesso!')
+      setRuleToDelete(null)
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Erro ao excluir regra de proxy')
@@ -91,6 +109,10 @@ export default function ProxyRulesPage() {
     applyConfigurationMutation.mutate()
   }
 
+  const handleDiscardChanges = () => {
+    discardChangesMutation.mutate()
+  }
+
   const handleToggleLock = (rule: ProxyRule) => {
     toggleLockMutation.mutate(rule.id)
   }
@@ -100,8 +122,12 @@ export default function ProxyRulesPage() {
   }
 
   const handleDeleteRule = (rule: ProxyRule) => {
-    if (window.confirm('Tem certeza que deseja excluir esta regra de proxy?')) {
-      deleteRuleMutation.mutate(rule.id)
+    setRuleToDelete(rule)
+  }
+
+  const confirmDeleteRule = () => {
+    if (ruleToDelete) {
+      deleteRuleMutation.mutate(ruleToDelete.id)
     }
   }
 
@@ -111,16 +137,20 @@ export default function ProxyRulesPage() {
 
   if (!auth) return null
 
+  const breadcrumbs = [
+    { label: 'Proxy Reverso', current: true }
+  ]
+
   if (isLoading) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={breadcrumbs}>
         <PageLoading />
       </MainLayout>
     )
   }
 
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -130,36 +160,44 @@ export default function ProxyRulesPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="outline"
               onClick={handleCreateProxyRule}
-              className="btn-secondary flex items-center gap-2"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-2" />
               Nova Regra
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDiscardChanges}
+              disabled={discardChangesMutation.isPending}
+              className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
+            >
+              {discardChangesMutation.isPending ? 'Descartando...' : 'Descartar Modificações'}
+            </Button>
+            <Button
               onClick={handleApplyConfiguration}
               disabled={applyConfigurationMutation.isPending}
-              className="btn-primary"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {applyConfigurationMutation.isPending ? 'Aplicando...' : 'Aplicar Configuração'}
-            </button>
+            </Button>
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Buscar regras..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input pl-10 w-full max-w-md"
+            className="pl-10"
           />
         </div>
 
-        <div className="card">
-          <div className="card-content p-0">
+        <Card>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -168,18 +206,20 @@ export default function ProxyRulesPage() {
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Destino</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Prioridade</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Status</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Travamento</th>
                     <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {proxyRules && proxyRules.length > 0 ? (
                     proxyRules.map((rule) => (
-                      <tr key={rule.id} className="border-b border-border hover:bg-muted/50">
+                      <tr key={rule.id} className={`border-b border-border hover:bg-muted/50 ${
+                        rule.isLocked ? 'bg-gray-50 opacity-60' : ''
+                      }`}>
                         <td className="py-3 px-6">
                           <div className="flex items-center gap-2">
-                            <ArrowRight className="h-4 w-4 text-blue-400" />
+                            <div className={`w-2 h-2 rounded-full ${
+                              rule.isActive ? 'bg-green-500' : 'bg-gray-400'
+                            }`}></div>
                             <code className="text-sm bg-muted px-2 py-1 rounded">{rule.sourcePath}</code>
                           </div>
                         </td>
@@ -193,20 +233,12 @@ export default function ProxyRulesPage() {
                           {rule.priority}
                         </td>
                         <td className="py-3 px-6">
-                          <span className={getStatusBadge(rule.isActive ? 'active' : 'inactive')}>
-                            {rule.isActive ? 'Ativo' : 'Inativo'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-6">
-                          <div className="flex items-center gap-2">
-                            <button
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={() => handleToggleLock(rule)}
                               disabled={toggleLockMutation.isPending}
-                              className={`btn-ghost btn-sm ${
-                                rule.isLocked
-                                  ? 'text-red-500 hover:text-red-600'
-                                  : 'text-gray-500 hover:text-gray-600'
-                              }`}
                               title={rule.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
                             >
                               {rule.isLocked ? (
@@ -214,47 +246,51 @@ export default function ProxyRulesPage() {
                               ) : (
                                 <Unlock className="h-4 w-4" />
                               )}
-                            </button>
-                            {rule.isLocked && (
-                              <span className="text-xs text-red-500 font-medium">TRAVADO</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-6">
-                          <div className="flex items-center gap-2">
+                            </Button>
+
                             {!rule.isLocked && (
                               <>
-                                <button
-                                  onClick={() => handleToggleProxyRule(rule)}
-                                  disabled={toggleProxyRuleMutation.isPending}
-                                  className={`btn-ghost btn-sm ${
-                                    rule.isActive
-                                      ? 'text-red-500 hover:text-red-600'
-                                      : 'text-green-500 hover:text-green-600'
-                                  }`}
-                                  title={rule.isActive ? 'Desativar regra' : 'Ativar regra'}
-                                >
-                                  {rule.isActive ? (
-                                    <Pause className="h-4 w-4" />
-                                  ) : (
+                                {rule.isActive ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleToggleProxyRule(rule)}
+                                    disabled={toggleProxyRuleMutation.isPending}
+                                    title="Desativar regra"
+                                  >
+                                    <Square className="h-4 w-4" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleToggleProxyRule(rule)}
+                                    disabled={toggleProxyRuleMutation.isPending}
+                                    title="Ativar regra"
+                                  >
                                     <Play className="h-4 w-4" />
-                                  )}
-                                </button>
-                                <button
+                                  </Button>
+                                )}
+
+                                <Button
+                                  size="sm"
+                                  variant="outline"
                                   onClick={() => handleEditRule(rule)}
-                                  className="btn-ghost btn-sm text-blue-500 hover:text-blue-600"
                                   title="Editar regra"
                                 >
                                   <Edit className="h-4 w-4" />
-                                </button>
-                                <button
+                                </Button>
+
+                                <Button
+                                  size="sm"
+                                  variant="outline"
                                   onClick={() => handleDeleteRule(rule)}
                                   disabled={deleteRuleMutation.isPending}
-                                  className="btn-ghost btn-sm text-red-500 hover:text-red-600"
+                                  className="text-red-600 hover:text-red-700"
                                   title="Excluir regra"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </button>
+                                </Button>
                               </>
                             )}
                           </div>
@@ -263,7 +299,7 @@ export default function ProxyRulesPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-muted-foreground">
+                      <td colSpan={5} className="py-12 text-center text-muted-foreground">
                         Nenhuma regra de proxy encontrada
                       </td>
                     </tr>
@@ -271,8 +307,26 @@ export default function ProxyRulesPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={!!ruleToDelete}
+          onClose={() => setRuleToDelete(null)}
+          onConfirm={confirmDeleteRule}
+          title="Confirmar Exclusão"
+          subtitle="Esta ação não pode ser desfeita."
+          itemName={ruleToDelete?.sourcePath || ''}
+          consequences={[
+            'Remover permanentemente a regra de proxy',
+            'Interromper o redirecionamento configurado',
+            'Afetar o acesso aos recursos protegidos'
+          ]}
+          confirmText="Excluir Regra"
+          isLoading={deleteRuleMutation.isPending}
+        />
+
       </div>
     </MainLayout>
   )

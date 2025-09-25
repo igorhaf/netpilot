@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   BarChart3,
   Globe,
@@ -13,7 +13,9 @@ import {
   Settings,
   Terminal,
   Container,
-  Clock
+  Clock,
+  Zap,
+  Library
 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth'
 import { cn } from '@/lib/utils'
@@ -63,6 +65,16 @@ const navigationItems = [
     name: 'Logs',
     href: '/logs',
     icon: FileText
+  },
+  {
+    name: 'Integrações',
+    href: '/integrations',
+    icon: Zap
+  },
+  {
+    name: 'Biblioteca de Presets',
+    href: '/preset-library',
+    icon: Library
   }
 ]
 
@@ -74,19 +86,27 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose, isMobile }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useAuthStore()
 
-  // No desktop, sempre mostra. No mobile, usa o estado isOpen
+  // Tanto mobile quanto desktop respondem ao estado isOpen
   const sidebarClasses = isMobile
     ? `fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col bg-sidebar border-r border-border transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`
-    : 'flex h-full w-64 flex-col bg-sidebar border-r border-border'
+    : `flex h-full w-64 flex-col bg-sidebar border-r border-border transform transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`
 
   const handleLinkClick = () => {
     if (isMobile) {
       onClose()
     }
+  }
+
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
   }
 
   return (
@@ -155,7 +175,7 @@ export function Sidebar({ isOpen, onClose, isMobile }: SidebarProps) {
           </Link>
 
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             <LogOut className="h-4 w-4" />

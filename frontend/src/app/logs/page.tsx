@@ -18,6 +18,8 @@ import {
 import toast from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { Button } from '@/components/ui/button'
 import { useRequireAuth } from '@/hooks/useAuth'
 import { formatDate, formatRelativeTime, getStatusColor, formatDuration } from '@/lib/utils'
 import api from '@/lib/api'
@@ -28,6 +30,8 @@ export default function LogsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [selectedLog, setSelectedLog] = useState<Log | null>(null)
+  const [showClearConfirmation, setShowClearConfirmation] = useState(false)
   const queryClient = useQueryClient()
 
   const { data: logs, isLoading } = useQuery<Log[]>({
@@ -111,9 +115,12 @@ export default function LogsPage() {
   })
 
   const handleClearLogs = () => {
-    if (confirm('Tem certeza que deseja remover todos os logs? Esta ação não pode ser desfeita.')) {
-      clearLogsMutation.mutate()
-    }
+    setShowClearConfirmation(true)
+  }
+
+  const confirmClearLogs = () => {
+    clearLogsMutation.mutate()
+    setShowClearConfirmation(false)
   }
 
   const handleRefresh = () => {
@@ -126,13 +133,39 @@ export default function LogsPage() {
       case 'success':
         return CheckCircle
       case 'failed':
+      case 'error':
         return XCircle
       case 'running':
+      case 'in_progress':
         return Activity
       case 'pending':
+      case 'queued':
         return Clock
+      case 'warning':
+        return AlertTriangle
       default:
         return AlertTriangle
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success':
+      case 'completed':
+        return 'text-green-500'
+      case 'failed':
+      case 'error':
+        return 'text-red-500'
+      case 'running':
+      case 'in_progress':
+        return 'text-orange-500'
+      case 'pending':
+      case 'queued':
+        return 'text-blue-500'
+      case 'warning':
+        return 'text-yellow-500'
+      default:
+        return 'text-gray-500'
     }
   }
 
@@ -149,9 +182,13 @@ export default function LogsPage() {
 
   if (!auth) return null
 
+  const breadcrumbs = [
+    { label: 'Logs', current: true }
+  ]
+
   if (isLoading) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={breadcrumbs}>
         <PageLoading />
       </MainLayout>
     )
@@ -160,7 +197,7 @@ export default function LogsPage() {
   const filteredLogs = logs || []
 
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -171,30 +208,31 @@ export default function LogsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="outline"
               onClick={handleRefresh}
-              className="btn-secondary"
               disabled={isLoading}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => exportLogsMutation.mutate()}
-              className="btn-secondary"
               disabled={exportLogsMutation.isPending}
             >
               <Download className="h-4 w-4 mr-2" />
               Exportar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               onClick={handleClearLogs}
-              className="btn-secondary text-red-600 hover:text-red-700"
+              className="text-red-600 hover:text-red-700"
               disabled={clearLogsMutation.isPending}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Limpar Logs
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -256,7 +294,7 @@ export default function LogsPage() {
                   <p className="text-sm font-medium text-muted-foreground">Total</p>
                   <p className="text-2xl font-bold text-foreground">{filteredLogs.length}</p>
                 </div>
-                <FileText className="h-8 w-8 text-blue-400" />
+                <FileText className="h-8 w-8 text-blue-500" />
               </div>
             </div>
           </div>
@@ -266,11 +304,11 @@ export default function LogsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Sucessos</p>
-                  <p className="text-2xl font-bold text-green-400">
+                  <p className="text-2xl font-bold text-green-500">
                     {filteredLogs.filter(log => log.status === 'success').length}
                   </p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-400" />
+                <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
             </div>
           </div>
@@ -280,11 +318,11 @@ export default function LogsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Falhas</p>
-                  <p className="text-2xl font-bold text-red-400">
+                  <p className="text-2xl font-bold text-red-500">
                     {filteredLogs.filter(log => log.status === 'failed').length}
                   </p>
                 </div>
-                <XCircle className="h-8 w-8 text-red-400" />
+                <XCircle className="h-8 w-8 text-red-500" />
               </div>
             </div>
           </div>
@@ -294,11 +332,11 @@ export default function LogsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Executando</p>
-                  <p className="text-2xl font-bold text-blue-400">
+                  <p className="text-2xl font-bold text-orange-500">
                     {filteredLogs.filter(log => log.status === 'running').length}
                   </p>
                 </div>
-                <Activity className="h-8 w-8 text-blue-400" />
+                <Activity className="h-8 w-8 text-orange-500" />
               </div>
             </div>
           </div>
@@ -329,7 +367,11 @@ export default function LogsPage() {
                   const StatusIcon = getStatusIcon(log.status)
 
                   return (
-                    <div key={log.id} className="border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+                    <div
+                      key={log.id}
+                      className="border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => setSelectedLog(log)}
+                    >
                       <div className="flex items-start gap-4">
                         <div className="flex-shrink-0 mt-1">
                           <StatusIcon className={`h-5 w-5 ${getStatusColor(log.status)}`} />
@@ -404,6 +446,122 @@ export default function LogsPage() {
             )}
           </div>
         </div>
+
+        {/* Log Detail Modal */}
+        {selectedLog && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card border border-border rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+              <div className="p-6 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const StatusIcon = getStatusIcon(selectedLog.status)
+                      return <StatusIcon className={`h-6 w-6 ${getStatusColor(selectedLog.status)}`} />
+                    })()}
+                    <h3 className="text-lg font-semibold text-foreground">{selectedLog.action || 'Detalhes do Log'}</h3>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedLog(null)}
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-96">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Status</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                          selectedLog.status === 'success' ? 'bg-green-100 text-green-800' :
+                          selectedLog.status === 'failed' ? 'bg-red-100 text-red-800' :
+                          selectedLog.status === 'running' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedLog.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Tipo</label>
+                      <p className="mt-1 text-sm text-foreground">{getTypeLabel(selectedLog.type)}</p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Criado em</label>
+                      <p className="mt-1 text-sm text-foreground">{formatDate(selectedLog.createdAt)}</p>
+                    </div>
+
+                    {selectedLog.duration && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Duração</label>
+                        <p className="mt-1 text-sm text-foreground">{formatDuration(selectedLog.duration)}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedLog.message && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Mensagem</label>
+                      <p className="mt-1 text-sm text-foreground">{selectedLog.message}</p>
+                    </div>
+                  )}
+
+                  {selectedLog.details && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Detalhes</label>
+                      <div className="mt-2 p-3 bg-muted rounded-md">
+                        <pre className="text-xs whitespace-pre-wrap font-mono text-foreground">
+                          {selectedLog.details}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedLog.startedAt && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Iniciado em</label>
+                        <p className="mt-1 text-sm text-foreground">{formatDate(selectedLog.startedAt)}</p>
+                      </div>
+                    )}
+
+                    {selectedLog.completedAt && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Concluído em</label>
+                        <p className="mt-1 text-sm text-foreground">{formatDate(selectedLog.completedAt)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Clear Logs Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showClearConfirmation}
+          onClose={() => setShowClearConfirmation(false)}
+          onConfirm={confirmClearLogs}
+          title="Confirmar Limpeza"
+          subtitle="Esta ação não pode ser desfeita."
+          itemName="Todos os logs do sistema"
+          consequences={[
+            'Remover permanentemente todos os registros de log',
+            'Perder histórico completo de atividades do sistema',
+            'Impossibilitar auditoria e troubleshooting futuro',
+            'Não será possível recuperar os dados removidos'
+          ]}
+          confirmText="Limpar Logs"
+          isLoading={clearLogsMutation.isPending}
+        />
+
       </div>
     </MainLayout>
   )
