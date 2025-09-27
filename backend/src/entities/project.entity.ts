@@ -16,6 +16,12 @@ export class Project {
   @Column({ unique: true })
   name: string;
 
+  @Column({ unique: true })
+  alias: string; // Apelido/pasta raiz - deve ser lowercase, hifens, sem caracteres especiais
+
+  @Column({ nullable: true })
+  projectPath: string; // Caminho absoluto da pasta do projeto
+
   @Column({ nullable: true })
   description: string;
 

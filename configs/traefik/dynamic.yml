@@ -10,7 +10,15 @@
           web
         ]
       
-      api-netpilot-com-redirect: 
+      netpilot-meadadigital-com-socketio-redirect:
+        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/socket.io`)
+        service: netpilot-meadadigital-com-api-service
+        priority: 15
+        entryPoints: [
+          web
+        ]
+
+      api-netpilot-com-redirect:
         rule: Host(`api.netpilot.com`)
         middlewares: [
           api-netpilot-com-redirect-https
@@ -19,15 +27,30 @@
           web
         ]
       
-      netpilot-meadadigital-com-api: 
+      netpilot-meadadigital-com-socketio:
+        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/socket.io`)
+        service: netpilot-meadadigital-com-api-service
+        middlewares: [
+          websocket-headers
+        ]
+        priority: 15
+        entryPoints: [
+          websecure
+        ]
+        tls:
+          certResolver: letsencrypt
+
+      netpilot-meadadigital-com-api:
         rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)
         service: netpilot-meadadigital-com-api-service
-        middlewares: []
+        middlewares: [
+          websocket-headers
+        ]
         priority: 10
         entryPoints: [
           websecure
         ]
-        tls: 
+        tls:
           certResolver: letsencrypt
         
       
@@ -73,24 +96,28 @@
         
       
     
-    middlewares: 
-      deit-meadadigital-com-redirect-https: 
-        redirectScheme: 
+    middlewares:
+      websocket-headers:
+        headers:
+          customResponseHeaders:
+            Access-Control-Allow-Origin: "*"
+            Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
+            Access-Control-Allow-Headers: "Content-Type,Authorization,X-Requested-With,Connection,Upgrade"
+            Access-Control-Allow-Credentials: "true"
+
+      deit-meadadigital-com-redirect-https:
+        redirectScheme:
           scheme: https
           permanent: true
-        
-      
-      api-netpilot-com-redirect-https: 
-        redirectScheme: 
+
+      api-netpilot-com-redirect-https:
+        redirectScheme:
           scheme: https
           permanent: true
-        
-      
-      netpilot-meadadigital-com-redirect-https: 
-        redirectScheme: 
+
+      netpilot-meadadigital-com-redirect-https:
+        redirectScheme:
           scheme: https
           permanent: true
-        
-      
     
   

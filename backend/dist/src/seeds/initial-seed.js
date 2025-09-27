@@ -60,6 +60,7 @@ let InitialSeedService = class InitialSeedService {
         if (!existingProject) {
             const sampleProject = this.projectRepository.create({
                 name: 'NetPilot System',
+                alias: 'netpilot-system',
                 description: 'Sistema principal NetPilot para gerenciamento de proxy reverso e SSL',
                 isActive: true,
                 technologies: ['NestJS', 'Next.js', 'TypeScript', 'Docker', 'PostgreSQL', 'Traefik', 'Nginx'],
@@ -85,6 +86,7 @@ let InitialSeedService = class InitialSeedService {
         if (!existingDeitProject) {
             const deitProject = this.projectRepository.create({
                 name: 'Deit',
+                alias: 'deit',
                 description: 'Sistema Deit - Plataforma de gestão e automação empresarial',
                 isActive: true,
                 technologies: ['Laravel', 'Vue.js', 'PHP', 'MySQL', 'Docker', 'Redis'],
@@ -177,46 +179,7 @@ let InitialSeedService = class InitialSeedService {
         else {
             console.log('ℹ️  Deit domain already exists');
         }
-        const logCount = await this.logRepository.count();
-        if (logCount === 0) {
-            const sampleLogs = [
-                {
-                    type: log_entity_1.LogType.DEPLOYMENT,
-                    status: log_entity_1.LogStatus.SUCCESS,
-                    action: 'Deploy do Nginx',
-                    message: 'Configuração do Nginx aplicada com sucesso',
-                    duration: 2500,
-                    startedAt: new Date(Date.now() - 3600000),
-                    completedAt: new Date(Date.now() - 3597500),
-                },
-                {
-                    type: log_entity_1.LogType.SSL_RENEWAL,
-                    status: log_entity_1.LogStatus.SUCCESS,
-                    action: 'Renovação SSL netpilot.meadadigital.com',
-                    message: 'Certificado SSL renovado com sucesso',
-                    duration: 15000,
-                    startedAt: new Date(Date.now() - 7200000),
-                    completedAt: new Date(Date.now() - 7185000),
-                },
-                {
-                    type: log_entity_1.LogType.TRAEFIK_RELOAD,
-                    status: log_entity_1.LogStatus.SUCCESS,
-                    action: 'Reload do Traefik',
-                    message: 'Configuração do Traefik recarregada',
-                    duration: 1200,
-                    startedAt: new Date(Date.now() - 1800000),
-                    completedAt: new Date(Date.now() - 1798800),
-                },
-            ];
-            for (const logData of sampleLogs) {
-                const log = this.logRepository.create(logData);
-                await this.logRepository.save(log);
-            }
-            console.log('✅ Sample logs created');
-        }
-        else {
-            console.log('ℹ️  Sample logs already exist');
-        }
+        console.log('ℹ️  Sample logs creation disabled - showing only real logs');
         console.log('🌱 Database seeding completed successfully!');
     }
 };

@@ -23,6 +23,7 @@ export default function NewProjectPage() {
 
   const [formData, setFormData] = useState<CreateProjectDto>({
     name: '',
+    alias: '',
     description: '',
     isActive: true,
     technologies: [],
@@ -59,6 +60,49 @@ export default function NewProjectPage() {
       toast({
         title: 'Erro',
         description: 'Nome do projeto é obrigatório',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    if (!formData.alias.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Apelido/pasta raiz é obrigatório',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    // Validar formato do apelido
+    const aliasRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/
+    if (!aliasRegex.test(formData.alias)) {
+      toast({
+        title: 'Erro',
+        description: 'Apelido deve conter apenas letras minúsculas, números e hifens. Não pode começar ou terminar com hífen.',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    if (!formData.repository.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Repositório é obrigatório',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    // Validar formato básico do URL do repositório
+    const isValidUrl = formData.repository.startsWith('http://') ||
+                      formData.repository.startsWith('https://') ||
+                      formData.repository.startsWith('git@')
+
+    if (!isValidUrl) {
+      toast({
+        title: 'Erro',
+        description: 'Repositório deve ser uma URL válida (http://, https:// ou git@)',
         variant: 'destructive'
       })
       return
@@ -141,6 +185,22 @@ export default function NewProjectPage() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="alias">Apelido/Pasta Raiz *</Label>
+                  <Input
+                    id="alias"
+                    value={formData.alias}
+                    onChange={(e) => setFormData(prev => ({ ...prev, alias: e.target.value.toLowerCase() }))}
+                    placeholder="Ex: netpilot-system, e-commerce, blog"
+                    required
+                    pattern="^[a-z0-9]+(-[a-z0-9]+)*$"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Esta será a pasta raiz do projeto. Use apenas letras minúsculas, números e hifens.
+                    <strong> Não pode ser alterado após criação.</strong>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="description">Descrição</Label>
                   <Textarea
                     id="description"
@@ -181,13 +241,17 @@ export default function NewProjectPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="repository">Repositório</Label>
+                  <Label htmlFor="repository">Repositório *</Label>
                   <Input
                     id="repository"
                     value={formData.repository}
                     onChange={(e) => setFormData(prev => ({ ...prev, repository: e.target.value }))}
                     placeholder="https://github.com/usuario/projeto"
+                    required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    O repositório será clonado automaticamente para a pasta do projeto.
+                  </p>
                 </div>
 
                 <div className="space-y-2">

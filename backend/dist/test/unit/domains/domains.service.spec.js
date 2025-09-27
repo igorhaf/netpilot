@@ -14,6 +14,8 @@ describe('DomainsService', () => {
         id: 'domain-1',
         name: 'example.com',
         description: 'Test domain',
+        projectId: 'project-1',
+        project: null,
         isActive: true,
         isLocked: false,
         autoTls: true,
@@ -21,8 +23,6 @@ describe('DomainsService', () => {
         blockExternalAccess: false,
         enableWwwRedirect: false,
         bindIp: '127.0.0.1',
-        project: undefined,
-        projectId: undefined,
         proxyRules: [],
         sslCertificates: [],
         createdAt: new Date(),
@@ -79,6 +79,7 @@ describe('DomainsService', () => {
         const createDomainDto = {
             name: 'newdomain.com',
             description: 'New test domain',
+            projectId: 'project-1',
             isActive: true,
             autoTls: true,
             forceHttps: true,
@@ -147,6 +148,7 @@ describe('DomainsService', () => {
         const updateDomainDto = {
             name: 'example.com',
             description: 'Updated description',
+            projectId: 'project-1',
             isActive: false,
         };
         it('should update domain successfully', async () => {

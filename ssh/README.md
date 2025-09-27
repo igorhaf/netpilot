@@ -4,10 +4,10 @@ Para usar o console SSH, coloque a chave privada SSH em:
 - ssh/id_rsa (chave privada)
 
 Configuração atual no docker-compose.yml:
-- SSH_HOST=172.18.0.1 (IP do host Docker)
+- SSH_HOST=38.242.135.31
 - SSH_PORT=22
-- SSH_USER=root
-- SSH_PRIVATE_KEY_PATH=/app/ssh/id_rsa
+- SSH_USER=windsurf
+- SSH_PRIVATE_KEY_PATH=./id_ed25519
 
 Para conectar ao host local, certifique-se de que:
 1. SSH está habilitado no servidor

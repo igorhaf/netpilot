@@ -1,1 +1,1 @@
-{"version":3,"file":"update-project.dto.js","sourceRoot":"","sources":["../../../../../src/modules/projects/dto/update-project.dto.ts"],"names":[],"mappings":";;;AAAA,uDAAmD;AACnD,6DAAwD;AAExD,MAAa,gBAAiB,SAAQ,IAAA,0BAAW,EAAC,qCAAgB,CAAC;CAAG;AAAtE,4CAAsE"}
+{"version":3,"file":"update-project.dto.js","sourceRoot":"","sources":["../../../../../src/modules/projects/dto/update-project.dto.ts"],"names":[],"mappings":";;;AAAA,uDAA6D;AAC7D,6DAAwD;AAExD,MAAa,gBAAiB,SAAQ,IAAA,0BAAW,EAC/C,IAAA,uBAAQ,EAAC,qCAAgB,EAAE,CAAC,OAAO,CAAU,CAAC,CAC/C;CAAG;AAFJ,4CAEI"}

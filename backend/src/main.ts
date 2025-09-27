@@ -2,24 +2,38 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ServerOptions } from 'socket.io';
 import { AppModule } from './app.module';
 import { InitialSeedService } from './seeds/initial-seed';
+
+// Custom WebSocket adapter with enhanced CORS support
+class CustomIoAdapter extends IoAdapter {
+  createIOServer(port: number, options?: ServerOptions): any {
+    const server = super.createIOServer(port, {
+      ...options,
+      cors: {
+        origin: true, // Allow all origins
+        methods: ['GET', 'POST'],
+        allowedHeaders: ['Authorization', 'Content-Type'],
+        credentials: true,
+      },
+      allowEIO3: true,
+      transports: ['websocket', 'polling'],
+    });
+    return server;
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configure WebSocket adapter
-  app.useWebSocketAdapter(new IoAdapter(app));
+  // Configure custom WebSocket adapter for external connections
+  app.useWebSocketAdapter(new CustomIoAdapter(app));
 
   app.enableCors({
-    origin: [
-      'https://netpilot.meadadigital.com',
-      'https://netpilot.meadadigital.com:3000',
-      'http://netpilot.meadadigital.com',
-      'http://netpilot.meadadigital.com:3000',
-      'http://localhost:3000',
-      'https://localhost:3000'
-    ],
+    origin: true, // Allow all origins for flexibility
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     credentials: true,
   });
 
@@ -50,7 +64,7 @@ async function bootstrap() {
   }
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0'); // Listen on all interfaces for external connections
 
   console.log(`🚀 NetPilot Backend running on https://netpilot.meadadigital.com/api`);
   console.log(`📚 Swagger docs available at https://netpilot.meadadigital.com/api/docs`);

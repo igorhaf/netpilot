@@ -28,16 +28,13 @@ export interface KillCommandDto {
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: [
-      'http://localhost:3000',
-      'https://localhost:3000',
-      'http://netpilot.meadadigital.com',
-      'https://netpilot.meadadigital.com',
-      'http://netpilot.meadadigital.com:3000',
-      'https://netpilot.meadadigital.com:3000',
-    ],
+    origin: true, // Allow all origins for external server connections
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
     credentials: true,
   },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
 })
 export class TerminalGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

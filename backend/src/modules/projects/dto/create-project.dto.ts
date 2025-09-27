@@ -1,8 +1,14 @@
-import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsBoolean, Matches } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
   name: string;
+
+  @IsString()
+  @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
+    message: 'Apelido deve conter apenas letras minúsculas, números e hifens. Não pode começar ou terminar com hífen.'
+  })
+  alias: string;
 
   @IsOptional()
   @IsString()
@@ -17,9 +23,8 @@ export class CreateProjectDto {
   @IsString({ each: true })
   technologies?: string[];
 
-  @IsOptional()
   @IsString()
-  repository?: string;
+  repository: string;
 
   @IsOptional()
   @IsString()

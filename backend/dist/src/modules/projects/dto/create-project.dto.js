@@ -19,6 +19,13 @@ __decorate([
     __metadata("design:type", String)
 ], CreateProjectDto.prototype, "name", void 0);
 __decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^[a-z0-9]+(-[a-z0-9]+)*$/, {
+        message: 'Apelido deve conter apenas letras minúsculas, números e hifens. Não pode começar ou terminar com hífen.'
+    }),
+    __metadata("design:type", String)
+], CreateProjectDto.prototype, "alias", void 0);
+__decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -35,7 +42,6 @@ __decorate([
     __metadata("design:type", Array)
 ], CreateProjectDto.prototype, "technologies", void 0);
 __decorate([
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProjectDto.prototype, "repository", void 0);

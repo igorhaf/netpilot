@@ -43,7 +43,8 @@
       "Bash(npm run typeorm:*)",
       "Bash(npm run type-check:*)",
       "Bash(npm uninstall:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQG5ldHBpbG90LmxvY2FsIiwic3ViIjoiZTg1ZmYxOTEtNDIyMy00MmM2LTkxOWQtMWYyMzM3NjY3YmIzIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU4OTUzODU1LCJleHAiOjE3NTk1NTg2NTV9.CMwhTQqvzsTJFBHMR5nrM-2l4UBlhiWwupT2IV902kE\")"
     ],
     "deny": [],
     "ask": []

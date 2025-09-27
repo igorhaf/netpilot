@@ -129,16 +129,13 @@ exports.TerminalGateway = TerminalGateway = TerminalGateway_1 = __decorate([
     (0, common_1.Injectable)(),
     (0, websockets_1.WebSocketGateway)({
         cors: {
-            origin: [
-                'http://localhost:3000',
-                'https://localhost:3000',
-                'http://netpilot.meadadigital.com',
-                'https://netpilot.meadadigital.com',
-                'http://netpilot.meadadigital.com:3000',
-                'https://netpilot.meadadigital.com:3000',
-            ],
+            origin: true,
+            methods: ['GET', 'POST'],
+            allowedHeaders: ['Authorization', 'Content-Type'],
             credentials: true,
         },
+        transports: ['websocket', 'polling'],
+        allowEIO3: true,
     }),
     __metadata("design:paramtypes", [terminal_service_1.TerminalService])
 ], TerminalGateway);

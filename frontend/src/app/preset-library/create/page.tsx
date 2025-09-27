@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { useRequireAuth } from '@/hooks/useAuth'
 import {
   ArrowLeft,
@@ -178,9 +179,9 @@ export default function CreateStackPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
-                <textarea
+                <Textarea
                   id="description"
-                  className="w-full min-h-[100px] p-3 border border-border rounded-md resize-vertical"
+                  className="min-h-[100px]"
                   placeholder="Descreva o propósito e conteúdo desta stack..."
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
