@@ -24,6 +24,14 @@ __decorate([
     __metadata("design:type", String)
 ], Project.prototype, "name", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ unique: true }),
+    __metadata("design:type", String)
+], Project.prototype, "alias", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Project.prototype, "projectPath", void 0);
+__decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Project.prototype, "description", void 0);

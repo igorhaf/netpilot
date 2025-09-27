@@ -116,8 +116,8 @@ describe('Domains (e2e)', () => {
       expect(response.body).toHaveProperty('id');
       expect(response.body.name).toBe(testDomain.name);
       expect(response.body.description).toBe(testDomain.description);
-      expect(response.body.enabled).toBe(testDomain.enabled);
-      expect(response.body.autoSsl).toBe(testDomain.autoSsl);
+      expect(response.body.isActive).toBe(testDomain.isActive);
+      expect(response.body.autoTls).toBe(testDomain.autoTls);
 
       // Verify domain was created in database
       const domain = await domainRepository.findOne({

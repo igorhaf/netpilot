@@ -52,8 +52,8 @@ export function useTerminal(options: UseTerminalOptions = {}) {
     setIsConnecting(true)
 
     // URL do WebSocket
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-    const socketUrl = API_URL
+    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    const socketUrl = WS_URL
 
     // Criar conexão WebSocket
     console.log('[Terminal] Attempting to connect to:', socketUrl)

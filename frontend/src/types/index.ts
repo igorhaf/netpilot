@@ -12,10 +12,12 @@ export interface AuthResponse {
 export interface Project {
   id: string
   name: string
+  alias: string
+  projectPath?: string
   description?: string
   isActive: boolean
   technologies?: string[]
-  repository?: string
+  repository: string
   documentation?: string
   aiSessionData?: string
   mainDomain?: string
@@ -146,10 +148,11 @@ export interface DashboardStats {
 
 export interface CreateProjectDto {
   name: string
+  alias: string
   description?: string
   isActive?: boolean
   technologies?: string[]
-  repository?: string
+  repository: string
   documentation?: string
   aiSessionData?: string
   mainDomain?: string

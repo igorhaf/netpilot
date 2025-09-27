@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useMutation } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Save, Plus, X } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { MainLayout } from '@/components/layout/main-layout'
@@ -15,15 +15,28 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { useRequireAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
-import { CreateProjectDto } from '@/types'
+import { Project } from '@/types'
 
-export default function NewProjectPage() {
+interface UpdateProjectDto {
+  name: string
+  description?: string
+  isActive?: boolean
+  technologies?: string[]
+  repository: string
+  documentation?: string
+  mainDomain?: string
+  metadata?: Record<string, any>
+}
+
+export default function EditProjectPage() {
   const auth = useRequireAuth()
   const router = useRouter()
+  const params = useParams()
+  const queryClient = useQueryClient()
+  const projectId = params?.id as string
 
-  const [formData, setFormData] = useState<CreateProjectDto>({
+  const [formData, setFormData] = useState<UpdateProjectDto>({
     name: '',
-    alias: '',
     description: '',
     isActive: true,
     technologies: [],
@@ -35,19 +48,42 @@ export default function NewProjectPage() {
 
   const [newTechnology, setNewTechnology] = useState('')
 
-  const createMutation = useMutation({
-    mutationFn: (data: CreateProjectDto) => api.post('/projects', data),
+  const { data: project, isLoading } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => api.get(`/projects/${projectId}`).then(res => res.data),
+    enabled: !!projectId
+  })
+
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        name: project.name || '',
+        description: project.description || '',
+        isActive: project.isActive ?? true,
+        technologies: project.technologies || [],
+        repository: project.repository || '',
+        documentation: project.documentation || '',
+        mainDomain: project.mainDomain || '',
+        metadata: project.metadata || {}
+      })
+    }
+  }, [project])
+
+  const updateMutation = useMutation({
+    mutationFn: (data: UpdateProjectDto) => api.patch(`/projects/${projectId}`, data),
     onSuccess: () => {
       toast({
         title: 'Sucesso',
-        description: 'Projeto criado com sucesso!'
+        description: 'Projeto atualizado com sucesso!'
       })
-      router.push('/projects')
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      router.push(`/projects/${projectId}`)
     },
     onError: (error: any) => {
       toast({
         title: 'Erro',
-        description: error.response?.data?.message || 'Erro ao criar projeto',
+        description: error.response?.data?.message || 'Erro ao atualizar projeto',
         variant: 'destructive'
       })
     },
@@ -60,26 +96,6 @@ export default function NewProjectPage() {
       toast({
         title: 'Erro',
         description: 'Nome do projeto é obrigatório',
-        variant: 'destructive'
-      })
-      return
-    }
-
-    if (!formData.alias.trim()) {
-      toast({
-        title: 'Erro',
-        description: 'Apelido/pasta raiz é obrigatório',
-        variant: 'destructive'
-      })
-      return
-    }
-
-    // Validar formato do apelido
-    const aliasRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/
-    if (!aliasRegex.test(formData.alias)) {
-      toast({
-        title: 'Erro',
-        description: 'Apelido deve conter apenas letras minúsculas, números e hifens. Não pode começar ou terminar com hífen.',
         variant: 'destructive'
       })
       return
@@ -108,7 +124,7 @@ export default function NewProjectPage() {
       return
     }
 
-    createMutation.mutate(formData)
+    updateMutation.mutate(formData)
   }
 
   const addTechnology = () => {
@@ -137,9 +153,23 @@ export default function NewProjectPage() {
 
   if (!auth) return null
 
+  if (isLoading || !project) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Carregando projeto...</p>
+          </div>
+        </div>
+      </MainLayout>
+    )
+  }
+
   const breadcrumbs = [
     { label: 'Projetos', href: '/projects' },
-    { label: 'Novo Projeto', current: true }
+    { label: project.name, href: `/projects/${project.id}` },
+    { label: 'Editar', current: true }
   ]
 
   return (
@@ -157,13 +187,29 @@ export default function NewProjectPage() {
               Voltar
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Novo Projeto</h1>
+              <h1 className="text-3xl font-bold text-foreground">Editar Projeto</h1>
               <p className="text-muted-foreground">
-                Crie um novo projeto para organizar seus domínios
+                Editando: {project.name}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Informação sobre campos não editáveis */}
+        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-3">
+              <div className="w-4 h-4 rounded-full bg-amber-500 mt-0.5 flex-shrink-0"></div>
+              <div>
+                <h3 className="font-medium text-amber-800 dark:text-amber-200">Campos não editáveis</h3>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                  O <strong>apelido (alias)</strong> e a <strong>pasta do projeto</strong> não podem ser alterados após a criação.
+                  Atualmente: <code className="bg-amber-100 dark:bg-amber-900 px-1 py-0.5 rounded text-xs">{project.alias}</code>
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
@@ -182,22 +228,6 @@ export default function NewProjectPage() {
                     placeholder="Ex: NetPilot, E-commerce, Blog..."
                     required
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="alias">Apelido/Pasta Raiz *</Label>
-                  <Input
-                    id="alias"
-                    value={formData.alias}
-                    onChange={(e) => setFormData(prev => ({ ...prev, alias: e.target.value.toLowerCase() }))}
-                    placeholder="Ex: netpilot-system, e-commerce, blog"
-                    required
-                    pattern="^[a-z0-9]+(-[a-z0-9]+)*$"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Esta será a pasta raiz do projeto. Use apenas letras minúsculas, números e hifens.
-                    <strong> Não pode ser alterado após criação.</strong>
-                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -250,7 +280,7 @@ export default function NewProjectPage() {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    O repositório será clonado automaticamente para a pasta do projeto.
+                    ⚠️ Alterar o repositório não afeta a pasta já clonada.
                   </p>
                 </div>
 
@@ -312,10 +342,10 @@ export default function NewProjectPage() {
             </Button>
             <Button
               type="submit"
-              disabled={createMutation.isPending}
+              disabled={updateMutation.isPending}
             >
               <Save className="h-4 w-4 mr-2" />
-              {createMutation.isPending ? 'Criando...' : 'Criar Projeto'}
+              {updateMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </div>
         </form>

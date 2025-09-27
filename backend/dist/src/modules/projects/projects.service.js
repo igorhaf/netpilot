@@ -16,7 +16,12 @@ exports.ProjectsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const child_process_1 = require("child_process");
+const util_1 = require("util");
+const fs = require("fs/promises");
+const path = require("path");
 const project_entity_1 = require("../../entities/project.entity");
+const execAsync = (0, util_1.promisify)(child_process_1.exec);
 let ProjectsService = class ProjectsService {
     constructor(projectRepository) {
         this.projectRepository = projectRepository;
@@ -28,8 +33,54 @@ let ProjectsService = class ProjectsService {
         if (existingProject) {
             throw new common_1.ConflictException('Projeto com este nome já existe');
         }
+        const existingAlias = await this.projectRepository.findOne({
+            where: { alias: createProjectDto.alias },
+        });
+        if (existingAlias) {
+            throw new common_1.ConflictException('Projeto com este alias já existe');
+        }
+        const projectsRoot = process.env.PROJECTS_ROOT || '/home/projects';
+        const projectPath = path.join(projectsRoot, createProjectDto.alias);
+        try {
+            await fs.access(projectPath);
+            throw new common_1.ConflictException(`Pasta do projeto já existe: ${projectPath}`);
+        }
+        catch (error) {
+        }
         const project = this.projectRepository.create(createProjectDto);
-        return await this.projectRepository.save(project);
+        const savedProject = await this.projectRepository.save(project);
+        try {
+            await fs.mkdir(projectPath, { recursive: true });
+            console.log(`✅ Pasta do projeto criada: ${projectPath}`);
+            console.log(`🔄 Clonando repositório: ${createProjectDto.repository}`);
+            const { stdout, stderr } = await execAsync(`git clone "${createProjectDto.repository}" "${projectPath}"`, { timeout: 60000 });
+            if (stderr && !stderr.includes('Cloning into')) {
+                console.warn(`⚠️ Warning during clone: ${stderr}`);
+            }
+            console.log(`✅ Repositório clonado com sucesso para: ${projectPath}`);
+            console.log(`📋 Output: ${stdout}`);
+            try {
+                await this.projectRepository.update(savedProject.id, {
+                    description: `${savedProject.description} | Pasta: ${projectPath}`
+                });
+                console.log(`📁 Caminho do projeto registrado: ${projectPath}`);
+            }
+            catch (pathError) {
+                console.warn(`⚠️ Falha ao registrar caminho: ${pathError.message}`);
+            }
+        }
+        catch (error) {
+            console.error(`❌ Erro ao criar pasta/clonar repositório: ${error.message}`);
+            try {
+                await fs.rmdir(projectPath, { recursive: true });
+            }
+            catch (cleanupError) {
+                console.warn(`⚠️ Falha ao limpar pasta: ${cleanupError.message}`);
+            }
+            await this.projectRepository.remove(savedProject);
+            throw new common_1.ConflictException(`Falha ao criar projeto: ${error.message}. Verifique se o repositório é válido e acessível.`);
+        }
+        return savedProject;
     }
     async findAll(includeInactive = false) {
         const queryBuilder = this.projectRepository

@@ -1,9 +1,10 @@
 export declare class CreateProjectDto {
     name: string;
+    alias: string;
     description?: string;
     isActive?: boolean;
     technologies?: string[];
-    repository?: string;
+    repository: string;
     documentation?: string;
     aiSessionData?: string;
     mainDomain?: string;

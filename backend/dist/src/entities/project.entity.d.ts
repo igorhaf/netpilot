@@ -2,6 +2,8 @@ import { Domain } from './domain.entity';
 export declare class Project {
     id: string;
     name: string;
+    alias: string;
+    projectPath: string;
     description: string;
     isActive: boolean;
     technologies: string[];
