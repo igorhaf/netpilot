@@ -5,10 +5,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ProxyRule } from './proxy-rule.entity';
 // import { Redirect } from './redirect.entity'; // Temporarily disabled
 import { SslCertificate } from './ssl-certificate.entity';
+import { Project } from './project.entity';
 
 @Entity('domains')
 export class Domain {
@@ -24,6 +27,9 @@ export class Domain {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isLocked: boolean;
+
   @Column({ default: true })
   autoTls: boolean;
 
@@ -38,6 +44,13 @@ export class Domain {
 
   @Column({ nullable: true })
   bindIp: string;
+
+  @ManyToOne(() => Project, (project) => project.domains, { nullable: false })
+  @JoinColumn({ name: 'projectId' })
+  project: Project;
+
+  @Column({ nullable: false })
+  projectId: string;
 
   @OneToMany(() => ProxyRule, (proxyRule) => proxyRule.domain)
   proxyRules: ProxyRule[];

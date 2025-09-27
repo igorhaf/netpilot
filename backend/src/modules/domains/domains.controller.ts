@@ -52,6 +52,12 @@ export class DomainsController {
     return this.domainsService.findOne(id);
   }
 
+  @Patch(':id/toggle-lock')
+  @ApiOperation({ summary: 'Travar/destravar domínio' })
+  toggleLock(@Param('id') id: string) {
+    return this.domainsService.toggleLock(id);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar domínio' })
   update(@Param('id') id: string, @Body() updateDomainDto: UpdateDomainDto) {

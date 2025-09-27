@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Search, RotateCcw, CheckCircle, XCircle, ArrowRight } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
@@ -16,15 +16,24 @@ import { Redirect, Domain } from '@/types'
 export default function RedirectsPage() {
   const auth = useRequireAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const queryClient = useQueryClient()
   const [redirectToDelete, setRedirectToDelete] = useState<Redirect | null>(null)
 
-  const { data: redirects, isLoading: redirectsLoading } = useQuery<Redirect[]>({
+  // Get domain filter from URL
+  const domainFilter = searchParams.get('domain')
+
+  const { data: allRedirects, isLoading: redirectsLoading } = useQuery<Redirect[]>({
     queryKey: ['redirects', search],
     queryFn: () => api.get(`/redirects?search=${search}`).then(res => res.data),
     enabled: !!auth,
   })
+
+  // Filter by domain if specified
+  const redirects = domainFilter
+    ? allRedirects?.filter(redirect => redirect.domainId === domainFilter)
+    : allRedirects
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/redirects/${id}`),
@@ -68,15 +77,27 @@ export default function RedirectsPage() {
     redirect.domain.name.toLowerCase().includes(search.toLowerCase())
   ) || []
 
+  const breadcrumbs = domainFilter
+    ? [
+        { label: 'Domínios', href: '/domains' },
+        { label: 'Redirecionamentos', current: true }
+      ]
+    : [
+        { label: 'Redirecionamentos', current: true }
+      ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Redirecionamentos</h1>
             <p className="text-muted-foreground">
-              Configure redirecionamentos para seus domínios
+              {domainFilter
+                ? 'Redirecionamentos para o domínio selecionado'
+                : 'Configure redirecionamentos para seus domínios'
+              }
             </p>
           </div>
           <button

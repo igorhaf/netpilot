@@ -14,7 +14,9 @@ async function bootstrap() {
             'https://netpilot.meadadigital.com',
             'https://netpilot.meadadigital.com:3000',
             'http://netpilot.meadadigital.com',
-            'http://netpilot.meadadigital.com:3000'
+            'http://netpilot.meadadigital.com:3000',
+            'http://localhost:3000',
+            'https://localhost:3000'
         ],
         credentials: true,
     });

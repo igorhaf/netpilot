@@ -7,25 +7,34 @@ const typeorm_2 = require("@nestjs/typeorm");
 const app_module_1 = require("../../src/app.module");
 const user_entity_1 = require("../../src/entities/user.entity");
 const domain_entity_1 = require("../../src/entities/domain.entity");
+const project_entity_1 = require("../../src/entities/project.entity");
 describe('Domains (e2e)', () => {
     let app;
     let userRepository;
     let domainRepository;
+    let projectRepository;
     let accessToken;
     let userId;
+    let testProjectId;
     const testUser = {
         email: 'test@example.com',
         password: 'Password123!',
         roles: ['user'],
     };
+    const testProject = {
+        name: 'Test Project',
+        description: 'Test project for domain tests',
+        isActive: true,
+    };
     const testDomain = {
         name: 'example.com',
         description: 'Test domain',
-        enabled: true,
-        autoSsl: true,
+        projectId: '',
+        isActive: true,
+        autoTls: true,
         forceHttps: true,
-        blockExternal: false,
-        wwwRedirect: false,
+        blockExternalAccess: false,
+        enableWwwRedirect: false,
     };
     beforeAll(async () => {
         const moduleFixture = await testing_1.Test.createTestingModule({
@@ -47,10 +56,12 @@ describe('Domains (e2e)', () => {
         app = moduleFixture.createNestApplication();
         userRepository = app.get((0, typeorm_2.getRepositoryToken)(user_entity_1.User));
         domainRepository = app.get((0, typeorm_2.getRepositoryToken)(domain_entity_1.Domain));
+        projectRepository = app.get((0, typeorm_2.getRepositoryToken)(project_entity_1.Project));
         await app.init();
     });
     beforeEach(async () => {
         await domainRepository.delete({});
+        await projectRepository.delete({});
         await userRepository.delete({});
         const registerResponse = await request(app.getHttpServer())
             .post('/auth/register')
@@ -63,6 +74,12 @@ describe('Domains (e2e)', () => {
             password: testUser.password,
         });
         accessToken = loginResponse.body.access_token;
+        const projectResponse = await request(app.getHttpServer())
+            .post('/projects')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send(testProject);
+        testProjectId = projectResponse.body.id;
+        testDomain.projectId = testProjectId;
     });
     afterAll(async () => {
         await app.close();
@@ -299,6 +316,7 @@ describe('Domains (e2e)', () => {
         it('should update domain', async () => {
             const updateData = {
                 name: testDomain.name,
+                projectId: testProjectId,
                 description: 'Updated description',
                 isActive: false,
                 forceHttps: false,

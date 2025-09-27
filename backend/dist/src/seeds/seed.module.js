@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const initial_seed_1 = require("./initial-seed");
 const user_entity_1 = require("../entities/user.entity");
+const project_entity_1 = require("../entities/project.entity");
 const domain_entity_1 = require("../entities/domain.entity");
 const proxy_rule_entity_1 = require("../entities/proxy-rule.entity");
 const redirect_entity_1 = require("../entities/redirect.entity");
@@ -24,6 +25,7 @@ exports.SeedModule = SeedModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([
                 user_entity_1.User,
+                project_entity_1.Project,
                 domain_entity_1.Domain,
                 proxy_rule_entity_1.ProxyRule,
                 redirect_entity_1.Redirect,

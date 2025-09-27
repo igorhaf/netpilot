@@ -194,4 +194,8 @@ export declare class DockerMinimalController {
         success: boolean;
         message: any;
     }>;
+    removeContainer(id: string): Promise<{
+        success: boolean;
+        message: any;
+    }>;
 }

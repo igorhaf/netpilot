@@ -13,6 +13,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const bull_1 = require("@nestjs/bull");
 const cache_manager_1 = require("@nestjs/cache-manager");
 const auth_module_1 = require("./modules/auth/auth.module");
+const projects_module_1 = require("./modules/projects/projects.module");
 const domains_module_1 = require("./modules/domains/domains.module");
 const proxy_rules_module_1 = require("./modules/proxy-rules/proxy-rules.module");
 const ssl_certificates_module_1 = require("./modules/ssl-certificates/ssl-certificates.module");
@@ -21,9 +22,11 @@ const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const console_module_1 = require("./modules/console/console.module");
 const docker_minimal_module_1 = require("./modules/docker/docker-minimal.module");
 const websocket_module_1 = require("./modules/websocket/websocket.module");
+const terminal_module_1 = require("./modules/terminal/terminal.module");
 const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
 const user_entity_1 = require("./entities/user.entity");
+const project_entity_1 = require("./entities/project.entity");
 const domain_entity_1 = require("./entities/domain.entity");
 const proxy_rule_entity_1 = require("./entities/proxy-rule.entity");
 const ssl_certificate_entity_1 = require("./entities/ssl-certificate.entity");
@@ -44,7 +47,7 @@ exports.AppModule = AppModule = __decorate([
                 useFactory: (configService) => ({
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
-                    entities: [user_entity_1.User, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog],
+                    entities: [user_entity_1.User, project_entity_1.Project, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog],
                     synchronize: true,
                     logging: process.env.NODE_ENV === 'development',
                 }),
@@ -72,6 +75,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             config_module_1.ConfigModule,
             auth_module_1.AuthModule,
+            projects_module_1.ProjectsModule,
             domains_module_1.DomainsModule,
             proxy_rules_module_1.ProxyRulesModule,
             ssl_certificates_module_1.SslCertificatesModule,
@@ -80,6 +84,7 @@ exports.AppModule = AppModule = __decorate([
             console_module_1.ConsoleModule,
             docker_minimal_module_1.DockerMinimalModule,
             websocket_module_1.WebSocketModule,
+            terminal_module_1.TerminalModule,
             seed_module_1.SeedModule,
         ],
     })

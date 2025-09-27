@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MainLayout } from '@/components/layout/main-layout';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import {
   Play,
   Square,
@@ -46,6 +47,7 @@ export default function ContainersPage() {
     name: '',
     page: 1
   });
+  const [containerToDelete, setContainerToDelete] = useState<DockerContainer | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -101,6 +103,8 @@ export default function ContainersPage() {
           return await DockerApiService.stopContainer(id);
         case 'restart':
           return await DockerApiService.restartContainer(id);
+        case 'remove':
+          return await DockerApiService.removeContainer(id);
         default:
           throw new Error(`Ação não suportada: ${action}`);
       }
@@ -132,6 +136,17 @@ export default function ContainersPage() {
 
   const handleAction = (containerId: string, action: string) => {
     actionMutation.mutate({ id: containerId, action });
+  };
+
+  const handleDeleteContainer = (container: DockerContainer) => {
+    setContainerToDelete(container);
+  };
+
+  const confirmDeleteContainer = () => {
+    if (containerToDelete) {
+      actionMutation.mutate({ id: containerToDelete.id, action: 'remove' });
+      setContainerToDelete(null);
+    }
   };
 
   if (error) {
@@ -331,6 +346,7 @@ export default function ContainersPage() {
                           variant="outline"
                           onClick={() => handleAction(container.id, 'restart')}
                           disabled={actionMutation.isPending}
+                          title="Reiniciar container"
                         >
                           <RotateCcw className="h-4 w-4" />
                         </Button>
@@ -360,9 +376,10 @@ export default function ContainersPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleAction(container.id, 'remove')}
+                          onClick={() => handleDeleteContainer(container)}
                           disabled={actionMutation.isPending}
                           className="text-red-600 hover:text-red-700"
+                          title="Excluir container"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -402,6 +419,23 @@ export default function ContainersPage() {
         </div>
       )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!containerToDelete}
+        onClose={() => setContainerToDelete(null)}
+        onConfirm={confirmDeleteContainer}
+        title="Confirmar Exclusão"
+        subtitle="Esta ação não pode ser desfeita."
+        itemName={containerToDelete?.names?.[0]?.replace(/^\//, '') || containerToDelete?.id.substring(0, 12) || ''}
+        consequences={[
+          'Remover permanentemente o container',
+          'Perder todos os dados não persistidos',
+          'Interromper todos os processos em execução'
+        ]}
+        confirmText="Excluir Container"
+        isLoading={actionMutation.isPending}
+      />
     </MainLayout>
   );
 }

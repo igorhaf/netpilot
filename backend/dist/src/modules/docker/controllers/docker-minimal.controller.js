@@ -295,6 +295,29 @@ let DockerMinimalController = class DockerMinimalController {
             };
         }
     }
+    async removeContainer(id) {
+        try {
+            const container = this.docker.getContainer(id);
+            try {
+                await container.stop();
+            }
+            catch (stopError) {
+                console.log(`Container ${id} might already be stopped:`, stopError.message);
+            }
+            await container.remove();
+            return {
+                success: true,
+                message: `Container ${id.substring(0, 12)} removed successfully`
+            };
+        }
+        catch (error) {
+            console.error(`Error removing container ${id}:`, error);
+            return {
+                success: false,
+                message: error.message || 'Failed to remove container'
+            };
+        }
+    }
 };
 exports.DockerMinimalController = DockerMinimalController;
 __decorate([
@@ -367,6 +390,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], DockerMinimalController.prototype, "getContainerLogs", null);
+__decorate([
+    (0, common_1.Post)('containers/:id/remove'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], DockerMinimalController.prototype, "removeContainer", null);
 exports.DockerMinimalController = DockerMinimalController = __decorate([
     (0, common_1.Controller)('docker'),
     __metadata("design:paramtypes", [])

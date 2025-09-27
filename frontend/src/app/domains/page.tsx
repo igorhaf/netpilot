@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Search, Globe, CheckCircle, XCircle, Settings, Trash2, Eye, Play, Square, RotateCcw, Shield, ShieldX, Network, ExternalLink, Lock, Unlock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/hooks/use-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
@@ -33,11 +33,18 @@ export default function DomainsPage() {
     mutationFn: (id: string) => api.delete(`/domains/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains'] })
-      toast.success('Domínio excluído com sucesso!')
+      toast({
+        title: 'Sucesso',
+        description: 'Domínio excluído com sucesso!',
+      })
       setDomainToDelete(null)
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao excluir domínio')
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.message || 'Erro ao excluir domínio',
+        variant: 'destructive',
+      })
     },
   })
 
@@ -55,21 +62,48 @@ export default function DomainsPage() {
       }),
     onSuccess: (_, { isActive }) => {
       queryClient.invalidateQueries({ queryKey: ['domains'] })
-      toast.success(`Domínio ${isActive ? 'ativado' : 'desativado'} com sucesso!`)
+      toast({
+        title: 'Sucesso',
+        description: `Domínio ${isActive ? 'ativado' : 'desativado'} com sucesso!`,
+      })
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao alterar status do domínio')
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.message || 'Erro ao alterar status do domínio',
+        variant: 'destructive',
+      })
     },
   })
 
   const toggleLockMutation = useMutation({
-    mutationFn: (id: string) => api.patch(`/domains/${id}/toggle-lock`),
+    mutationFn: async (domain: Domain) => {
+      const response = await api.patch(`/domains/${domain.id}`, {
+        name: domain.name,
+        description: domain.description,
+        isActive: domain.isActive,
+        isLocked: !domain.isLocked,
+        autoTls: domain.autoTls,
+        forceHttps: domain.forceHttps,
+        blockExternalAccess: domain.blockExternalAccess,
+        enableWwwRedirect: domain.enableWwwRedirect,
+        bindIp: domain.bindIp,
+      })
+      return response.data
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains'] })
-      toast.success('Status do travamento atualizado!')
+      toast({
+        title: 'Sucesso',
+        description: 'Status do travamento atualizado!',
+      })
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao atualizar travamento')
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.message || 'Erro ao atualizar travamento',
+        variant: 'destructive',
+      })
     },
   })
 
@@ -77,10 +111,17 @@ export default function DomainsPage() {
     mutationFn: (id: string) => api.post(`/domains/${id}/restart`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains'] })
-      toast.success('Domínio reiniciado com sucesso!')
+      toast({
+        title: 'Sucesso',
+        description: 'Domínio reiniciado com sucesso!',
+      })
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao reiniciar domínio')
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.message || 'Erro ao reiniciar domínio',
+        variant: 'destructive',
+      })
     },
   })
 
@@ -128,7 +169,7 @@ export default function DomainsPage() {
   }
 
   const handleToggleLock = (domain: Domain) => {
-    toggleLockMutation.mutate(domain.id)
+    toggleLockMutation.mutate(domain)
   }
 
   const handleRestartDomain = (domain: Domain) => {

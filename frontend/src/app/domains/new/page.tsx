@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Server, Shield, Globe, Lock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -14,10 +14,12 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface CreateDomainData {
   name: string
   description?: string
+  projectId: string
   isActive: boolean
   autoTls: boolean
   forceHttps: boolean
@@ -34,12 +36,19 @@ export default function NewDomainPage() {
   const [formData, setFormData] = useState<CreateDomainData>({
     name: '',
     description: '',
+    projectId: '',
     isActive: true,
     autoTls: true,
     forceHttps: true,
     blockExternalAccess: false,
     enableWwwRedirect: false,
     bindIp: undefined,
+  })
+
+  // Buscar projetos disponíveis
+  const { data: projects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.get('/projects').then(res => res.data)
   })
 
   const createDomainMutation = useMutation({
@@ -58,6 +67,10 @@ export default function NewDomainPage() {
     e.preventDefault()
     if (!formData.name.trim()) {
       toast.error('Nome do domínio é obrigatório')
+      return
+    }
+    if (!formData.projectId) {
+      toast.error('Projeto é obrigatório')
       return
     }
 
@@ -140,6 +153,30 @@ export default function NewDomainPage() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Descrição opcional para identificar o domínio
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="projectId">
+                    Projeto <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.projectId}
+                    onValueChange={(value) => setFormData({ ...formData, projectId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um projeto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects?.map((project: any) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Projeto ao qual este domínio pertence
                   </p>
                 </div>
               </div>

@@ -1,0 +1,286 @@
+'use client'
+
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Plus, Search, FolderOpen, Globe, Settings, Trash2, Edit, Eye } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { toast } from '@/hooks/use-toast'
+import { MainLayout } from '@/components/layout/main-layout'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { useRequireAuth } from '@/hooks/useAuth'
+import { formatDate } from '@/lib/utils'
+import api from '@/lib/api'
+import { Project } from '@/types'
+
+export default function ProjectsPage() {
+  const auth = useRequireAuth()
+  const router = useRouter()
+  const [search, setSearch] = useState('')
+  const queryClient = useQueryClient()
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null)
+
+  const { data: projects, isLoading } = useQuery<Project[]>({
+    queryKey: ['projects', search],
+    queryFn: () => api.get(`/projects?search=${search}`).then(res => res.data),
+    enabled: !!auth,
+  })
+
+  const { data: stats } = useQuery({
+    queryKey: ['projects-stats'],
+    queryFn: () => api.get('/projects/stats').then(res => res.data),
+    enabled: !!auth,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/projects/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: ['projects-stats'] })
+      toast({
+        title: 'Sucesso',
+        description: 'Projeto removido com sucesso!'
+      })
+      setProjectToDelete(null)
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.message || 'Erro ao remover projeto',
+        variant: 'destructive'
+      })
+    },
+  })
+
+  const handleCreateProject = () => {
+    router.push('/projects/new')
+  }
+
+  const handleDelete = (project: Project) => {
+    setProjectToDelete(project)
+  }
+
+  const confirmDeleteProject = () => {
+    if (projectToDelete) {
+      deleteMutation.mutate(projectToDelete.id)
+    }
+  }
+
+  if (!auth) return null
+
+  const filteredProjects = projects?.filter(project =>
+    project.name.toLowerCase().includes(search.toLowerCase()) ||
+    project.description?.toLowerCase().includes(search.toLowerCase()) ||
+    project.technologies?.some(tech => tech.toLowerCase().includes(search.toLowerCase()))
+  ) || []
+
+  const breadcrumbs = [
+    { label: 'Projetos', current: true }
+  ]
+
+  return (
+    <MainLayout breadcrumbs={breadcrumbs}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Projetos</h1>
+            <p className="text-muted-foreground">
+              Gerencie seus projetos e seus domínios associados
+            </p>
+          </div>
+          <Button onClick={handleCreateProject}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Projeto
+          </Button>
+        </div>
+
+        {/* Stats */}
+        {stats && (
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total</p>
+                    <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                  </div>
+                  <FolderOpen className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Ativos</p>
+                    <p className="text-2xl font-bold text-green-500">{stats.active}</p>
+                  </div>
+                  <FolderOpen className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Domínios</p>
+                    <p className="text-2xl font-bold text-blue-500">{stats.totalDomains}</p>
+                  </div>
+                  <Globe className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Média Domínios</p>
+                    <p className="text-2xl font-bold text-purple-500">{stats.avgDomainsPerProject}</p>
+                  </div>
+                  <Settings className="h-8 w-8 text-purple-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Search */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar projetos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Projects Grid */}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredProjects.map((project) => (
+              <Card key={project.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        project.isActive ? 'bg-green-500' : 'bg-gray-400'
+                      }`} />
+                      <CardTitle className="text-lg">{project.name}</CardTitle>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Link href={`/projects/${project.id}`}>
+                        <Button size="sm" variant="outline" title="Ver detalhes">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link href={`/projects/${project.id}/edit`}>
+                        <Button size="sm" variant="outline" title="Editar">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(project)}
+                        className="text-red-600 hover:text-red-700"
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {project.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {project.description}
+                      </p>
+                    )}
+
+                    {/* Technologies */}
+                    {project.technologies && project.technologies.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {project.technologies.slice(0, 3).map((tech, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {tech}
+                          </Badge>
+                        ))}
+                        {project.technologies.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{project.technologies.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Domains Count */}
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>
+                        {project.domains?.length || 0} domínio(s)
+                      </span>
+                      <span>
+                        {formatDate(project.createdAt)}
+                      </span>
+                    </div>
+
+                    {/* Main Domain */}
+                    {project.mainDomain && (
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Domínio principal: </span>
+                        <span className="font-medium">{project.mainDomain}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filteredProjects.length === 0 && (
+          <div className="text-center py-12">
+            <FolderOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">Nenhum projeto encontrado</h3>
+            <p className="text-muted-foreground mb-4">
+              Crie seu primeiro projeto para começar a organizar seus domínios.
+            </p>
+            <Button onClick={handleCreateProject}>
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Projeto
+            </Button>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={!!projectToDelete}
+          onClose={() => setProjectToDelete(null)}
+          onConfirm={confirmDeleteProject}
+          title="Confirmar Exclusão"
+          subtitle="Esta ação não pode ser desfeita."
+          itemName={`Projeto "${projectToDelete?.name}"`}
+          consequences={[
+            'Remover permanentemente o projeto',
+            'Domínios associados ficarão sem projeto',
+            'Dados de sessão de IA serão perdidos'
+          ]}
+          confirmText="Excluir Projeto"
+          isLoading={deleteMutation.isPending}
+        />
+      </div>
+    </MainLayout>
+  )
+}

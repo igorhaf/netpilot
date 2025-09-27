@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
 import { AuthModule } from './modules/auth/auth.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 import { DomainsModule } from './modules/domains/domains.module';
 import { ProxyRulesModule } from './modules/proxy-rules/proxy-rules.module';
 // import { RedirectsModule } from './modules/redirects/redirects.module'; // Temporarily disabled
@@ -13,9 +14,11 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ConsoleModule } from './modules/console/console.module';
 import { DockerMinimalModule } from './modules/docker/docker-minimal.module';
 import { WebSocketModule } from './modules/websocket/websocket.module';
+import { TerminalModule } from './modules/terminal/terminal.module';
 import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
 import { User } from './entities/user.entity';
+import { Project } from './entities/project.entity';
 import { Domain } from './entities/domain.entity';
 import { ProxyRule } from './entities/proxy-rule.entity';
 // import { Redirect } from './entities/redirect.entity'; // Temporarily disabled
@@ -35,7 +38,7 @@ import { ConsoleLog } from './entities/console-log.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog],
+        entities: [User, Project, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog],
         synchronize: true, // Temporarily enabled to recognize new isLocked column
         logging: process.env.NODE_ENV === 'development',
       }),
@@ -63,6 +66,7 @@ import { ConsoleLog } from './entities/console-log.entity';
     }),
     ConfigModule,
     AuthModule,
+    ProjectsModule,
     DomainsModule,
     ProxyRulesModule,
     // RedirectsModule, // Temporarily disabled
@@ -72,6 +76,7 @@ import { ConsoleLog } from './entities/console-log.entity';
     ConsoleModule,
     DockerMinimalModule,
     WebSocketModule,
+    TerminalModule,
     SeedModule,
   ],
   // No custom controllers in AppModule

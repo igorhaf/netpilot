@@ -1,7 +1,9 @@
 export declare class CreateDomainDto {
     name: string;
     description?: string;
+    projectId: string;
     isActive?: boolean;
+    isLocked?: boolean;
     autoTls?: boolean;
     forceHttps?: boolean;
     blockExternalAccess?: boolean;

@@ -8,14 +8,17 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { AppModule } from '../../src/app.module';
 import { User } from '../../src/entities/user.entity';
 import { Domain } from '../../src/entities/domain.entity';
+import { Project } from '../../src/entities/project.entity';
 import { CreateDomainDto, UpdateDomainDto } from '../../src/dtos/domain.dto';
 
 describe('Domains (e2e)', () => {
   let app: INestApplication;
   let userRepository: Repository<User>;
   let domainRepository: Repository<Domain>;
+  let projectRepository: Repository<Project>;
   let accessToken: string;
   let userId: string;
+  let testProjectId: string;
 
   const testUser = {
     email: 'test@example.com',
@@ -23,14 +26,21 @@ describe('Domains (e2e)', () => {
     roles: ['user'],
   };
 
+  const testProject = {
+    name: 'Test Project',
+    description: 'Test project for domain tests',
+    isActive: true,
+  };
+
   const testDomain = {
     name: 'example.com',
     description: 'Test domain',
-    enabled: true,
-    autoSsl: true,
+    projectId: '', // Will be set dynamically
+    isActive: true,
+    autoTls: true,
     forceHttps: true,
-    blockExternal: false,
-    wwwRedirect: false,
+    blockExternalAccess: false,
+    enableWwwRedirect: false,
   };
 
   beforeAll(async () => {
@@ -54,6 +64,7 @@ describe('Domains (e2e)', () => {
     app = moduleFixture.createNestApplication();
     userRepository = app.get<Repository<User>>(getRepositoryToken(User));
     domainRepository = app.get<Repository<Domain>>(getRepositoryToken(Domain));
+    projectRepository = app.get<Repository<Project>>(getRepositoryToken(Project));
 
     await app.init();
   });
@@ -61,6 +72,7 @@ describe('Domains (e2e)', () => {
   beforeEach(async () => {
     // Clean database
     await domainRepository.delete({});
+    await projectRepository.delete({});
     await userRepository.delete({});
 
     // Create test user and get auth token
@@ -78,6 +90,15 @@ describe('Domains (e2e)', () => {
       });
 
     accessToken = loginResponse.body.access_token;
+
+    // Create test project
+    const projectResponse = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(testProject);
+
+    testProjectId = projectResponse.body.id;
+    testDomain.projectId = testProjectId;
   });
 
   afterAll(async () => {
@@ -377,6 +398,7 @@ describe('Domains (e2e)', () => {
     it('should update domain', async () => {
       const updateData: UpdateDomainDto = {
         name: testDomain.name, // Include required name field
+        projectId: testProjectId, // Include required projectId field
         description: 'Updated description',
         isActive: false,
         forceHttps: false,

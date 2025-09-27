@@ -7,8 +7,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: string | Date) {
-  return format(new Date(date), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+export function formatDate(date: string | Date, formatStr: string = 'dd/MM/yyyy HH:mm') {
+  return format(new Date(date), formatStr, { locale: ptBR })
 }
 
 export function formatDateShort(date: string | Date) {

@@ -11,7 +11,7 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
 
   // Detectar se está em mobile
@@ -24,9 +24,7 @@ export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
         setSidebarOpen(false)
       } else {
         // No desktop, mantém o estado atual ou abre se for a primeira vez
-        if (window.innerWidth >= 768) {
-          setSidebarOpen(true)
-        }
+        setSidebarOpen(true)
       }
     }
 
@@ -58,7 +56,7 @@ export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
 
       {/* Main content */}
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
-        !isMobile && !sidebarOpen ? 'ml-0' : ''
+        !isMobile && sidebarOpen ? 'ml-64' : 'ml-0'
       }`}>
         {/* Header com botão hambúrguer */}
         <header className="h-16 bg-background border-b border-border flex items-center px-4 md:px-6">
@@ -67,18 +65,19 @@ export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
             className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
             aria-label="Toggle menu"
           >
-            {sidebarOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            <Menu className="h-6 w-6" />
           </button>
 
           {/* Título NetPilot apenas no mobile */}
           <div className="flex-1 ml-4 md:hidden">
-            <h1 className="text-lg font-semibold text-foreground">
-              NetPilot
-            </h1>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">NP</span>
+              </div>
+              <h1 className="text-lg font-semibold text-foreground">
+                NetPilot
+              </h1>
+            </div>
           </div>
         </header>
 

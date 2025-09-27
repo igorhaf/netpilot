@@ -18,14 +18,16 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = require("bcryptjs");
 const user_entity_1 = require("../entities/user.entity");
+const project_entity_1 = require("../entities/project.entity");
 const domain_entity_1 = require("../entities/domain.entity");
 const proxy_rule_entity_1 = require("../entities/proxy-rule.entity");
 const redirect_entity_1 = require("../entities/redirect.entity");
 const ssl_certificate_entity_1 = require("../entities/ssl-certificate.entity");
 const log_entity_1 = require("../entities/log.entity");
 let InitialSeedService = class InitialSeedService {
-    constructor(userRepository, domainRepository, proxyRuleRepository, redirectRepository, sslCertificateRepository, logRepository) {
+    constructor(userRepository, projectRepository, domainRepository, proxyRuleRepository, redirectRepository, sslCertificateRepository, logRepository) {
         this.userRepository = userRepository;
+        this.projectRepository = projectRepository;
         this.domainRepository = domainRepository;
         this.proxyRuleRepository = proxyRuleRepository;
         this.redirectRepository = redirectRepository;
@@ -51,6 +53,57 @@ let InitialSeedService = class InitialSeedService {
         else {
             console.log('ℹ️  Admin user already exists');
         }
+        const existingProject = await this.projectRepository.findOne({
+            where: { name: 'NetPilot System' },
+        });
+        let savedProject;
+        if (!existingProject) {
+            const sampleProject = this.projectRepository.create({
+                name: 'NetPilot System',
+                description: 'Sistema principal NetPilot para gerenciamento de proxy reverso e SSL',
+                isActive: true,
+                technologies: ['NestJS', 'Next.js', 'TypeScript', 'Docker', 'PostgreSQL', 'Traefik', 'Nginx'],
+                repository: 'https://github.com/netpilot/netpilot',
+                documentation: 'https://docs.netpilot.com',
+                mainDomain: 'netpilot.meadadigital.com',
+                metadata: {
+                    version: '1.0.0',
+                    environment: 'production'
+                }
+            });
+            savedProject = await this.projectRepository.save(sampleProject);
+            console.log('✅ Sample project created');
+        }
+        else {
+            savedProject = existingProject;
+            console.log('ℹ️  Sample project already exists');
+        }
+        const existingDeitProject = await this.projectRepository.findOne({
+            where: { name: 'Deit' },
+        });
+        let savedDeitProject;
+        if (!existingDeitProject) {
+            const deitProject = this.projectRepository.create({
+                name: 'Deit',
+                description: 'Sistema Deit - Plataforma de gestão e automação empresarial',
+                isActive: true,
+                technologies: ['Laravel', 'Vue.js', 'PHP', 'MySQL', 'Docker', 'Redis'],
+                repository: 'https://github.com/meadadigital/deit',
+                documentation: 'https://docs.deit.meadadigital.com',
+                mainDomain: 'deit.meadadigital.com',
+                metadata: {
+                    version: '2.1.0',
+                    environment: 'production',
+                    type: 'business-platform'
+                }
+            });
+            savedDeitProject = await this.projectRepository.save(deitProject);
+            console.log('✅ Deit project created');
+        }
+        else {
+            savedDeitProject = existingDeitProject;
+            console.log('ℹ️  Deit project already exists');
+        }
         const existingDomain = await this.domainRepository.findOne({
             where: { name: 'netpilot.meadadigital.com' },
         });
@@ -64,6 +117,7 @@ let InitialSeedService = class InitialSeedService {
                 blockExternalAccess: false,
                 enableWwwRedirect: true,
                 bindIp: '127.0.0.1',
+                projectId: savedProject.id,
             });
             const savedDomain = await this.domainRepository.save(sampleDomain);
             const sampleProxyRule = this.proxyRuleRepository.create({
@@ -101,6 +155,27 @@ let InitialSeedService = class InitialSeedService {
         }
         else {
             console.log('ℹ️  Sample domain already exists');
+        }
+        const existingDeitDomain = await this.domainRepository.findOne({
+            where: { name: 'deit.meadadigital.com' },
+        });
+        if (!existingDeitDomain) {
+            const deitDomain = this.domainRepository.create({
+                name: 'deit.meadadigital.com',
+                description: 'Domínio principal do sistema Deit',
+                isActive: true,
+                autoTls: true,
+                forceHttps: true,
+                blockExternalAccess: false,
+                enableWwwRedirect: true,
+                bindIp: '127.0.0.1',
+                projectId: savedDeitProject.id,
+            });
+            await this.domainRepository.save(deitDomain);
+            console.log('✅ Deit domain created');
+        }
+        else {
+            console.log('ℹ️  Deit domain already exists');
         }
         const logCount = await this.logRepository.count();
         if (logCount === 0) {
@@ -149,12 +224,14 @@ exports.InitialSeedService = InitialSeedService;
 exports.InitialSeedService = InitialSeedService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __param(1, (0, typeorm_1.InjectRepository)(domain_entity_1.Domain)),
-    __param(2, (0, typeorm_1.InjectRepository)(proxy_rule_entity_1.ProxyRule)),
-    __param(3, (0, typeorm_1.InjectRepository)(redirect_entity_1.Redirect)),
-    __param(4, (0, typeorm_1.InjectRepository)(ssl_certificate_entity_1.SslCertificate)),
-    __param(5, (0, typeorm_1.InjectRepository)(log_entity_1.Log)),
+    __param(1, (0, typeorm_1.InjectRepository)(project_entity_1.Project)),
+    __param(2, (0, typeorm_1.InjectRepository)(domain_entity_1.Domain)),
+    __param(3, (0, typeorm_1.InjectRepository)(proxy_rule_entity_1.ProxyRule)),
+    __param(4, (0, typeorm_1.InjectRepository)(redirect_entity_1.Redirect)),
+    __param(5, (0, typeorm_1.InjectRepository)(ssl_certificate_entity_1.SslCertificate)),
+    __param(6, (0, typeorm_1.InjectRepository)(log_entity_1.Log)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

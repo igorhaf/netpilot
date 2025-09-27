@@ -13,6 +13,7 @@ exports.Domain = void 0;
 const typeorm_1 = require("typeorm");
 const proxy_rule_entity_1 = require("./proxy-rule.entity");
 const ssl_certificate_entity_1 = require("./ssl-certificate.entity");
+const project_entity_1 = require("./project.entity");
 let Domain = class Domain {
 };
 exports.Domain = Domain;
@@ -33,6 +34,10 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Domain.prototype, "isActive", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], Domain.prototype, "isLocked", void 0);
+__decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], Domain.prototype, "autoTls", void 0);
@@ -52,6 +57,15 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Domain.prototype, "bindIp", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => project_entity_1.Project, (project) => project.domains, { nullable: false }),
+    (0, typeorm_1.JoinColumn)({ name: 'projectId' }),
+    __metadata("design:type", project_entity_1.Project)
+], Domain.prototype, "project", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: false }),
+    __metadata("design:type", String)
+], Domain.prototype, "projectId", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => proxy_rule_entity_1.ProxyRule, (proxyRule) => proxyRule.domain),
     __metadata("design:type", Array)

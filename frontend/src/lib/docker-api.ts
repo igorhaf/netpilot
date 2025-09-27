@@ -109,8 +109,8 @@ export class DockerApiService {
    */
   static async removeContainer(containerId: string, force?: boolean): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await api.delete(`/docker/containers/${containerId}`, {
-        data: { force }
+      const response = await api.post(`/docker/containers/${containerId}/remove`, {
+        force
       })
       return response.data
     } catch (error: any) {
