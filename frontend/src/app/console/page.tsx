@@ -27,14 +27,16 @@ interface CommandResult {
 
 export default function ConsolePage() {
     const [command, setCommand] = useState('')
-    const [terminalOutput, setTerminalOutput] = useState<string[]>(['Conectando ao servidor...'])
+    const [terminalOutput, setTerminalOutput] = useState<string[]>(['Conectando ao sistema local...'])
     const [isConnected, setIsConnected] = useState(false)
     const [activeTab, setActiveTab] = useState('console')
+    const [sessionStarted, setSessionStarted] = useState(false)
 
     const {
         isConnected: wsConnected,
         error: wsError,
         executeCommand,
+        connectToSession,
         on,
         off
     } = useConsoleSocket()
@@ -62,6 +64,15 @@ export default function ConsolePage() {
             on('terminal:output', handleTerminalOutput)
             on('terminal:error', handleTerminalError)
             on('ssh:status', handleConnectionStatus)
+
+            // Conectar automaticamente ao sistema local quando WebSocket conectar
+            if (!sessionStarted) {
+                setSessionStarted(true)
+                setTimeout(() => {
+                    connectToSession('localhost')
+                    setTerminalOutput(prev => [...prev, 'Conectando ao sistema local...'])
+                }, 1000)
+            }
         }
 
         return () => {

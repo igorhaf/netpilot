@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsOptional, IsIP, ValidateIf } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsIP, ValidateIf, IsUUID } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -12,10 +12,19 @@ export class CreateDomainDto {
   @IsString()
   description?: string;
 
+  @ApiProperty({ example: 'uuid-do-projeto' })
+  @IsUUID()
+  projectId: string;
+
   @ApiProperty({ example: true, required: false })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isLocked?: boolean;
 
   @ApiProperty({ example: true, required: false })
   @IsOptional()

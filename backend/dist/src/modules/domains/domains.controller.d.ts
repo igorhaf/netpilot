@@ -13,6 +13,7 @@ export declare class DomainsController {
         withoutSsl: number;
     }>;
     findOne(id: string): Promise<import("../../entities/domain.entity").Domain>;
+    toggleLock(id: string): Promise<import("../../entities/domain.entity").Domain>;
     update(id: string, updateDomainDto: UpdateDomainDto): Promise<import("../../entities/domain.entity").Domain>;
     remove(id: string): Promise<void>;
 }

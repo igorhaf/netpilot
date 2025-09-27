@@ -28,11 +28,22 @@ __decorate([
     __metadata("design:type", String)
 ], CreateDomainDto.prototype, "description", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'uuid-do-projeto' }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreateDomainDto.prototype, "projectId", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ example: true, required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateDomainDto.prototype, "isActive", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: false, required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateDomainDto.prototype, "isLocked", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: true, required: false }),
     (0, class_validator_1.IsOptional)(),

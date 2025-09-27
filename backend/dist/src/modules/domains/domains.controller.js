@@ -34,6 +34,9 @@ let DomainsController = class DomainsController {
     findOne(id) {
         return this.domainsService.findOne(id);
     }
+    toggleLock(id) {
+        return this.domainsService.toggleLock(id);
+    }
     update(id, updateDomainDto) {
         return this.domainsService.update(id, updateDomainDto);
     }
@@ -78,6 +81,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], DomainsController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Patch)(':id/toggle-lock'),
+    (0, swagger_1.ApiOperation)({ summary: 'Travar/destravar domínio' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], DomainsController.prototype, "toggleLock", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Atualizar domínio' }),

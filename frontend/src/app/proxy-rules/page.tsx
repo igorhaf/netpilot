@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, Search, Play, Pause, Plus, Edit, Trash2, Lock, Unlock, Square } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
@@ -19,15 +19,24 @@ import { ProxyRule } from '@/types'
 export default function ProxyRulesPage() {
   const auth = useRequireAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const [ruleToDelete, setRuleToDelete] = useState<ProxyRule | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: proxyRules, isLoading } = useQuery<ProxyRule[]>({
+  // Get domain filter from URL
+  const domainFilter = searchParams.get('domain')
+
+  const { data: allProxyRules, isLoading } = useQuery<ProxyRule[]>({
     queryKey: ['proxy-rules', search],
     queryFn: () => api.get(`/proxy-rules?search=${search}`).then(res => res.data),
     enabled: !!auth,
   })
+
+  // Filter by domain if specified
+  const proxyRules = domainFilter
+    ? allProxyRules?.filter(rule => rule.domainId === domainFilter)
+    : allProxyRules
 
   // Mutation para ativar/desativar proxy rule
   const toggleProxyRuleMutation = useMutation({
@@ -137,9 +146,14 @@ export default function ProxyRulesPage() {
 
   if (!auth) return null
 
-  const breadcrumbs = [
-    { label: 'Proxy Reverso', current: true }
-  ]
+  const breadcrumbs = domainFilter
+    ? [
+        { label: 'Domínios', href: '/domains' },
+        { label: 'Proxy Reverso', current: true }
+      ]
+    : [
+        { label: 'Proxy Reverso', current: true }
+      ]
 
   if (isLoading) {
     return (
@@ -156,7 +170,10 @@ export default function ProxyRulesPage() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Proxy Reverso</h1>
             <p className="text-muted-foreground">
-              Configure regras de proxy reverso para seus domínios
+              {domainFilter
+                ? 'Regras de proxy para o domínio selecionado'
+                : 'Configure regras de proxy reverso para seus domínios'
+              }
             </p>
           </div>
           <div className="flex items-center gap-3">

@@ -11,6 +11,7 @@ export declare class DomainsService {
     findOne(id: string): Promise<Domain>;
     update(id: string, updateDomainDto: UpdateDomainDto): Promise<Domain>;
     remove(id: string): Promise<void>;
+    toggleLock(id: string): Promise<Domain>;
     getStats(): Promise<{
         total: number;
         active: number;

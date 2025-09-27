@@ -89,6 +89,12 @@ let DomainsService = class DomainsService {
         await this.configGenerationService.generateNginxConfig();
         await this.configGenerationService.generateTraefikConfig();
     }
+    async toggleLock(id) {
+        const domain = await this.findOne(id);
+        domain.isLocked = !domain.isLocked;
+        await this.domainRepository.save(domain);
+        return this.findOne(id);
+    }
     async getStats() {
         const [total, active, withSsl] = await Promise.all([
             this.domainRepository.count(),

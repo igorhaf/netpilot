@@ -17,11 +17,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import Link from 'next/link'
 
 interface UpdateDomainData {
   name: string
   description?: string
+  projectId: string
   isActive: boolean
   autoTls: boolean
   forceHttps: boolean
@@ -40,6 +42,7 @@ export default function EditDomainPage() {
   const [formData, setFormData] = useState<UpdateDomainData>({
     name: '',
     description: '',
+    projectId: '',
     isActive: true,
     autoTls: true,
     forceHttps: true,
@@ -52,6 +55,12 @@ export default function EditDomainPage() {
     queryKey: ['domain', domainId],
     queryFn: () => api.get(`/domains/${domainId}`).then(res => res.data),
     enabled: !!domainId,
+  })
+
+  // Buscar projetos disponíveis
+  const { data: projects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => api.get('/projects').then(res => res.data)
   })
 
   const { data: containersResponse, isLoading: containersLoading } = useQuery({
@@ -97,6 +106,7 @@ export default function EditDomainPage() {
       setFormData({
         name: domain.name || '',
         description: domain.description || '',
+        projectId: domain.projectId || '',
         isActive: domain.isActive ?? true,
         autoTls: domain.autoTls ?? true,
         forceHttps: domain.forceHttps ?? true,
@@ -124,6 +134,10 @@ export default function EditDomainPage() {
     e.preventDefault()
     if (!formData.name.trim()) {
       toast.error('Nome do domínio é obrigatório')
+      return
+    }
+    if (!formData.projectId) {
+      toast.error('Projeto é obrigatório')
       return
     }
 
@@ -234,6 +248,30 @@ export default function EditDomainPage() {
                 />
                 <p className="text-sm text-muted-foreground">
                   Descrição opcional para identificar o domínio
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="projectId">
+                  Projeto <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.projectId}
+                  onValueChange={(value) => setFormData({ ...formData, projectId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um projeto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects?.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  Projeto ao qual este domínio pertence
                 </p>
               </div>
             </CardContent>

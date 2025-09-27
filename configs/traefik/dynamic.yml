@@ -1,6 +1,24 @@
 
   http: 
     routers: 
+      deit-meadadigital-com-redirect: 
+        rule: Host(`deit.meadadigital.com`)
+        middlewares: [
+          deit-meadadigital-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
+      api-netpilot-com-redirect: 
+        rule: Host(`api.netpilot.com`)
+        middlewares: [
+          api-netpilot-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
       netpilot-meadadigital-com-api: 
         rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)
         service: netpilot-meadadigital-com-api-service
@@ -34,36 +52,6 @@
           web
         ]
       
-      deit-meadadigital-com-: 
-        rule: Host(`deit.meadadigital.com`) && PathPrefix(``)
-        service: deit-meadadigital-com--service
-        middlewares: []
-        priority: 1
-        entryPoints: [
-          websecure
-        ]
-        tls: 
-          certResolver: letsencrypt
-        
-      
-      deit-meadadigital-com-redirect: 
-        rule: Host(`deit.meadadigital.com`)
-        middlewares: [
-          deit-meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
-      api-netpilot-com-redirect: 
-        rule: Host(`api.netpilot.com`)
-        middlewares: [
-          api-netpilot-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
     
     services: 
       netpilot-meadadigital-com-api-service: 
@@ -84,23 +72,8 @@
           ]
         
       
-      deit-meadadigital-com--service: 
-        loadBalancer: 
-          servers: [
-            
-              url: http://deit_deit-frontend_1:3008
-            
-          ]
-        
-      
     
     middlewares: 
-      netpilot-meadadigital-com-redirect-https: 
-        redirectScheme: 
-          scheme: https
-          permanent: true
-        
-      
       deit-meadadigital-com-redirect-https: 
         redirectScheme: 
           scheme: https
@@ -108,6 +81,12 @@
         
       
       api-netpilot-com-redirect-https: 
+        redirectScheme: 
+          scheme: https
+          permanent: true
+        
+      
+      netpilot-meadadigital-com-redirect-https: 
         redirectScheme: 
           scheme: https
           permanent: true

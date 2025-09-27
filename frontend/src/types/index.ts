@@ -9,6 +9,22 @@ export interface AuthResponse {
   user: User
 }
 
+export interface Project {
+  id: string
+  name: string
+  description?: string
+  isActive: boolean
+  technologies?: string[]
+  repository?: string
+  documentation?: string
+  aiSessionData?: string
+  mainDomain?: string
+  metadata?: Record<string, any>
+  domains?: Domain[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Domain {
   id: string
   name: string
@@ -20,6 +36,8 @@ export interface Domain {
   blockExternalAccess: boolean
   enableWwwRedirect: boolean
   bindIp: string
+  project?: Project
+  projectId?: string
   proxyRules?: ProxyRule[]
   redirects?: Redirect[]
   sslCertificates?: SslCertificate[]
@@ -126,6 +144,18 @@ export interface DashboardStats {
   }
 }
 
+export interface CreateProjectDto {
+  name: string
+  description?: string
+  isActive?: boolean
+  technologies?: string[]
+  repository?: string
+  documentation?: string
+  aiSessionData?: string
+  mainDomain?: string
+  metadata?: Record<string, any>
+}
+
 export interface CreateDomainDto {
   name: string
   description?: string
@@ -135,6 +165,7 @@ export interface CreateDomainDto {
   blockExternalAccess?: boolean
   enableWwwRedirect?: boolean
   bindIp?: string
+  projectId: string
 }
 
 export interface CreateProxyRuleDto {

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   BarChart3,
+  FolderOpen,
   Globe,
   ArrowRight,
   RotateCcw,
@@ -25,6 +26,11 @@ const navigationItems = [
     name: 'Dashboard',
     href: '/dashboard',
     icon: BarChart3
+  },
+  {
+    name: 'Projetos',
+    href: '/projects',
+    icon: FolderOpen
   },
   {
     name: 'Domínios',
@@ -62,6 +68,11 @@ const navigationItems = [
     icon: Terminal
   },
   {
+    name: 'Terminal',
+    href: '/terminal',
+    icon: Terminal
+  },
+  {
     name: 'Logs',
     href: '/logs',
     icon: FileText
@@ -94,7 +105,7 @@ export function Sidebar({ isOpen, onClose, isMobile }: SidebarProps) {
     ? `fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col bg-sidebar border-r border-border transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`
-    : `flex h-full w-64 flex-col bg-sidebar border-r border-border transform transition-transform duration-300 ease-in-out ${
+    : `fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-col bg-sidebar border-r border-border transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`
 

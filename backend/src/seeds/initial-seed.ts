@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../entities/user.entity';
+import { Project } from '../entities/project.entity';
 import { Domain } from '../entities/domain.entity';
 import { ProxyRule } from '../entities/proxy-rule.entity';
 import { Redirect, RedirectType } from '../entities/redirect.entity';
@@ -14,6 +15,8 @@ export class InitialSeedService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Project)
+    private projectRepository: Repository<Project>,
     @InjectRepository(Domain)
     private domainRepository: Repository<Domain>,
     @InjectRepository(ProxyRule)
@@ -48,6 +51,61 @@ export class InitialSeedService {
       console.log('ℹ️  Admin user already exists');
     }
 
+    // Create sample project
+    const existingProject = await this.projectRepository.findOne({
+      where: { name: 'NetPilot System' },
+    });
+
+    let savedProject;
+    if (!existingProject) {
+      const sampleProject = this.projectRepository.create({
+        name: 'NetPilot System',
+        description: 'Sistema principal NetPilot para gerenciamento de proxy reverso e SSL',
+        isActive: true,
+        technologies: ['NestJS', 'Next.js', 'TypeScript', 'Docker', 'PostgreSQL', 'Traefik', 'Nginx'],
+        repository: 'https://github.com/netpilot/netpilot',
+        documentation: 'https://docs.netpilot.com',
+        mainDomain: 'netpilot.meadadigital.com',
+        metadata: {
+          version: '1.0.0',
+          environment: 'production'
+        }
+      });
+      savedProject = await this.projectRepository.save(sampleProject);
+      console.log('✅ Sample project created');
+    } else {
+      savedProject = existingProject;
+      console.log('ℹ️  Sample project already exists');
+    }
+
+    // Create Deit project
+    const existingDeitProject = await this.projectRepository.findOne({
+      where: { name: 'Deit' },
+    });
+
+    let savedDeitProject;
+    if (!existingDeitProject) {
+      const deitProject = this.projectRepository.create({
+        name: 'Deit',
+        description: 'Sistema Deit - Plataforma de gestão e automação empresarial',
+        isActive: true,
+        technologies: ['Laravel', 'Vue.js', 'PHP', 'MySQL', 'Docker', 'Redis'],
+        repository: 'https://github.com/meadadigital/deit',
+        documentation: 'https://docs.deit.meadadigital.com',
+        mainDomain: 'deit.meadadigital.com',
+        metadata: {
+          version: '2.1.0',
+          environment: 'production',
+          type: 'business-platform'
+        }
+      });
+      savedDeitProject = await this.projectRepository.save(deitProject);
+      console.log('✅ Deit project created');
+    } else {
+      savedDeitProject = existingDeitProject;
+      console.log('ℹ️  Deit project already exists');
+    }
+
     // Create sample domain
     const existingDomain = await this.domainRepository.findOne({
       where: { name: 'netpilot.meadadigital.com' },
@@ -63,6 +121,7 @@ export class InitialSeedService {
         blockExternalAccess: false,
         enableWwwRedirect: true,
         bindIp: '127.0.0.1',
+        projectId: savedProject.id,
       });
       const savedDomain = await this.domainRepository.save(sampleDomain);
 
@@ -106,6 +165,29 @@ export class InitialSeedService {
       console.log('✅ Sample domain and configurations created');
     } else {
       console.log('ℹ️  Sample domain already exists');
+    }
+
+    // Create Deit domain
+    const existingDeitDomain = await this.domainRepository.findOne({
+      where: { name: 'deit.meadadigital.com' },
+    });
+
+    if (!existingDeitDomain) {
+      const deitDomain = this.domainRepository.create({
+        name: 'deit.meadadigital.com',
+        description: 'Domínio principal do sistema Deit',
+        isActive: true,
+        autoTls: true,
+        forceHttps: true,
+        blockExternalAccess: false,
+        enableWwwRedirect: true,
+        bindIp: '127.0.0.1',
+        projectId: savedDeitProject.id,
+      });
+      await this.domainRepository.save(deitDomain);
+      console.log('✅ Deit domain created');
+    } else {
+      console.log('ℹ️  Deit domain already exists');
     }
 
     // Create sample logs

@@ -248,7 +248,7 @@ export default function DomainDetailPage() {
                   <p className="text-sm text-muted-foreground">Certificados</p>
                 </div>
                 <div className="flex items-center justify-center">
-                  <Link href={`/domains/${domain.id}/ssl-certificates`}>
+                  <Link href={`/ssl-certificates?domain=${domain.id}`}>
                     <Button variant="outline" size="sm">
                       Gerenciar SSL
                     </Button>
@@ -441,7 +441,7 @@ export default function DomainDetailPage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link href={`/domains/${domain.id}/proxy-rules`}>
+          <Link href={`/proxy-rules?domain=${domain.id}`}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardContent className="flex items-center space-x-3 p-6">
                 <div className="h-8 w-8 bg-blue-100 rounded flex items-center justify-center">
@@ -455,7 +455,7 @@ export default function DomainDetailPage() {
             </Card>
           </Link>
 
-          <Link href={`/domains/${domain.id}/redirects`}>
+          <Link href={`/redirects?domain=${domain.id}`}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardContent className="flex items-center space-x-3 p-6">
                 <div className="h-8 w-8 bg-green-100 rounded flex items-center justify-center">
@@ -469,7 +469,7 @@ export default function DomainDetailPage() {
             </Card>
           </Link>
 
-          <Link href={`/domains/${domain.id}/ssl-certificates`}>
+          <Link href={`/ssl-certificates?domain=${domain.id}`}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardContent className="flex items-center space-x-3 p-6">
                 <div className="h-8 w-8 bg-purple-100 rounded flex items-center justify-center">

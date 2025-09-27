@@ -326,4 +326,33 @@ export class DockerMinimalController {
       };
     }
   }
+
+  @Post('containers/:id/remove')
+  async removeContainer(@Param('id') id: string) {
+    try {
+      const container = this.docker.getContainer(id);
+
+      // First try to stop the container if it's running
+      try {
+        await container.stop();
+      } catch (stopError) {
+        // Container might already be stopped, that's okay
+        console.log(`Container ${id} might already be stopped:`, stopError.message);
+      }
+
+      // Remove the container
+      await container.remove();
+
+      return {
+        success: true,
+        message: `Container ${id.substring(0, 12)} removed successfully`
+      };
+    } catch (error) {
+      console.error(`Error removing container ${id}:`, error);
+      return {
+        success: false,
+        message: error.message || 'Failed to remove container'
+      };
+    }
+  }
 }

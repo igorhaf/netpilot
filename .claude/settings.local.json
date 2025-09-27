@@ -41,7 +41,9 @@
       "Bash(do)",
       "Bash(done)",
       "Bash(npm run typeorm:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

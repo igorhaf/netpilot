@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Shield, Search, RefreshCw, CheckCircle, AlertTriangle, XCircle, Trash2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
@@ -17,15 +18,24 @@ import { SslCertificate } from '@/types'
 
 export default function SslCertificatesPage() {
   const auth = useRequireAuth()
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
   const queryClient = useQueryClient()
   const [certificateToDelete, setCertificateToDelete] = useState<SslCertificate | null>(null)
 
-  const { data: certificates, isLoading } = useQuery<SslCertificate[]>({
+  // Get domain filter from URL
+  const domainFilter = searchParams.get('domain')
+
+  const { data: allCertificates, isLoading } = useQuery<SslCertificate[]>({
     queryKey: ['ssl-certificates', search],
     queryFn: () => api.get('/ssl-certificates').then(res => res.data),
     enabled: !!auth,
   })
+
+  // Filter by domain if specified
+  const certificates = domainFilter
+    ? allCertificates?.filter(cert => cert.domainId === domainFilter)
+    : allCertificates
 
   const { data: stats } = useQuery({
     queryKey: ['ssl-certificates-stats'],
@@ -115,9 +125,14 @@ export default function SslCertificatesPage() {
     }
   }
 
-  const breadcrumbs = [
-    { label: 'Certificados SSL', current: true }
-  ]
+  const breadcrumbs = domainFilter
+    ? [
+        { label: 'Domínios', href: '/domains' },
+        { label: 'Certificados SSL', current: true }
+      ]
+    : [
+        { label: 'Certificados SSL', current: true }
+      ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
@@ -126,7 +141,10 @@ export default function SslCertificatesPage() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Certificados SSL</h1>
             <p className="text-muted-foreground">
-              Gerencie certificados SSL e renovações automáticas
+              {domainFilter
+                ? 'Certificados SSL para o domínio selecionado'
+                : 'Gerencie certificados SSL e renovações automáticas'
+              }
             </p>
           </div>
           <Button
