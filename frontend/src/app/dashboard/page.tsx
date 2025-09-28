@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { getStatusColor, formatRelativeTime } from '@/lib/utils'
 import api from '@/lib/api'
 import { DashboardStats, Log, SslCertificate } from '@/types'
@@ -42,23 +44,6 @@ export default function DashboardPage() {
     )
   }
 
-  const StatCard = ({ title, value, subtitle, icon: Icon, color }: any) => (
-    <div className="card">
-      <div className="card-content">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            )}
-          </div>
-          <Icon className={`h-8 w-8 ${color}`} />
-        </div>
-      </div>
-    </div>
-  )
-
   const SystemStatusCard = ({ name, status, uptime }: any) => (
     <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-muted/50">
       <div className="flex items-center gap-3">
@@ -66,10 +51,10 @@ export default function DashboardPage() {
         <span className="font-medium">{name}</span>
       </div>
       <div className="text-right">
-        <span className={`text-sm font-medium ${getStatusColor(status)}`}>
+        <Badge variant={status === 'online' ? "default" : "destructive"}>
           {status === 'online' ? 'Online' : 'Offline'}
-        </span>
-        <p className="text-xs text-muted-foreground">{uptime}</p>
+        </Badge>
+        <p className="text-xs text-muted-foreground mt-1">{uptime}</p>
       </div>
     </div>
   )
@@ -78,58 +63,93 @@ export default function DashboardPage() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Visão geral do sistema NetPilot
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Visão geral do sistema NetPilot
+            </p>
+          </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Domínios Ativos"
-            value={stats?.domains.active || 0}
-            subtitle={`${stats?.domains.total || 0} total`}
-            icon={Globe}
-            color="text-green-400"
-          />
-          <StatCard
-            title="Regras de Proxy"
-            value={stats?.proxyRules.active || 0}
-            subtitle={`${stats?.proxyRules.total || 0} total`}
-            icon={ArrowRight}
-            color="text-blue-400"
-          />
-          <StatCard
-            title="Certificados Válidos"
-            value={stats?.sslCertificates.valid || 0}
-            subtitle={`${stats?.sslCertificates.expiring || 0} expirando`}
-            icon={Shield}
-            color="text-green-400"
-          />
-          <StatCard
-            title="Logs Recentes"
-            value={stats?.logs.success || 0}
-            subtitle={`${stats?.logs.failed || 0} falhas`}
-            icon={FileText}
-            color="text-gray-400"
-          />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats?.domains.active || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Domínios Ativos</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.domains.total || 0} total
+                  </p>
+                </div>
+                <Globe className="h-8 w-8 text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {stats?.proxyRules.active || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Regras de Proxy</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.proxyRules.total || 0} total
+                  </p>
+                </div>
+                <ArrowRight className="h-8 w-8 text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats?.sslCertificates.valid || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Certificados Válidos</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.sslCertificates.expiring || 0} expirando
+                  </p>
+                </div>
+                <Shield className="h-8 w-8 text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-gray-600">
+                    {stats?.logs.success || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Logs Sucesso</p>
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.logs.failed || 0} falhas
+                  </p>
+                </div>
+                <FileText className="h-8 w-8 text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* System Status */}
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center gap-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-green-400" />
-                <h3 className="card-title">Status do Sistema</h3>
-              </div>
-              <p className="card-description">
-                Uptime dos serviços principais
-              </p>
-            </div>
-            <div className="card-content space-y-3">
+                Status do Sistema
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <SystemStatusCard
                 name="Nginx"
                 status={stats?.systemStatus.nginx.status}
@@ -145,21 +165,18 @@ export default function DashboardPage() {
                 status={stats?.systemStatus.database.status}
                 uptime={stats?.systemStatus.database.uptime}
               />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Recent Logs */}
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center gap-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-blue-400" />
-                <h3 className="card-title">Logs Recentes</h3>
-              </div>
-              <p className="card-description">
-                Últimas atividades do sistema
-              </p>
-            </div>
-            <div className="card-content">
+                Logs Recentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               {logsLoading ? (
                 <div className="text-center py-8 text-muted-foreground">
                   Carregando logs...
@@ -180,9 +197,9 @@ export default function DashboardPage() {
                             {formatRelativeTime(log.createdAt)}
                           </p>
                         </div>
-                        <span className={`text-xs font-medium ${getStatusColor(log.status)}`}>
+                        <Badge variant={log.status === 'success' ? "default" : log.status === 'failed' ? "destructive" : "secondary"}>
                           {log.status}
-                        </span>
+                        </Badge>
                       </div>
                     )
                   })}
@@ -192,22 +209,19 @@ export default function DashboardPage() {
                   Nenhum log encontrado
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Expiring Certificates */}
-        <div className="card">
-          <div className="card-header">
-            <div className="flex items-center gap-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-400" />
-              <h3 className="card-title">Certificados Expirando</h3>
-            </div>
-            <p className="card-description">
-              Certificados que expiram nos próximos 30 dias
-            </p>
-          </div>
-          <div className="card-content">
+              Certificados Expirando
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             {certsLoading ? (
               <div className="text-center py-8 text-muted-foreground">
                 Carregando certificados...
@@ -222,9 +236,9 @@ export default function DashboardPage() {
                         Expira em {formatRelativeTime(cert.expiresAt!)}
                       </p>
                     </div>
-                    <span className="status-badge-warning">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
                       Expirando
-                    </span>
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -234,8 +248,8 @@ export default function DashboardPage() {
                 <p>Todos os certificados estão válidos</p>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   )

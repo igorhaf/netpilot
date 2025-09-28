@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { useConsoleSocket } from '@/hooks/useConsoleSocket'
-import { Terminal, Server, Wifi, WifiOff, Activity, Settings } from 'lucide-react'
+import { Terminal, Server, Wifi, WifiOff, Activity, Settings, Monitor, Play, CheckCircle, Clock } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface SshSession {
     id: string
@@ -127,54 +132,90 @@ export default function ConsolePage() {
         <MainLayout>
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground">Console SSH</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Console SSH</h1>
                         <p className="text-muted-foreground">
                             Acesse o terminal do servidor via SSH
                         </p>
                     </div>
                 </div>
 
-                {/* Tabs Navigation */}
-                <div className="border-b border-border">
-                    <nav className="flex space-x-8 overflow-x-auto">
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon
-                            const isActive = activeTab === tab.id
-
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                                        isActive
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-                                    }`}
-                                >
-                                    <Icon className={`h-4 w-4 ${isActive ? tab.color : ''}`} />
-                                    {tab.label}
-                                </button>
-                            )
-                        })}
-                    </nav>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center">
+                                <div>
+                                    <p className={`text-2xl font-bold ${wsConnected ? 'text-green-600' : 'text-red-600'}`}>
+                                        {wsConnected ? 'Online' : 'Offline'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">Status WebSocket</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center">
+                                <div>
+                                    <p className={`text-2xl font-bold ${isConnected ? 'text-green-600' : 'text-yellow-600'}`}>
+                                        {isConnected ? 'Conectado' : 'Conectando'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">SSH Session</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center">
+                                <div>
+                                    <p className="text-2xl font-bold text-blue-600">
+                                        {terminalOutput.length}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">Linhas do Terminal</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex items-center">
+                                <div>
+                                    <p className="text-2xl font-bold text-purple-600">
+                                        localhost
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">Servidor Conectado</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* Tab Content */}
-                <div className="mt-6">
-                    {activeTab === 'console' && (
-                        <div className="card">
-                            <div className="card-header">
-                                <div className="flex items-center gap-2">
+                {/* Tabs */}
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon
+                            return (
+                                <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
+                                    <Icon className="h-4 w-4" />
+                                    {tab.label}
+                                </TabsTrigger>
+                            )
+                        })}
+                    </TabsList>
+
+                    <TabsContent value="console">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
                                     <Terminal className="h-5 w-5 text-green-500" />
-                                    <h3 className="card-title">Terminal SSH</h3>
-                                </div>
-                                <p className="card-description">
-                                    Terminal interativo do servidor NetPilot
-                                </p>
-                            </div>
-                            <div className="card-content">
+                                    Terminal SSH
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
                                 {/* Terminal Output */}
                                 <div className="bg-black rounded-lg p-4 font-mono text-sm h-96 overflow-y-auto mb-4">
                                     {terminalOutput.map((line, index) => (
@@ -195,22 +236,22 @@ export default function ConsolePage() {
                                     <div className="flex items-center bg-black text-green-400 px-3 py-2 rounded font-mono text-sm">
                                         root@netpilot:~$
                                     </div>
-                                    <input
+                                    <Input
                                         type="text"
                                         value={command}
                                         onChange={(e) => setCommand(e.target.value)}
                                         onKeyPress={handleKeyPress}
                                         placeholder={wsConnected ? "Digite um comando..." : "Aguarde conexão..."}
-                                        className="input flex-1 font-mono"
+                                        className="flex-1 font-mono"
                                         disabled={!wsConnected || !isConnected}
                                     />
-                                    <button
+                                    <Button
                                         onClick={handleExecuteCommand}
                                         disabled={!command.trim() || !wsConnected || !isConnected}
-                                        className="btn-secondary"
+                                        variant="secondary"
                                     >
                                         Executar
-                                    </button>
+                                    </Button>
                                 </div>
 
                                 {!wsConnected && (
@@ -220,22 +261,19 @@ export default function ConsolePage() {
                                         </p>
                                     </div>
                                 )}
-                            </div>
-                        </div>
-                    )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
 
-                    {activeTab === 'status' && (
-                        <div className="card">
-                            <div className="card-header">
-                                <div className="flex items-center gap-2">
+                    <TabsContent value="status">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
                                     <Activity className="h-5 w-5 text-blue-500" />
-                                    <h3 className="card-title">Status da Conexão</h3>
-                                </div>
-                                <p className="card-description">
-                                    Informações do servidor e WebSocket
-                                </p>
-                            </div>
-                            <div className="card-content space-y-4">
+                                    Status da Conexão
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
                                 {/* Status WebSocket */}
                                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                     <div className="flex items-center gap-3">
@@ -251,9 +289,9 @@ export default function ConsolePage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className={`status-badge ${wsConnected ? 'status-badge-success' : 'status-badge-error'}`}>
+                                    <Badge variant={wsConnected ? "default" : "destructive"}>
                                         {wsConnected ? 'Online' : 'Offline'}
-                                    </div>
+                                    </Badge>
                                 </div>
 
                                 {/* Status SSH */}
@@ -267,9 +305,9 @@ export default function ConsolePage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className={`status-badge ${isConnected ? 'status-badge-success' : 'status-badge-warning'}`}>
+                                    <Badge variant={isConnected ? "default" : "secondary"}>
                                         {isConnected ? 'Conectado' : 'Conectando'}
-                                    </div>
+                                    </Badge>
                                 </div>
 
                                 {wsError && (
@@ -286,22 +324,19 @@ export default function ConsolePage() {
                                         onde o NetPilot está executando usando chave SSH configurada.
                                     </p>
                                 </div>
-                            </div>
-                        </div>
-                    )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
 
-                    {activeTab === 'implementation' && (
-                        <div className="card bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-                            <div className="card-header">
-                                <div className="flex items-center gap-2">
+                    <TabsContent value="implementation">
+                        <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
                                     <Settings className="h-5 w-5 text-purple-500" />
-                                    <h3 className="card-title text-blue-900 dark:text-blue-100">Status da Implementação</h3>
-                                </div>
-                                <p className="card-description text-blue-700 dark:text-blue-300">
-                                    Estado atual das funcionalidades do sistema SSH
-                                </p>
-                            </div>
-                            <div className="card-content">
+                                    Status da Implementação
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
                                 <div className="grid gap-2 text-sm text-blue-800 dark:text-blue-200 md:grid-cols-2">
                                     <div className="flex items-center gap-2">
                                         <span className="text-green-500">✅</span>
@@ -335,10 +370,10 @@ export default function ConsolePage() {
                                         A autenticação é feita via chave SSH configurada no servidor.
                                     </p>
                                 </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </MainLayout>
     )

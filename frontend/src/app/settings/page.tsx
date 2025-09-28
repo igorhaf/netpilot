@@ -97,11 +97,56 @@ export default function SettingsPage() {
     })
 
     const [systemSettings, setSystemSettings] = useState({
+        // Backup e Manutenção
         autoBackup: true,
+        backupSchedule: '03:00',
+        backupRetention: 7,
+        maintenanceMode: false,
+        maintenanceMessage: 'Sistema em manutenção. Tente novamente em alguns minutos.',
+
+        // Logs e Debug
         logRetention: 30,
         debugMode: false,
-        maintenanceMode: false,
-        maxConnections: 100
+        verboseLogging: false,
+        logLevel: 'info',
+        logCompression: true,
+
+        // Performance
+        maxConnections: 100,
+        connectionTimeout: 30,
+        requestTimeout: 60,
+        enableCaching: true,
+        cacheExpiration: 3600,
+
+        // Monitoramento
+        healthCheckInterval: 30,
+        metricsRetention: 90,
+        alertThreshold: 80,
+        autoScaling: false,
+
+        // SSL e Segurança
+        sslAutoRenewal: true,
+        sslCheckInterval: 24,
+        forceHttps: true,
+        securityHeaders: true,
+
+        // Database
+        dbConnectionPool: 20,
+        dbQueryTimeout: 30,
+        dbAutoVacuum: true,
+        dbBackupEnabled: true,
+
+        // Docker
+        dockerAutoUpdate: false,
+        dockerCleanup: true,
+        dockerPruneSchedule: 'weekly',
+        containerRestartPolicy: 'unless-stopped',
+
+        // API
+        apiRateLimit: 1000,
+        apiCorsEnabled: true,
+        apiVersioning: true,
+        apiDocumentation: true
     })
 
     // Dados fictícios para histórico de segurança
@@ -218,6 +263,263 @@ export default function SettingsPage() {
             enabled: true
         }
     ])
+
+    // Dados de monitoramento do sistema
+    const [systemMetrics] = useState({
+        cpu: { usage: 45, cores: 4, temperature: 68 },
+        memory: { used: 12.4, total: 16, percentage: 78 },
+        disk: { used: 124, total: 500, percentage: 25 },
+        network: { inbound: 1.2, outbound: 0.8, connections: 45 },
+        database: { connections: 15, queries: 1247, size: 2.1 },
+        docker: { containers: 8, images: 12, volumes: 5 },
+        ssl: { certificates: 3, expiring: 1, renewed: 2 },
+        uptime: { days: 15, hours: 8, minutes: 24 }
+    })
+
+    // Dados de serviços do sistema
+    const [systemServices] = useState([
+        { name: 'NetPilot Backend', status: 'running', port: 3001, uptime: '15d 8h', memory: '256 MB' },
+        { name: 'NetPilot Frontend', status: 'running', port: 3000, uptime: '15d 8h', memory: '128 MB' },
+        { name: 'PostgreSQL', status: 'running', port: 5432, uptime: '15d 8h', memory: '512 MB' },
+        { name: 'Redis', status: 'running', port: 6379, uptime: '15d 8h', memory: '64 MB' },
+        { name: 'Traefik', status: 'running', port: 8080, uptime: '15d 8h', memory: '32 MB' },
+        { name: 'Nginx', status: 'running', port: 3010, uptime: '15d 8h', memory: '16 MB' }
+    ])
+
+    // Configurações de ambiente
+    const [environmentInfo] = useState({
+        nodeVersion: 'v18.19.0',
+        npmVersion: '10.2.3',
+        dockerVersion: '24.0.7',
+        osVersion: 'Ubuntu 22.04.3 LTS',
+        architecture: 'x86_64',
+        timezone: 'America/Sao_Paulo',
+        hostname: 'netpilot-server',
+        kernelVersion: '5.15.0-91-generic'
+    })
+
+    // Dados de integrações disponíveis
+    const [integrations] = useState([
+        // Integrações Core (Sistema)
+        {
+            id: 'docker',
+            name: 'Docker Engine',
+            category: 'core',
+            icon: '🐳',
+            version: '24.0.7',
+            status: 'connected',
+            description: 'Container runtime e orquestração',
+            endpoint: '/var/run/docker.sock',
+            health: 'healthy',
+            lastCheck: '2025-01-27 19:30:15',
+            metrics: { containers: 8, images: 12, volumes: 5, networks: 3 }
+        },
+        {
+            id: 'traefik',
+            name: 'Traefik Proxy',
+            category: 'core',
+            icon: '🚀',
+            version: '3.0',
+            status: 'active',
+            description: 'Reverse proxy e load balancer',
+            endpoint: 'http://localhost:8080',
+            health: 'healthy',
+            lastCheck: '2025-01-27 19:29:45',
+            metrics: { routes: 15, services: 6, middlewares: 8 }
+        },
+        {
+            id: 'postgresql',
+            name: 'PostgreSQL',
+            category: 'database',
+            icon: '🐘',
+            version: '15.4',
+            status: 'online',
+            description: 'Banco de dados principal',
+            endpoint: 'postgresql://localhost:5432/netpilot',
+            health: 'healthy',
+            lastCheck: '2025-01-27 19:30:10',
+            metrics: { connections: 15, queries: 1247, size: '2.1GB' }
+        },
+        {
+            id: 'redis',
+            name: 'Redis Cache',
+            category: 'cache',
+            icon: '📦',
+            version: '7.2',
+            status: 'online',
+            description: 'Cache distribuído e sessões',
+            endpoint: 'redis://localhost:6379',
+            health: 'healthy',
+            lastCheck: '2025-01-27 19:30:05',
+            metrics: { keys: 342, memory: '64MB', hits: '98.5%' }
+        },
+        {
+            id: 'nginx',
+            name: 'Nginx',
+            category: 'proxy',
+            icon: '🌐',
+            version: '1.25',
+            status: 'active',
+            description: 'Web server e proxy reverso',
+            endpoint: 'http://localhost:3010',
+            health: 'healthy',
+            lastCheck: '2025-01-27 19:29:55',
+            metrics: { requests: 2847, uptime: '15d 8h', workers: 4 }
+        },
+
+        // Integrações Externas (Monitoramento)
+        {
+            id: 'prometheus',
+            name: 'Prometheus',
+            category: 'monitoring',
+            icon: '📊',
+            version: '2.45.0',
+            status: 'disconnected',
+            description: 'Sistema de monitoramento e alertas',
+            endpoint: 'http://localhost:9090',
+            health: 'unhealthy',
+            lastCheck: '2025-01-27 18:15:30',
+            metrics: { targets: 0, rules: 0, alerts: 0 }
+        },
+        {
+            id: 'grafana',
+            name: 'Grafana',
+            category: 'monitoring',
+            icon: '📈',
+            version: '10.2.0',
+            status: 'disconnected',
+            description: 'Dashboards e visualização',
+            endpoint: 'http://localhost:3001',
+            health: 'unhealthy',
+            lastCheck: '2025-01-27 18:15:25',
+            metrics: { dashboards: 0, users: 0, datasources: 0 }
+        },
+
+        // Integrações CI/CD
+        {
+            id: 'github',
+            name: 'GitHub',
+            category: 'ci_cd',
+            icon: '🐙',
+            version: 'API v4',
+            status: 'disconnected',
+            description: 'Repositórios e automação',
+            endpoint: 'https://api.github.com',
+            health: 'unknown',
+            lastCheck: null,
+            metrics: { repos: 0, webhooks: 0, actions: 0 }
+        },
+        {
+            id: 'gitlab',
+            name: 'GitLab',
+            category: 'ci_cd',
+            icon: '🦊',
+            version: 'API v4',
+            status: 'disconnected',
+            description: 'DevOps e pipelines',
+            endpoint: 'https://gitlab.com/api/v4',
+            health: 'unknown',
+            lastCheck: null,
+            metrics: { projects: 0, pipelines: 0, runners: 0 }
+        },
+
+        // Integrações de Notificação
+        {
+            id: 'slack_integration',
+            name: 'Slack',
+            category: 'notification',
+            icon: '💬',
+            version: 'Webhook',
+            status: 'configured',
+            description: 'Notificações em tempo real',
+            endpoint: 'https://hooks.slack.com/services/...',
+            health: 'healthy',
+            lastCheck: '2025-01-27 19:25:40',
+            metrics: { messages: 156, channels: 3, success: '99.2%' }
+        },
+        {
+            id: 'discord_integration',
+            name: 'Discord',
+            category: 'notification',
+            icon: '🎮',
+            version: 'Webhook',
+            status: 'disconnected',
+            description: 'Alertas para equipe',
+            endpoint: 'https://discord.com/api/webhooks/...',
+            health: 'unknown',
+            lastCheck: null,
+            metrics: { messages: 0, guilds: 0, success: '0%' }
+        },
+
+        // Integrações Cloud
+        {
+            id: 'aws',
+            name: 'Amazon AWS',
+            category: 'cloud',
+            icon: '☁️',
+            version: 'SDK v3',
+            status: 'disconnected',
+            description: 'Serviços cloud AWS',
+            endpoint: 'https://aws.amazon.com',
+            health: 'unknown',
+            lastCheck: null,
+            metrics: { services: 0, regions: 0, costs: '$0' }
+        },
+        {
+            id: 'digitalocean',
+            name: 'DigitalOcean',
+            category: 'cloud',
+            icon: '🌊',
+            version: 'API v2',
+            status: 'disconnected',
+            description: 'Droplets e recursos cloud',
+            endpoint: 'https://api.digitalocean.com/v2',
+            health: 'unknown',
+            lastCheck: null,
+            metrics: { droplets: 0, volumes: 0, snapshots: 0 }
+        }
+    ])
+
+    // Configurações das integrações
+    const [integrationSettings, setIntegrationSettings] = useState({
+        // GitHub
+        githubToken: '',
+        githubWebhookSecret: '',
+        githubOrganization: '',
+
+        // GitLab
+        gitlabToken: '',
+        gitlabWebhookSecret: '',
+        gitlabUrl: 'https://gitlab.com',
+
+        // Slack
+        slackWebhookUrl: 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX',
+        slackChannel: '#netpilot-alerts',
+        slackUsername: 'NetPilot Bot',
+
+        // Discord
+        discordWebhookUrl: '',
+        discordUsername: 'NetPilot Bot',
+
+        // Prometheus
+        prometheusUrl: 'http://localhost:9090',
+        prometheusInterval: 15,
+        prometheusRetention: '15d',
+
+        // Grafana
+        grafanaUrl: 'http://localhost:3001',
+        grafanaApiKey: '',
+        grafanaOrganization: 'Main Org.',
+
+        // AWS
+        awsAccessKey: '',
+        awsSecretKey: '',
+        awsRegion: 'us-east-1',
+
+        // DigitalOcean
+        doApiToken: '',
+        doRegion: 'nyc1'
+    })
 
     if (!auth) return null
 
@@ -411,6 +713,184 @@ export default function SettingsPage() {
         }
     }
 
+    const handleSystemRestart = async () => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            toast.success('Sistema reiniciado com sucesso!')
+        } catch (error) {
+            toast.error('Erro ao reiniciar sistema')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleSystemCleanup = async () => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            toast.success('Limpeza do sistema concluída!')
+        } catch (error) {
+            toast.error('Erro na limpeza do sistema')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleHealthCheck = async () => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500))
+            toast.success('Verificação de saúde: Sistema OK!')
+        } catch (error) {
+            toast.error('Problemas detectados na verificação')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleCacheClear = async () => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            toast.success('Cache limpo com sucesso!')
+        } catch (error) {
+            toast.error('Erro ao limpar cache')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleSaveSystemSettings = async () => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500))
+            toast.success('Configurações do sistema salvas!')
+            setSystemModalOpen(false)
+        } catch (error) {
+            toast.error('Erro ao salvar configurações')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'running': return 'text-green-600 bg-green-50 dark:bg-green-900/20'
+            case 'stopped': return 'text-red-600 bg-red-50 dark:bg-red-900/20'
+            case 'warning': return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20'
+            default: return 'text-gray-600 bg-gray-50 dark:bg-gray-900/20'
+        }
+    }
+
+    const getUsageColor = (percentage: number) => {
+        if (percentage >= 90) return 'bg-red-500'
+        if (percentage >= 75) return 'bg-yellow-500'
+        if (percentage >= 50) return 'bg-blue-500'
+        return 'bg-green-500'
+    }
+
+    const handleIntegrationConnect = async (integrationId: string) => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            toast.success(`Integração ${integrationId} conectada com sucesso!`)
+        } catch (error) {
+            toast.error(`Erro ao conectar integração ${integrationId}`)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleIntegrationDisconnect = async (integrationId: string) => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500))
+            toast.success(`Integração ${integrationId} desconectada!`)
+        } catch (error) {
+            toast.error(`Erro ao desconectar integração ${integrationId}`)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleIntegrationTest = async (integrationId: string) => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            const integration = integrations.find(i => i.id === integrationId)
+            if (integration?.health === 'healthy') {
+                toast.success(`Teste da integração ${integration.name}: OK!`)
+            } else {
+                toast.error(`Teste da integração ${integration?.name}: Falha`)
+            }
+        } catch (error) {
+            toast.error(`Erro no teste da integração`)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleSaveIntegrationSettings = async () => {
+        setIsLoading(true)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500))
+            toast.success('Configurações de integrações salvas!')
+            setIntegrationModalOpen(false)
+        } catch (error) {
+            toast.error('Erro ao salvar configurações')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const getIntegrationStatusColor = (status: string) => {
+        switch (status) {
+            case 'connected':
+            case 'active':
+            case 'online':
+            case 'configured':
+                return 'text-green-600 bg-green-50 dark:bg-green-900/20'
+            case 'disconnected':
+                return 'text-red-600 bg-red-50 dark:bg-red-900/20'
+            case 'warning':
+                return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20'
+            default:
+                return 'text-gray-600 bg-gray-50 dark:bg-gray-900/20'
+        }
+    }
+
+    const getHealthIcon = (health: string) => {
+        switch (health) {
+            case 'healthy': return '🟢'
+            case 'unhealthy': return '🔴'
+            case 'warning': return '🟡'
+            default: return '🔘'
+        }
+    }
+
+    const getCategoryIcon = (category: string) => {
+        switch (category) {
+            case 'core': return '⚙️'
+            case 'database': return '💾'
+            case 'cache': return '⚡'
+            case 'proxy': return '🔀'
+            case 'monitoring': return '📊'
+            case 'ci_cd': return '🚀'
+            case 'notification': return '🔔'
+            case 'cloud': return '☁️'
+            default: return '🔧'
+        }
+    }
+
+    const groupedIntegrations = integrations.reduce((acc, integration) => {
+        if (!acc[integration.category]) {
+            acc[integration.category] = []
+        }
+        acc[integration.category].push(integration)
+        return acc
+    }, {} as Record<string, typeof integrations>)
+
     return (
         <MainLayout>
             <div className="space-y-6">
@@ -495,6 +975,62 @@ export default function SettingsPage() {
                                     }}
                                 />
                             </div>
+
+                            {/* Métricas do Sistema */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <Label className="text-xs font-medium text-muted-foreground">CPU</Label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div
+                                                className={`h-2 rounded-full ${getUsageColor(systemMetrics.cpu.usage)}`}
+                                                style={{ width: `${systemMetrics.cpu.usage}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs font-mono">{systemMetrics.cpu.usage}%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label className="text-xs font-medium text-muted-foreground">Memória</Label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div
+                                                className={`h-2 rounded-full ${getUsageColor(systemMetrics.memory.percentage)}`}
+                                                style={{ width: `${systemMetrics.memory.percentage}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs font-mono">{systemMetrics.memory.percentage}%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label className="text-xs font-medium text-muted-foreground">Disco</Label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div
+                                                className={`h-2 rounded-full ${getUsageColor(systemMetrics.disk.percentage)}`}
+                                                style={{ width: `${systemMetrics.disk.percentage}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs font-mono">{systemMetrics.disk.percentage}%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label className="text-xs font-medium text-muted-foreground">Uptime</Label>
+                                    <p className="text-xs font-mono">{systemMetrics.uptime.days}d {systemMetrics.uptime.hours}h</p>
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Serviços</span>
+                                    <span className="text-xs text-green-600">{systemServices.filter(s => s.status === 'running').length}/{systemServices.length} ativos</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Containers</span>
+                                    <span className="text-xs text-muted-foreground">{systemMetrics.docker.containers} em execução</span>
+                                </div>
+                            </div>
+
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -702,25 +1238,56 @@ export default function SettingsPage() {
                             </Button>
                         </div>
                         <div className="space-y-4">
-                            <div>
-                                <Label className="text-sm font-medium">Docker</Label>
-                                <Badge variant="default">✓ Conectado</Badge>
+                            {/* Core Integrations */}
+                            <div className="grid grid-cols-2 gap-3">
+                                {integrations.filter(i => i.category === 'core').slice(0, 4).map((integration) => (
+                                    <div key={integration.id} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg">{integration.icon}</span>
+                                            <div>
+                                                <Label className="text-xs font-medium">{integration.name}</Label>
+                                                <p className="text-xs text-muted-foreground">{integration.version}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-sm">{getHealthIcon(integration.health)}</span>
+                                            <Badge variant={integration.status === 'connected' || integration.status === 'active' || integration.status === 'online' ? 'default' : 'secondary'} className="text-xs">
+                                                {integration.status === 'connected' ? 'OK' :
+                                                 integration.status === 'active' ? 'ON' :
+                                                 integration.status === 'online' ? 'UP' : 'OFF'}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div>
-                                <Label className="text-sm font-medium">Traefik</Label>
-                                <Badge variant="default">✓ Ativo</Badge>
+
+                            {/* External Integrations Summary */}
+                            <div className="pt-2 border-t">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Integrações Externas</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {integrations.filter(i => ['monitoring', 'ci_cd', 'notification', 'cloud'].includes(i.category) &&
+                                          ['connected', 'configured', 'active'].includes(i.status)).length}/{integrations.filter(i => ['monitoring', 'ci_cd', 'notification', 'cloud'].includes(i.category)).length} ativas
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Slack</span>
+                                    <Badge variant="default" className="text-xs">Configurado</Badge>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">GitHub/GitLab</span>
+                                    <Badge variant="secondary" className="text-xs">Pendente</Badge>
+                                </div>
                             </div>
-                            <div>
-                                <Label className="text-sm font-medium">PostgreSQL</Label>
-                                <Badge variant="default">✓ Online</Badge>
-                            </div>
+
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => router.push('/docker')}
+                                onClick={() => setIntegrationModalOpen(true)}
                                 className="w-full"
                             >
-                                Ver Docker
+                                <Settings className="h-4 w-4 mr-2" />
+                                Gerenciar Integrações
                             </Button>
                         </div>
                     </Card>
@@ -1697,81 +2264,454 @@ export default function SettingsPage() {
                 <Modal
                     isOpen={systemModalOpen}
                     onClose={() => setSystemModalOpen(false)}
-                    title="Configurações do Sistema"
-                    size="md"
+                    title="Configurações e Monitoramento do Sistema"
+                    size="xl"
                 >
                     <div className="space-y-6">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <Label>Backup Automático</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Criar backups diários automaticamente
-                                    </p>
+                        {/* Monitoramento em Tempo Real */}
+                        <div>
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Monitor className="h-5 w-5 text-blue-500" />
+                                Monitoramento em Tempo Real
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Label className="text-sm font-medium">CPU</Label>
+                                        <span className="text-sm font-mono">{systemMetrics.cpu.usage}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                                        <div
+                                            className={`h-2 rounded-full ${getUsageColor(systemMetrics.cpu.usage)}`}
+                                            style={{ width: `${systemMetrics.cpu.usage}%` }}
+                                        />
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {systemMetrics.cpu.cores} cores • {systemMetrics.cpu.temperature}°C
+                                    </div>
                                 </div>
-                                <Switch
-                                    checked={systemSettings.autoBackup}
-                                    onCheckedChange={(checked) =>
-                                        setSystemSettings({...systemSettings, autoBackup: checked})
-                                    }
-                                />
-                            </div>
 
-                            <div>
-                                <Label htmlFor="log-retention">Retenção de Logs (dias)</Label>
-                                <Input
-                                    id="log-retention"
-                                    type="number"
-                                    min="1"
-                                    max="365"
-                                    value={systemSettings.logRetention}
-                                    onChange={(e) => setSystemSettings({...systemSettings, logRetention: parseInt(e.target.value)})}
-                                />
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Logs serão deletados após este período
-                                </p>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <Label>Modo Debug</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Ativar logs detalhados para debug
-                                    </p>
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Label className="text-sm font-medium">Memória</Label>
+                                        <span className="text-sm font-mono">{systemMetrics.memory.percentage}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                                        <div
+                                            className={`h-2 rounded-full ${getUsageColor(systemMetrics.memory.percentage)}`}
+                                            style={{ width: `${systemMetrics.memory.percentage}%` }}
+                                        />
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {systemMetrics.memory.used}GB / {systemMetrics.memory.total}GB
+                                    </div>
                                 </div>
-                                <Switch
-                                    checked={systemSettings.debugMode}
-                                    onCheckedChange={(checked) =>
-                                        setSystemSettings({...systemSettings, debugMode: checked})
-                                    }
-                                />
-                            </div>
 
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <Label>Modo Manutenção</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Bloquear acesso para manutenção
-                                    </p>
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Label className="text-sm font-medium">Disco</Label>
+                                        <span className="text-sm font-mono">{systemMetrics.disk.percentage}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                                        <div
+                                            className={`h-2 rounded-full ${getUsageColor(systemMetrics.disk.percentage)}`}
+                                            style={{ width: `${systemMetrics.disk.percentage}%` }}
+                                        />
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {systemMetrics.disk.used}GB / {systemMetrics.disk.total}GB
+                                    </div>
                                 </div>
-                                <Switch
-                                    checked={systemSettings.maintenanceMode}
-                                    onCheckedChange={(checked) =>
-                                        setSystemSettings({...systemSettings, maintenanceMode: checked})
-                                    }
-                                />
-                            </div>
 
-                            <div>
-                                <Label htmlFor="max-connections">Máximo de Conexões</Label>
-                                <Input
-                                    id="max-connections"
-                                    type="number"
-                                    min="10"
-                                    max="1000"
-                                    value={systemSettings.maxConnections}
-                                    onChange={(e) => setSystemSettings({...systemSettings, maxConnections: parseInt(e.target.value)})}
-                                />
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Label className="text-sm font-medium">Network</Label>
+                                        <span className="text-sm font-mono">{systemMetrics.network.connections}</span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground space-y-1">
+                                        <div>↓ {systemMetrics.network.inbound} MB/s</div>
+                                        <div>↑ {systemMetrics.network.outbound} MB/s</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Status dos Serviços */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Settings className="h-5 w-5 text-green-500" />
+                                Status dos Serviços
+                            </h3>
+                            <div className="max-h-64 overflow-y-auto border rounded-lg">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-muted/50">
+                                        <tr>
+                                            <th className="text-left p-3 font-medium">Serviço</th>
+                                            <th className="text-left p-3 font-medium">Status</th>
+                                            <th className="text-left p-3 font-medium">Porta</th>
+                                            <th className="text-left p-3 font-medium">Uptime</th>
+                                            <th className="text-left p-3 font-medium">Memória</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {systemServices.map((service, index) => (
+                                            <tr key={index} className="border-t">
+                                                <td className="p-3 font-medium">{service.name}</td>
+                                                <td className="p-3">
+                                                    <Badge className={getStatusColor(service.status)}>
+                                                        {service.status === 'running' ? 'Executando' : 'Parado'}
+                                                    </Badge>
+                                                </td>
+                                                <td className="p-3 font-mono text-xs">{service.port}</td>
+                                                <td className="p-3 font-mono text-xs">{service.uptime}</td>
+                                                <td className="p-3 font-mono text-xs">{service.memory}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Configurações de Backup e Manutenção */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Database className="h-5 w-5 text-purple-500" />
+                                Backup e Manutenção
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label>Backup Automático</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Backups diários automáticos
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={systemSettings.autoBackup}
+                                            onCheckedChange={(checked) =>
+                                                setSystemSettings({...systemSettings, autoBackup: checked})
+                                            }
+                                        />
+                                    </div>
+                                    {systemSettings.autoBackup && (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <Label htmlFor="backup-schedule">Horário</Label>
+                                                <Input
+                                                    id="backup-schedule"
+                                                    type="time"
+                                                    value={systemSettings.backupSchedule}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, backupSchedule: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="backup-retention">Retenção (dias)</Label>
+                                                <Input
+                                                    id="backup-retention"
+                                                    type="number"
+                                                    min="1"
+                                                    max="365"
+                                                    value={systemSettings.backupRetention}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, backupRetention: parseInt(e.target.value)})}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label>Modo Manutenção</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Bloquear acesso público
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={systemSettings.maintenanceMode}
+                                            onCheckedChange={(checked) =>
+                                                setSystemSettings({...systemSettings, maintenanceMode: checked})
+                                            }
+                                        />
+                                    </div>
+                                    {systemSettings.maintenanceMode && (
+                                        <div>
+                                            <Label htmlFor="maintenance-message">Mensagem de Manutenção</Label>
+                                            <Textarea
+                                                id="maintenance-message"
+                                                value={systemSettings.maintenanceMessage}
+                                                onChange={(e) => setSystemSettings({...systemSettings, maintenanceMessage: e.target.value})}
+                                                placeholder="Digite a mensagem que será exibida..."
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="log-retention">Retenção de Logs (dias)</Label>
+                                        <Input
+                                            id="log-retention"
+                                            type="number"
+                                            min="1"
+                                            max="365"
+                                            value={systemSettings.logRetention}
+                                            onChange={(e) => setSystemSettings({...systemSettings, logRetention: parseInt(e.target.value)})}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="log-level">Nível de Log</Label>
+                                        <select
+                                            id="log-level"
+                                            className="w-full mt-1 p-2 border border-border rounded-md bg-background"
+                                            value={systemSettings.logLevel}
+                                            onChange={(e) => setSystemSettings({...systemSettings, logLevel: e.target.value})}
+                                        >
+                                            <option value="error">Error</option>
+                                            <option value="warn">Warning</option>
+                                            <option value="info">Info</option>
+                                            <option value="debug">Debug</option>
+                                            <option value="verbose">Verbose</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label>Modo Debug</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Logs detalhados
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={systemSettings.debugMode}
+                                            onCheckedChange={(checked) =>
+                                                setSystemSettings({...systemSettings, debugMode: checked})
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label>Compressão de Logs</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Comprimir logs antigos
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={systemSettings.logCompression}
+                                            onCheckedChange={(checked) =>
+                                                setSystemSettings({...systemSettings, logCompression: checked})
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Configurações de Performance */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <RefreshCw className="h-5 w-5 text-orange-500" />
+                                Performance
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="max-connections">Máximo de Conexões</Label>
+                                        <Input
+                                            id="max-connections"
+                                            type="number"
+                                            min="10"
+                                            max="1000"
+                                            value={systemSettings.maxConnections}
+                                            onChange={(e) => setSystemSettings({...systemSettings, maxConnections: parseInt(e.target.value)})}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="connection-timeout">Timeout de Conexão (s)</Label>
+                                        <Input
+                                            id="connection-timeout"
+                                            type="number"
+                                            min="5"
+                                            max="300"
+                                            value={systemSettings.connectionTimeout}
+                                            onChange={(e) => setSystemSettings({...systemSettings, connectionTimeout: parseInt(e.target.value)})}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label>Cache Habilitado</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Cache de aplicação
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={systemSettings.enableCaching}
+                                            onCheckedChange={(checked) =>
+                                                setSystemSettings({...systemSettings, enableCaching: checked})
+                                            }
+                                        />
+                                    </div>
+                                    {systemSettings.enableCaching && (
+                                        <div>
+                                            <Label htmlFor="cache-expiration">Expiração do Cache (s)</Label>
+                                            <Input
+                                                id="cache-expiration"
+                                                type="number"
+                                                min="60"
+                                                max="86400"
+                                                value={systemSettings.cacheExpiration}
+                                                onChange={(e) => setSystemSettings({...systemSettings, cacheExpiration: parseInt(e.target.value)})}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="health-check-interval">Intervalo de Health Check (s)</Label>
+                                        <Input
+                                            id="health-check-interval"
+                                            type="number"
+                                            min="10"
+                                            max="300"
+                                            value={systemSettings.healthCheckInterval}
+                                            onChange={(e) => setSystemSettings({...systemSettings, healthCheckInterval: parseInt(e.target.value)})}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="alert-threshold">Limite de Alerta (%)</Label>
+                                        <Input
+                                            id="alert-threshold"
+                                            type="number"
+                                            min="50"
+                                            max="95"
+                                            value={systemSettings.alertThreshold}
+                                            onChange={(e) => setSystemSettings({...systemSettings, alertThreshold: parseInt(e.target.value)})}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label>Auto Scaling</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Escalabilidade automática
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={systemSettings.autoScaling}
+                                            onCheckedChange={(checked) =>
+                                                setSystemSettings({...systemSettings, autoScaling: checked})
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label>HTTPS Obrigatório</Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Forçar conexões seguras
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={systemSettings.forceHttps}
+                                            onCheckedChange={(checked) =>
+                                                setSystemSettings({...systemSettings, forceHttps: checked})
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Informações do Ambiente */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Monitor className="h-5 w-5 text-indigo-500" />
+                                Informações do Ambiente
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">Node.js</Label>
+                                    <p className="font-mono text-sm">{environmentInfo.nodeVersion}</p>
+                                </div>
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">Docker</Label>
+                                    <p className="font-mono text-sm">{environmentInfo.dockerVersion}</p>
+                                </div>
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">OS</Label>
+                                    <p className="font-mono text-sm">{environmentInfo.osVersion}</p>
+                                </div>
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">Arquitetura</Label>
+                                    <p className="font-mono text-sm">{environmentInfo.architecture}</p>
+                                </div>
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">Hostname</Label>
+                                    <p className="font-mono text-sm">{environmentInfo.hostname}</p>
+                                </div>
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">Timezone</Label>
+                                    <p className="font-mono text-sm">{environmentInfo.timezone}</p>
+                                </div>
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">Kernel</Label>
+                                    <p className="font-mono text-sm">{environmentInfo.kernelVersion}</p>
+                                </div>
+                                <div className="p-3 border rounded-lg">
+                                    <Label className="text-xs font-medium text-muted-foreground">Uptime</Label>
+                                    <p className="font-mono text-sm">{systemMetrics.uptime.days}d {systemMetrics.uptime.hours}h {systemMetrics.uptime.minutes}m</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Ações do Sistema */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Settings className="h-5 w-5 text-red-500" />
+                                Ações do Sistema
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleHealthCheck}
+                                    disabled={isLoading}
+                                    className="flex items-center gap-2"
+                                >
+                                    {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Monitor className="h-4 w-4" />}
+                                    Health Check
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleCacheClear}
+                                    disabled={isLoading}
+                                    className="flex items-center gap-2"
+                                >
+                                    {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                                    Limpar Cache
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleSystemCleanup}
+                                    disabled={isLoading}
+                                    className="flex items-center gap-2"
+                                >
+                                    {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+                                    Limpeza Sistema
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleSystemRestart}
+                                    disabled={isLoading}
+                                    className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                                >
+                                    {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                                    Reiniciar Sistema
+                                </Button>
                             </div>
                         </div>
 
@@ -1783,13 +2723,20 @@ export default function SettingsPage() {
                                 Cancelar
                             </Button>
                             <Button
-                                onClick={() => {
-                                    toast.success('Configurações do sistema salvas!')
-                                    setSystemModalOpen(false)
-                                }}
+                                onClick={handleSaveSystemSettings}
+                                disabled={isLoading}
                             >
-                                <Settings className="h-4 w-4 mr-2" />
-                                Salvar
+                                {isLoading ? (
+                                    <>
+                                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                        Salvando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Settings className="h-4 w-4 mr-2" />
+                                        Salvar Configurações
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -1907,96 +2854,336 @@ export default function SettingsPage() {
                 <Modal
                     isOpen={integrationModalOpen}
                     onClose={() => setIntegrationModalOpen(false)}
-                    title="Configurações de Integrações"
-                    size="lg"
+                    title="Centro de Integrações"
+                    size="xl"
                 >
                     <div className="space-y-6">
+                        {/* Visão Geral das Integrações */}
                         <div>
-                            <h3 className="text-lg font-medium mb-4">Status das Integrações</h3>
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Wifi className="h-5 w-5 text-blue-500" />
+                                Visão Geral
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="p-4 border rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-green-600">
+                                        {integrations.filter(i => ['connected', 'active', 'online', 'configured'].includes(i.status)).length}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Ativas</p>
+                                </div>
+                                <div className="p-4 border rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-red-600">
+                                        {integrations.filter(i => i.status === 'disconnected').length}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Desconectadas</p>
+                                </div>
+                                <div className="p-4 border rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-green-600">
+                                        {integrations.filter(i => i.health === 'healthy').length}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Saudáveis</p>
+                                </div>
+                                <div className="p-4 border rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-gray-600">
+                                        {integrations.length}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Total</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Integrações por Categoria */}
+                        {Object.entries(groupedIntegrations).map(([category, categoryIntegrations]) => (
+                            <div key={category} className="border-t pt-6">
+                                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                    <span className="text-xl">{getCategoryIcon(category)}</span>
+                                    {category === 'core' ? 'Sistema Principal' :
+                                     category === 'database' ? 'Banco de Dados' :
+                                     category === 'cache' ? 'Cache' :
+                                     category === 'proxy' ? 'Proxy' :
+                                     category === 'monitoring' ? 'Monitoramento' :
+                                     category === 'ci_cd' ? 'CI/CD' :
+                                     category === 'notification' ? 'Notificações' :
+                                     category === 'cloud' ? 'Cloud' : category}
+                                    <Badge variant="secondary" className="ml-2">
+                                        {categoryIntegrations.length}
+                                    </Badge>
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {categoryIntegrations.map((integration) => (
+                                        <div key={integration.id} className="p-4 border rounded-lg">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-2xl">{integration.icon}</span>
+                                                    <div>
+                                                        <h4 className="font-medium">{integration.name}</h4>
+                                                        <p className="text-sm text-muted-foreground">{integration.description}</p>
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                            Versão: {integration.version}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <Badge className={getIntegrationStatusColor(integration.status)}>
+                                                        {integration.status === 'connected' ? 'Conectado' :
+                                                         integration.status === 'active' ? 'Ativo' :
+                                                         integration.status === 'online' ? 'Online' :
+                                                         integration.status === 'configured' ? 'Configurado' :
+                                                         'Desconectado'}
+                                                    </Badge>
+                                                    <span className="text-lg">{getHealthIcon(integration.health)}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Métricas da Integração */}
+                                            {integration.metrics && (
+                                                <div className="mb-3 p-2 bg-muted rounded">
+                                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                                        {Object.entries(integration.metrics).map(([key, value]) => (
+                                                            <div key={key} className="flex justify-between">
+                                                                <span className="text-muted-foreground capitalize">
+                                                                    {key.replace(/([A-Z])/g, ' $1')}:
+                                                                </span>
+                                                                <span className="font-mono">{value}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Endpoint */}
+                                            <div className="mb-3">
+                                                <Label className="text-xs text-muted-foreground">Endpoint</Label>
+                                                <p className="text-xs font-mono bg-muted p-1 rounded mt-1 truncate">
+                                                    {integration.endpoint}
+                                                </p>
+                                            </div>
+
+                                            {/* Última Verificação */}
+                                            {integration.lastCheck && (
+                                                <div className="mb-3">
+                                                    <Label className="text-xs text-muted-foreground">Última Verificação</Label>
+                                                    <p className="text-xs">{integration.lastCheck}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Ações */}
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleIntegrationTest(integration.id)}
+                                                    disabled={isLoading}
+                                                    className="flex-1"
+                                                >
+                                                    {isLoading ? (
+                                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        <Monitor className="h-3 w-3" />
+                                                    )}
+                                                    Testar
+                                                </Button>
+                                                {['connected', 'active', 'online', 'configured'].includes(integration.status) ? (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleIntegrationDisconnect(integration.id)}
+                                                        disabled={isLoading || integration.category === 'core'}
+                                                        className="flex-1 text-red-600 hover:text-red-700"
+                                                    >
+                                                        {isLoading ? (
+                                                            <RefreshCw className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            <X className="h-3 w-3" />
+                                                        )}
+                                                        Desconectar
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleIntegrationConnect(integration.id)}
+                                                        disabled={isLoading}
+                                                        className="flex-1 text-green-600 hover:text-green-700"
+                                                    >
+                                                        {isLoading ? (
+                                                            <RefreshCw className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            <Wifi className="h-3 w-3" />
+                                                        )}
+                                                        Conectar
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Configurações Avançadas */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Settings className="h-5 w-5 text-purple-500" />
+                                Configurações Avançadas
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* GitHub */}
+                                <div className="space-y-4">
+                                    <h4 className="font-medium flex items-center gap-2">
+                                        🐙 GitHub
+                                    </h4>
+                                    <div>
+                                        <Label htmlFor="github-token">Token de Acesso</Label>
+                                        <Input
+                                            id="github-token"
+                                            type="password"
+                                            value={integrationSettings.githubToken}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, githubToken: e.target.value})}
+                                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="github-org">Organização</Label>
+                                        <Input
+                                            id="github-org"
+                                            value={integrationSettings.githubOrganization}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, githubOrganization: e.target.value})}
+                                            placeholder="minha-organizacao"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Slack */}
+                                <div className="space-y-4">
+                                    <h4 className="font-medium flex items-center gap-2">
+                                        💬 Slack
+                                    </h4>
+                                    <div>
+                                        <Label htmlFor="slack-webhook">Webhook URL</Label>
+                                        <Input
+                                            id="slack-webhook"
+                                            value={integrationSettings.slackWebhookUrl}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, slackWebhookUrl: e.target.value})}
+                                            placeholder="https://hooks.slack.com/services/..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="slack-channel">Canal</Label>
+                                        <Input
+                                            id="slack-channel"
+                                            value={integrationSettings.slackChannel}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, slackChannel: e.target.value})}
+                                            placeholder="#netpilot-alerts"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* AWS */}
+                                <div className="space-y-4">
+                                    <h4 className="font-medium flex items-center gap-2">
+                                        ☁️ Amazon AWS
+                                    </h4>
+                                    <div>
+                                        <Label htmlFor="aws-access-key">Access Key</Label>
+                                        <Input
+                                            id="aws-access-key"
+                                            type="password"
+                                            value={integrationSettings.awsAccessKey}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, awsAccessKey: e.target.value})}
+                                            placeholder="AKIA..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="aws-region">Região</Label>
+                                        <select
+                                            id="aws-region"
+                                            className="w-full mt-1 p-2 border border-border rounded-md bg-background"
+                                            value={integrationSettings.awsRegion}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, awsRegion: e.target.value})}
+                                        >
+                                            <option value="us-east-1">US East (N. Virginia)</option>
+                                            <option value="us-west-2">US West (Oregon)</option>
+                                            <option value="eu-west-1">Europe (Ireland)</option>
+                                            <option value="sa-east-1">South America (São Paulo)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Prometheus */}
+                                <div className="space-y-4">
+                                    <h4 className="font-medium flex items-center gap-2">
+                                        📊 Prometheus
+                                    </h4>
+                                    <div>
+                                        <Label htmlFor="prometheus-url">URL do Servidor</Label>
+                                        <Input
+                                            id="prometheus-url"
+                                            value={integrationSettings.prometheusUrl}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, prometheusUrl: e.target.value})}
+                                            placeholder="http://localhost:9090"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="prometheus-interval">Intervalo de Scraping (s)</Label>
+                                        <Input
+                                            id="prometheus-interval"
+                                            type="number"
+                                            min="5"
+                                            max="300"
+                                            value={integrationSettings.prometheusInterval}
+                                            onChange={(e) => setIntegrationSettings({...integrationSettings, prometheusInterval: parseInt(e.target.value)})}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Webhooks de Sistema */}
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                                <Bell className="h-5 w-5 text-orange-500" />
+                                Webhooks do Sistema
+                            </h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-4 border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                        <div>
-                                            <p className="font-medium">Docker Engine</p>
-                                            <p className="text-sm text-muted-foreground">Versão 24.0.7</p>
-                                        </div>
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-medium">Webhook de Deploy</h4>
+                                        <Badge variant="default">Ativo</Badge>
                                     </div>
-                                    <Badge variant="default">Conectado</Badge>
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                        Disparado quando um novo deploy é realizado
+                                    </p>
+                                    <p className="text-xs font-mono bg-muted p-2 rounded">
+                                        https://netpilot.meadadigital.com/webhooks/deploy
+                                    </p>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                        <div>
-                                            <p className="font-medium">Traefik Proxy</p>
-                                            <p className="text-sm text-muted-foreground">Versão 3.0</p>
-                                        </div>
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-medium">Webhook de SSL</h4>
+                                        <Badge variant="default">Ativo</Badge>
                                     </div>
-                                    <Badge variant="default">Ativo</Badge>
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                        Disparado quando certificados SSL são renovados
+                                    </p>
+                                    <p className="text-xs font-mono bg-muted p-2 rounded">
+                                        https://netpilot.meadadigital.com/webhooks/ssl
+                                    </p>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                        <div>
-                                            <p className="font-medium">PostgreSQL</p>
-                                            <p className="text-sm text-muted-foreground">Versão 15.4</p>
-                                        </div>
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-medium">Webhook de Alertas</h4>
+                                        <Badge variant="default">Ativo</Badge>
                                     </div>
-                                    <Badge variant="default">Online</Badge>
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                        Disparado para eventos críticos do sistema
+                                    </p>
+                                    <p className="text-xs font-mono bg-muted p-2 rounded">
+                                        https://netpilot.meadadigital.com/webhooks/alerts
+                                    </p>
                                 </div>
-
-                                <div className="flex items-center justify-between p-4 border rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                        <div>
-                                            <p className="font-medium">Nginx</p>
-                                            <p className="text-sm text-muted-foreground">Versão 1.25</p>
-                                        </div>
-                                    </div>
-                                    <Badge variant="default">Ativo</Badge>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="border-t pt-6">
-                            <h3 className="text-lg font-medium mb-4">Configurações de Conexão</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <Label>Docker Socket</Label>
-                                    <Input
-                                        value="/var/run/docker.sock"
-                                        disabled
-                                        className="font-mono"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>PostgreSQL URL</Label>
-                                    <Input
-                                        value="postgresql://netpilot:***@localhost:5432/netpilot"
-                                        disabled
-                                        className="font-mono"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="border-t pt-6">
-                            <h3 className="text-lg font-medium mb-4">Teste de Conectividade</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button variant="outline" onClick={() => toast.success('Docker: Conectado com sucesso!')}>
-                                    Testar Docker
-                                </Button>
-                                <Button variant="outline" onClick={() => toast.success('Traefik: Respondendo normalmente!')}>
-                                    Testar Traefik
-                                </Button>
-                                <Button variant="outline" onClick={() => toast.success('PostgreSQL: Conexão ativa!')}>
-                                    Testar PostgreSQL
-                                </Button>
-                                <Button variant="outline" onClick={() => toast.success('Nginx: Servidor ativo!')}>
-                                    Testar Nginx
-                                </Button>
                             </div>
                         </div>
 
@@ -2005,7 +3192,23 @@ export default function SettingsPage() {
                                 variant="outline"
                                 onClick={() => setIntegrationModalOpen(false)}
                             >
-                                Fechar
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={handleSaveIntegrationSettings}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                        Salvando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Wifi className="h-4 w-4 mr-2" />
+                                        Salvar Configurações
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </div>

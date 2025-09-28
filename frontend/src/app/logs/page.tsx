@@ -19,7 +19,10 @@ import toast from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { useRequireAuth } from '@/hooks/useAuth'
 import { formatDate, formatRelativeTime, getStatusColor, formatDuration } from '@/lib/utils'
 import api from '@/lib/api'
@@ -200,9 +203,9 @@ export default function LogsPage() {
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Logs do Sistema</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Logs do Sistema</h1>
             <p className="text-muted-foreground">
               Visualize e gerencie os logs de atividades do NetPilot
             </p>
@@ -237,120 +240,110 @@ export default function LogsPage() {
         </div>
 
         {/* Filters */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Pesquisar logs..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input pl-10"
-            />
-          </div>
-
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input pl-10"
-            >
-              <option value="all">Todos os Status</option>
-              <option value="success">Sucesso</option>
-              <option value="failed">Falha</option>
-              <option value="running">Executando</option>
-              <option value="pending">Pendente</option>
-            </select>
-          </div>
-
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="input pl-10"
-            >
-              <option value="all">Todos os Tipos</option>
-              <option value="deployment">Deploy</option>
-              <option value="ssl_renewal">SSL</option>
-              <option value="nginx_reload">Nginx</option>
-              <option value="traefik_reload">Traefik</option>
-              <option value="system">Sistema</option>
-            </select>
-          </div>
-
-          <div className="text-sm text-muted-foreground flex items-center">
-            {filteredLogs.length} log(s) encontrado(s)
-          </div>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar logs..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="input pl-10"
+                >
+                  <option value="all">Todos os Status</option>
+                  <option value="success">Sucesso</option>
+                  <option value="failed">Falha</option>
+                  <option value="running">Executando</option>
+                  <option value="pending">Pendente</option>
+                </select>
+              </div>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="input pl-10"
+                >
+                  <option value="all">Todos os Tipos</option>
+                  <option value="deployment">Deploy</option>
+                  <option value="ssl_renewal">SSL</option>
+                  <option value="nginx_reload">Nginx</option>
+                  <option value="traefik_reload">Traefik</option>
+                  <option value="system">Sistema</option>
+                </select>
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center">
+                {filteredLogs.length} logs
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total</p>
-                  <p className="text-2xl font-bold text-foreground">{filteredLogs.length}</p>
+                  <p className="text-2xl font-bold text-blue-600">{filteredLogs.length}</p>
+                  <p className="text-xs text-muted-foreground">Total de Logs</p>
                 </div>
-                <FileText className="h-8 w-8 text-blue-500" />
               </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center justify-between">
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Sucessos</p>
-                  <p className="text-2xl font-bold text-green-500">
+                  <p className="text-2xl font-bold text-green-600">
                     {filteredLogs.filter(log => log.status === 'success').length}
                   </p>
+                  <p className="text-xs text-muted-foreground">Sucessos</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center justify-between">
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Falhas</p>
-                  <p className="text-2xl font-bold text-red-500">
+                  <p className="text-2xl font-bold text-red-600">
                     {filteredLogs.filter(log => log.status === 'failed').length}
                   </p>
+                  <p className="text-xs text-muted-foreground">Falhas</p>
                 </div>
-                <XCircle className="h-8 w-8 text-red-500" />
               </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center justify-between">
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Executando</p>
-                  <p className="text-2xl font-bold text-orange-500">
+                  <p className="text-2xl font-bold text-orange-600">
                     {filteredLogs.filter(log => log.status === 'running').length}
                   </p>
+                  <p className="text-xs text-muted-foreground">Executando</p>
                 </div>
-                <Activity className="h-8 w-8 text-orange-500" />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Logs List */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Registros de Atividade</h3>
-            <p className="card-description">
-              Histórico completo das operações do sistema
-            </p>
-          </div>
-          <div className="card-content">
+        <Card>
+          <CardHeader>
+            <CardTitle>Registros de Atividade</CardTitle>
+          </CardHeader>
+          <CardContent>
             {filteredLogs.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -362,14 +355,14 @@ export default function LogsPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {filteredLogs.map((log) => {
                   const StatusIcon = getStatusIcon(log.status)
 
                   return (
                     <div
                       key={log.id}
-                      className="border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                      className="border rounded-lg p-4 hover:bg-muted/25 transition-colors cursor-pointer"
                       onClick={() => setSelectedLog(log)}
                     >
                       <div className="flex items-start gap-4">
@@ -378,21 +371,21 @@ export default function LogsPage() {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
                             <h4 className="font-medium text-foreground truncate">
                               {log.action}
                             </h4>
-                            <span className={`status-badge ${
-                              log.status === 'success' ? 'status-badge-success' :
-                              log.status === 'failed' ? 'status-badge-error' :
-                              log.status === 'running' ? 'status-badge-warning' :
-                              'status-badge-inactive'
-                            }`}>
+                            <Badge variant={
+                              log.status === 'success' ? 'default' :
+                              log.status === 'failed' ? 'destructive' :
+                              log.status === 'running' ? 'secondary' :
+                              'outline'
+                            }>
                               {log.status}
-                            </span>
-                            <span className="status-badge-secondary">
+                            </Badge>
+                            <Badge variant="outline">
                               {getTypeLabel(log.type)}
-                            </span>
+                            </Badge>
                           </div>
 
                           {log.message && (
@@ -401,7 +394,7 @@ export default function LogsPage() {
                             </p>
                           )}
 
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                             <span>
                               {formatRelativeTime(log.createdAt)}
                             </span>
@@ -444,8 +437,8 @@ export default function LogsPage() {
                 })}
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Log Detail Modal */}
         {selectedLog && (
