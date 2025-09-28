@@ -15,6 +15,8 @@ import { ConsoleModule } from './modules/console/console.module';
 import { DockerMinimalModule } from './modules/docker/docker-minimal.module';
 import { WebSocketModule } from './modules/websocket/websocket.module';
 import { TerminalModule } from './modules/terminal/terminal.module';
+import { JobQueuesModule } from './modules/job-queues/job-queues.module';
+import { RedisModule } from './modules/redis/redis.module';
 import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
 import { User } from './entities/user.entity';
@@ -26,6 +28,9 @@ import { SslCertificate } from './entities/ssl-certificate.entity';
 import { Log } from './entities/log.entity';
 import { SshSession } from './entities/ssh-session.entity';
 import { ConsoleLog } from './entities/console-log.entity';
+import { JobQueue } from './entities/job-queue.entity';
+import { JobExecution } from './entities/job-execution.entity';
+import { JobSchedule } from './entities/job-schedule.entity';
 // Docker entities temporarily removed
 
 @Module({
@@ -38,7 +43,7 @@ import { ConsoleLog } from './entities/console-log.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User, Project, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog],
+        entities: [User, Project, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog, JobQueue, JobExecution, JobSchedule],
         synchronize: true, // Temporarily enabled to recognize new isLocked column
         logging: process.env.NODE_ENV === 'development',
       }),
@@ -77,6 +82,8 @@ import { ConsoleLog } from './entities/console-log.entity';
     DockerMinimalModule,
     WebSocketModule,
     TerminalModule,
+    JobQueuesModule,
+    RedisModule,
     SeedModule,
   ],
   // No custom controllers in AppModule

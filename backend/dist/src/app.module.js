@@ -23,6 +23,8 @@ const console_module_1 = require("./modules/console/console.module");
 const docker_minimal_module_1 = require("./modules/docker/docker-minimal.module");
 const websocket_module_1 = require("./modules/websocket/websocket.module");
 const terminal_module_1 = require("./modules/terminal/terminal.module");
+const job_queues_module_1 = require("./modules/job-queues/job-queues.module");
+const redis_module_1 = require("./modules/redis/redis.module");
 const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
 const user_entity_1 = require("./entities/user.entity");
@@ -33,6 +35,9 @@ const ssl_certificate_entity_1 = require("./entities/ssl-certificate.entity");
 const log_entity_1 = require("./entities/log.entity");
 const ssh_session_entity_1 = require("./entities/ssh-session.entity");
 const console_log_entity_1 = require("./entities/console-log.entity");
+const job_queue_entity_1 = require("./entities/job-queue.entity");
+const job_execution_entity_1 = require("./entities/job-execution.entity");
+const job_schedule_entity_1 = require("./entities/job-schedule.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -47,7 +52,7 @@ exports.AppModule = AppModule = __decorate([
                 useFactory: (configService) => ({
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
-                    entities: [user_entity_1.User, project_entity_1.Project, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog],
+                    entities: [user_entity_1.User, project_entity_1.Project, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, job_queue_entity_1.JobQueue, job_execution_entity_1.JobExecution, job_schedule_entity_1.JobSchedule],
                     synchronize: true,
                     logging: process.env.NODE_ENV === 'development',
                 }),
@@ -85,6 +90,8 @@ exports.AppModule = AppModule = __decorate([
             docker_minimal_module_1.DockerMinimalModule,
             websocket_module_1.WebSocketModule,
             terminal_module_1.TerminalModule,
+            job_queues_module_1.JobQueuesModule,
+            redis_module_1.RedisModule,
             seed_module_1.SeedModule,
         ],
     })

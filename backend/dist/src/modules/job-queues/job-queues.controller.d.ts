@@ -37,6 +37,45 @@ export declare class JobExecutionsController {
         outputLog: string;
         errorLog: string;
     }>;
+    getRedisStats(): Promise<{
+        waiting: number;
+        active: number;
+        completed: number;
+        failed: number;
+        delayed: number;
+        paused: boolean;
+        total: number;
+    } | {
+        waiting: number;
+        active: number;
+        completed: number;
+        failed: number;
+        delayed: number;
+        paused: boolean;
+        total: number;
+        error: string;
+    }>;
+    getRedisHealth(): Promise<{
+        healthy: boolean;
+        paused: boolean;
+        stats: {
+            waiting: number;
+            active: number;
+            completed: number;
+            failed: number;
+            delayed: number;
+            paused: boolean;
+            total: number;
+        };
+        timestamp: Date;
+        error?: undefined;
+    } | {
+        healthy: boolean;
+        error: any;
+        timestamp: Date;
+        paused?: undefined;
+        stats?: undefined;
+    }>;
 }
 export declare class JobSchedulesController {
     private readonly jobSchedulerService;

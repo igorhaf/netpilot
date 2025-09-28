@@ -6,6 +6,8 @@ import { JobQueue, ScriptType } from '../../entities/job-queue.entity';
 import { JobExecutionQueryDto } from './dto/job-execution-query.dto';
 import { ExecuteJobDto } from './dto/execute-job.dto';
 import { JobExecutionResult, ScriptExecutionContext } from './types/job-queue.types';
+import { JobQueuesGateway } from './job-queues.gateway';
+import { RedisQueueService } from '../redis/redis-queue.service';
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -19,6 +21,8 @@ export class JobExecutionsService {
     private jobExecutionRepository: Repository<JobExecution>,
     @InjectRepository(JobQueue)
     private jobQueueRepository: Repository<JobQueue>,
+    private jobQueuesGateway: JobQueuesGateway,
+    private redisQueueService: RedisQueueService,
   ) {}
 
   async executeJob(
@@ -49,13 +53,52 @@ export class JobExecutionsService {
 
     const savedExecution = await this.jobExecutionRepository.save(execution);
 
-    // Executar em background
-    this.performExecution(savedExecution, jobQueue, executeJobDto.environmentVars)
-      .catch(error => {
-        console.error('Erro na execução do job:', error);
+    // Adicionar job à fila Redis
+    try {
+      await this.redisQueueService.addJob(jobQueue, savedExecution.id, {
+        delay: executeJobDto.delay || 0,
+        priority: executeJobDto.priority || 0,
       });
+    } catch (error) {
+      // Se falhar ao adicionar no Redis, usar execução local como fallback
+      console.warn('Fallback para execução local devido a erro no Redis:', error.message);
+      this.performExecution(savedExecution, jobQueue, executeJobDto.environmentVars)
+        .catch(error => {
+          console.error('Erro na execução local do job:', error);
+        });
+    }
 
     return savedExecution;
+  }
+
+  async getRedisStats() {
+    try {
+      return await this.redisQueueService.getQueueStats();
+    } catch (error) {
+      console.warn('Erro ao obter estatísticas do Redis:', error.message);
+      return {
+        waiting: 0,
+        active: 0,
+        completed: 0,
+        failed: 0,
+        delayed: 0,
+        paused: false,
+        total: 0,
+        error: 'Redis não disponível'
+      };
+    }
+  }
+
+  async getRedisHealth() {
+    try {
+      return await this.redisQueueService.getQueueHealth();
+    } catch (error) {
+      return {
+        healthy: false,
+        error: error.message,
+        timestamp: new Date(),
+      };
+    }
   }
 
   private async performExecution(
@@ -70,6 +113,9 @@ export class JobExecutionsService {
       execution.status = ExecutionStatus.RUNNING;
       execution.startedAt = new Date();
       await this.jobExecutionRepository.save(execution);
+
+      // Notificar início da execução
+      this.jobQueuesGateway.notifyJobStarted(execution, jobQueue);
 
       // Preparar contexto de execução
       const context: ScriptExecutionContext = {
@@ -93,6 +139,9 @@ export class JobExecutionsService {
       execution.outputLog = result.output || '';
       execution.errorLog = result.error || '';
 
+      // Notificar conclusão com sucesso
+      this.jobQueuesGateway.notifyJobCompleted(execution, jobQueue);
+
     } catch (error) {
       // Atualizar execução com erro
       execution.status = ExecutionStatus.FAILED;
@@ -100,11 +149,17 @@ export class JobExecutionsService {
       execution.executionTimeMs = Date.now() - startTime;
       execution.errorLog = error.message || error.toString();
 
+      // Notificar falha
+      this.jobQueuesGateway.notifyJobFailed(execution, jobQueue, error.message);
+
       // Verificar se deve tentar novamente
       if (execution.retryCount < jobQueue.maxRetries) {
         execution.retryCount++;
         execution.status = ExecutionStatus.PENDING;
         execution.completedAt = null;
+
+        // Notificar retry
+        this.jobQueuesGateway.notifyJobRetry(execution, jobQueue);
 
         // Reagendar execução após delay
         setTimeout(() => {
@@ -335,7 +390,12 @@ export class JobExecutionsService {
     execution.status = ExecutionStatus.CANCELLED;
     execution.completedAt = new Date();
 
-    return this.jobExecutionRepository.save(execution);
+    const savedExecution = await this.jobExecutionRepository.save(execution);
+
+    // Notificar cancelamento
+    this.jobQueuesGateway.notifyJobCancelled(savedExecution, execution.jobQueue);
+
+    return savedExecution;
   }
 
   async retry(id: string): Promise<JobExecution> {

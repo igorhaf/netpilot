@@ -1,0 +1,52 @@
+# NetPilot Nginx Default Configuration Template
+# Generated automatically by NetPilot System Operations
+# Site: {{ server_name }}
+
+server {
+    listen {{ listen_ports[0] | default(80) }};
+    {% if listen_ports | length > 1 %}
+    {% for port in listen_ports[1:] %}
+    listen {{ port }};
+    {% endfor %}
+    {% endif %}
+
+    server_name {{ domains }};
+
+    {% if site.root %}
+    root {{ site.root }};
+    index {{ site.index }};
+    {% endif %}
+
+    # Basic security headers
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
+
+    # Logging
+    access_log {{ access_log }};
+    error_log {{ error_log }};
+
+    {% if locations %}
+    {% for location in locations %}
+    location {{ location.path }} {
+        {% if location.proxy_pass %}
+        proxy_pass {{ location.proxy_pass }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        {% elif location.root %}
+        root {{ location.root }};
+        {% endif %}
+    }
+    {% endfor %}
+    {% else %}
+    location / {
+        {% if site.root %}
+        try_files $uri $uri/ =404;
+        {% else %}
+        return 200 "NetPilot Default Page";
+        add_header Content-Type text/plain;
+        {% endif %}
+    }
+    {% endif %}
+}

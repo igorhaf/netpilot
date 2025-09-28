@@ -44,7 +44,15 @@
       "Bash(npm run type-check:*)",
       "Bash(npm uninstall:*)",
       "Bash(cat:*)",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQG5ldHBpbG90LmxvY2FsIiwic3ViIjoiZTg1ZmYxOTEtNDIyMy00MmM2LTkxOWQtMWYyMzM3NjY3YmIzIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU4OTUzODU1LCJleHAiOjE3NTk1NTg2NTV9.CMwhTQqvzsTJFBHMR5nrM-2l4UBlhiWwupT2IV902kE\")"
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQG5ldHBpbG90LmxvY2FsIiwic3ViIjoiZTg1ZmYxOTEtNDIyMy00MmM2LTkxOWQtMWYyMzM3NjY3YmIzIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU4OTUzODU1LCJleHAiOjE3NTk1NTg2NTV9.CMwhTQqvzsTJFBHMR5nrM-2l4UBlhiWwupT2IV902kE\")",
+      "Bash(DATABASE_URL=postgresql://netpilot:netpilot123@localhost:5432/netpilot npm run start:dev)",
+      "Bash(export DATABASE_URL=\"postgresql://netpilot:netpilot123@localhost:5432/netpilot\")",
+      "Bash(export REDIS_HOST=localhost)",
+      "Bash(export REDIS_PORT=6379)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/ -v)"
     ],
     "deny": [],
     "ask": []

@@ -31,168 +31,18 @@ import {
   Edit,
   Trash2,
   Calendar,
-  Lock,
-  Unlock
+  Bell,
+  RotateCcw
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
-
-// Enhanced mock data with more realistic Redis queue data
-const mockJobQueues = [
-  {
-    id: 'queue_ssl_monitor',
-    name: 'SSL Certificate Monitor',
-    scriptType: 'internal',
-    cronExpression: '0 6 * * *',
-    isActive: true,
-    isLocked: false,
-    lastExecution: new Date('2025-01-15T06:00:00Z'),
-    nextExecution: new Date('2025-01-16T06:00:00Z'),
-    status: 'completed',
-    executionCount: 247,
-    successRate: 99.2,
-    avgExecutionTime: 1800,
-    queueName: 'ssl_monitor',
-    priority: 'high',
-    timeout: 300,
-    retryAttempts: 3,
-    environment: 'production',
-    processor: 'SSLCertificateChecker'
-  },
-  {
-    id: 'queue_backup_db',
-    name: 'Database Backup',
-    scriptType: 'shell',
-    cronExpression: '0 2 * * *',
-    isActive: true,
-    isLocked: false,
-    lastExecution: new Date('2025-01-15T02:00:00Z'),
-    nextExecution: new Date('2025-01-16T02:00:00Z'),
-    status: 'running',
-    executionCount: 89,
-    successRate: 98.9,
-    avgExecutionTime: 45000,
-    queueName: 'database_backup',
-    priority: 'critical',
-    timeout: 3600,
-    retryAttempts: 2,
-    environment: 'production',
-    processor: 'PostgreSQLBackupProcessor'
-  },
-  {
-    id: 'queue_log_cleanup',
-    name: 'Log Cleanup',
-    scriptType: 'internal',
-    cronExpression: '0 3 * * 0',
-    isActive: true,
-    isLocked: false,
-    lastExecution: new Date('2025-01-14T03:00:00Z'),
-    nextExecution: new Date('2025-01-21T03:00:00Z'),
-    status: 'completed',
-    executionCount: 12,
-    successRate: 100,
-    avgExecutionTime: 8500,
-    queueName: 'log_cleanup',
-    priority: 'normal',
-    timeout: 1800,
-    retryAttempts: 1,
-    environment: 'production',
-    processor: 'LogCleanupProcessor'
-  },
-  {
-    id: 'queue_domain_sync',
-    name: 'Domain Configuration Sync',
-    scriptType: 'internal',
-    cronExpression: '*/15 * * * *',
-    isActive: true,
-    isLocked: false,
-    lastExecution: new Date('2025-01-15T14:30:00Z'),
-    nextExecution: new Date('2025-01-15T14:45:00Z'),
-    status: 'completed',
-    executionCount: 1456,
-    successRate: 97.8,
-    avgExecutionTime: 2200,
-    queueName: 'domain_sync',
-    priority: 'high',
-    timeout: 600,
-    retryAttempts: 3,
-    environment: 'production',
-    processor: 'DomainSyncProcessor'
-  },
-  {
-    id: 'queue_proxy_health',
-    name: 'Proxy Health Check',
-    scriptType: 'internal',
-    cronExpression: '*/5 * * * *',
-    isActive: true,
-    isLocked: false,
-    lastExecution: new Date('2025-01-15T14:35:00Z'),
-    nextExecution: new Date('2025-01-15T14:40:00Z'),
-    status: 'running',
-    executionCount: 4368,
-    successRate: 99.7,
-    avgExecutionTime: 800,
-    queueName: 'proxy_health_check',
-    priority: 'high',
-    timeout: 120,
-    retryAttempts: 2,
-    environment: 'production',
-    processor: 'ProxyHealthChecker'
-  },
-  {
-    id: 'queue_log_analysis',
-    name: 'Log Analysis & Alerting',
-    scriptType: 'python',
-    cronExpression: '*/10 * * * *',
-    isActive: true,
-    isLocked: true,
-    lastExecution: new Date('2025-01-15T14:30:00Z'),
-    nextExecution: new Date('2025-01-15T14:40:00Z'),
-    status: 'failed',
-    executionCount: 2184,
-    successRate: 95.3,
-    avgExecutionTime: 12000,
-    queueName: 'log_analysis',
-    priority: 'normal',
-    timeout: 900,
-    retryAttempts: 2,
-    environment: 'production',
-    processor: 'LogAnalysisProcessor'
-  },
-  {
-    id: 'queue_cert_renewal',
-    name: 'SSL Certificate Renewal',
-    scriptType: 'shell',
-    cronExpression: '0 4 * * 1',
-    isActive: false,
-    isLocked: false,
-    lastExecution: new Date('2025-01-13T04:00:00Z'),
-    nextExecution: null,
-    status: 'paused',
-    executionCount: 45,
-    successRate: 93.3,
-    avgExecutionTime: 180000,
-    queueName: 'cert_renewal',
-    priority: 'critical',
-    timeout: 7200,
-    retryAttempts: 3,
-    environment: 'production',
-    processor: 'CertRenewalProcessor'
-  }
-];
-
-const mockStatistics = {
-  totalJobs: 7,
-  activeJobs: 6,
-  completedExecutions: 8401,
-  failedExecutions: 234,
-  averageExecutionTime: 8900,
-  upcomingExecutions: 5,
-  queuesProcessing: 2,
-  totalQueues: 7,
-  successRate: 97.3,
-  avgWaitTime: 1200
-};
+import { jobQueuesApi, type JobQueue, type JobStatistics } from '@/lib/api/job-queues';
+import { JobsDashboard } from '@/components/jobs/JobsDashboard';
+import { JobExecutionLogs } from '@/components/jobs/JobExecutionLogs';
+import { RetryPolicyConfig } from '@/components/jobs/RetryPolicyConfig';
+import { RetryStats } from '@/components/jobs/RetryStats';
+import { PerformanceMetrics } from '@/components/jobs/PerformanceMetrics';
+import { JobNotifications } from '@/components/jobs/JobNotifications';
 
 export default function JobQueuesPage() {
   const [filters, setFilters] = useState({
@@ -203,7 +53,8 @@ export default function JobQueuesPage() {
     limit: 10
   });
 
-  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [selectedJob, setSelectedJob] = useState<JobQueue | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'jobs' | 'logs' | 'retry' | 'performance' | 'notifications'>('dashboard');
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -222,46 +73,13 @@ export default function JobQueuesPage() {
   // Query para listar job queues
   const { data, isLoading, error } = useQuery({
     queryKey: ['job-queues', filters],
-    queryFn: () => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          let filteredJobs = [...mockJobQueues];
-
-          // Aplicar filtros
-          if (filters.search) {
-            filteredJobs = filteredJobs.filter(job =>
-              job.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-              job.queueName.toLowerCase().includes(filters.search.toLowerCase()) ||
-              job.processor.toLowerCase().includes(filters.search.toLowerCase())
-            );
-          }
-
-          if (filters.status) {
-            filteredJobs = filteredJobs.filter(job => job.status === filters.status);
-          }
-
-          if (filters.isActive) {
-            const isActive = filters.isActive === 'true';
-            filteredJobs = filteredJobs.filter(job => job.isActive === isActive);
-          }
-
-          resolve({
-            data: filteredJobs,
-            statistics: mockStatistics
-          });
-        }, 500);
-      });
-    },
+    queryFn: () => jobQueuesApi.list(filters),
     refetchInterval: 30000
   });
 
   // Mutação para executar job manualmente
   const executeMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(`Job ${id} executado`), 1000);
-      });
-    },
+    mutationFn: ({ id }: { id: string }) => jobQueuesApi.execute(id),
     onSuccess: (_, { id }) => {
       toast({
         title: 'Job executado',
@@ -272,7 +90,7 @@ export default function JobQueuesPage() {
     onError: (error: any) => {
       toast({
         title: 'Erro ao executar job',
-        description: error.message,
+        description: error.response?.data?.message || error.message,
         variant: 'destructive',
       });
     },
@@ -280,11 +98,7 @@ export default function JobQueuesPage() {
 
   // Mutação para ativar/desativar job
   const toggleMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(`Job ${id} toggled`), 500);
-      });
-    },
+    mutationFn: ({ id }: { id: string }) => jobQueuesApi.toggleActive(id),
     onSuccess: () => {
       toast({
         title: 'Status alterado',
@@ -295,30 +109,26 @@ export default function JobQueuesPage() {
     onError: (error: any) => {
       toast({
         title: 'Erro ao alterar status',
-        description: error.message,
+        description: error.response?.data?.message || error.message,
         variant: 'destructive',
       });
     },
   });
 
-  // Mutação para travar/destravar job
-  const toggleLockMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(`Job ${id} lock toggled`), 500);
-      });
-    },
+  // Mutação para deletar job
+  const deleteMutation = useMutation({
+    mutationFn: ({ id }: { id: string }) => jobQueuesApi.delete(id),
     onSuccess: () => {
       toast({
-        title: 'Travamento alterado',
-        description: 'Status do travamento foi alterado com sucesso',
+        title: 'Job removido',
+        description: 'Job foi removido com sucesso',
       });
       queryClient.invalidateQueries({ queryKey: ['job-queues'] });
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro ao alterar travamento',
-        description: error.message,
+        title: 'Erro ao remover job',
+        description: error.response?.data?.message || error.message,
         variant: 'destructive',
       });
     },
@@ -405,16 +215,15 @@ export default function JobQueuesPage() {
     );
   };
 
-  const handleToggleLock = (id: string, name: string, isLocked: boolean) => {
-    const action = isLocked ? 'destravar' : 'travar';
+  const handleDelete = (id: string, name: string) => {
     showConfirmModal(
-      `${action.charAt(0).toUpperCase() + action.slice(1)} Job`,
-      `Confirma ${action} o job "${name}"?`,
+      'Remover Job',
+      `Confirma a remoção do job "${name}"? Esta ação não pode ser desfeita.`,
       () => {
-        toggleLockMutation.mutate({ id });
+        deleteMutation.mutate({ id });
         hideConfirmModal();
       },
-      'info'
+      'danger'
     );
   };
 
@@ -449,82 +258,64 @@ export default function JobQueuesPage() {
           </div>
         </div>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <Activity className="h-5 w-5 text-blue-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total de Jobs</p>
-                  <p className="text-2xl font-bold">{(data as any)?.statistics?.totalJobs || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Ativos</p>
-                  <p className="text-2xl font-bold">{(data as any)?.statistics?.activeJobs || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-orange-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Próximas</p>
-                  <p className="text-2xl font-bold">{(data as any)?.statistics?.upcomingExecutions || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Concluídas</p>
-                  <p className="text-2xl font-bold">{(data as any)?.statistics?.completedExecutions || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Falhas</p>
-                  <p className="text-2xl font-bold">{(data as any)?.statistics?.failedExecutions || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-purple-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Tempo Médio</p>
-                  <p className="text-2xl font-bold">
-                    {formatTime((data as any)?.statistics?.averageExecutionTime || 0)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Navegação por Abas */}
+        <div className="flex space-x-1 border-b">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: Activity },
+            { id: 'jobs', label: 'Jobs', icon: Settings },
+            { id: 'logs', label: 'Logs', icon: Eye },
+            { id: 'retry', label: 'Retry Stats', icon: RotateCcw },
+            { id: 'performance', label: 'Performance', icon: Activity },
+            { id: 'notifications', label: 'Notificações', icon: Bell }
+          ].map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id as any)}
+              className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+                activeTab === id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
+
+        {/* Conteúdo baseado na aba ativa */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            <JobsDashboard compact />
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div className="space-y-6">
+            <JobExecutionLogs />
+          </div>
+        )}
+
+        {activeTab === 'retry' && (
+          <div className="space-y-6">
+            <RetryStats />
+          </div>
+        )}
+
+        {activeTab === 'performance' && (
+          <div className="space-y-6">
+            <PerformanceMetrics />
+          </div>
+        )}
+
+        {activeTab === 'notifications' && (
+          <div className="space-y-6 flex justify-center">
+            <JobNotifications />
+          </div>
+        )}
+
+        {activeTab === 'jobs' && (
+          <div className="space-y-6">
 
         {/* Filtros */}
         <Card>
@@ -688,33 +479,19 @@ export default function JobQueuesPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleToggleLock(job.id, job.name, job.isLocked)}
-                              disabled={toggleLockMutation.isPending}
-                              title={job.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
+                              onClick={() => handleExecute(job.id, job.name)}
+                              disabled={executeMutation.isPending || !job.isActive}
+                              title="Executar job manualmente"
                             >
-                              {job.isLocked ? (
-                                <Lock className="h-4 w-4" />
-                              ) : (
-                                <Unlock className="h-4 w-4" />
-                              )}
+                              <Play className="h-4 w-4" />
                             </Button>
-
-                            {!job.isLocked && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleExecute(job.id, job.name)}
-                                  disabled={executeMutation.isPending || !job.isActive}
-                                >
-                                  <Play className="h-4 w-4" />
-                                </Button>
 
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleToggle(job.id, job.name, job.isActive)}
                               disabled={toggleMutation.isPending}
+                              title={job.isActive ? 'Desativar job' : 'Ativar job'}
                             >
                               {job.isActive ? (
                                 <Square className="h-4 w-4" />
@@ -727,25 +504,27 @@ export default function JobQueuesPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => setSelectedJob(job)}
+                              title="Ver detalhes"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
 
                             <Link href={`/job-queues/${job.id}/edit`}>
-                              <Button size="sm" variant="outline">
+                              <Button size="sm" variant="outline" title="Editar job">
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </Link>
 
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDelete(job.id, job.name)}
+                              disabled={deleteMutation.isPending}
+                              title="Remover job"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -757,6 +536,8 @@ export default function JobQueuesPage() {
             )}
           </CardContent>
         </Card>
+          </div>
+        )}
 
         {/* Job Details Modal */}
         {selectedJob && (
@@ -865,8 +646,8 @@ export default function JobQueuesPage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">Travado</label>
-                      <p className="mt-1 text-sm text-foreground">{selectedJob.isLocked ? 'Sim' : 'Não'}</p>
+                      <label className="text-sm font-medium text-muted-foreground">Timeout</label>
+                      <p className="mt-1 text-sm text-foreground">{selectedJob.timeout}s</p>
                     </div>
                   </div>
                 </div>

@@ -1,0 +1,232 @@
+# NetPilot Nginx Configuration Template
+# Generated automatically by NetPilot System Operations
+# Site: {{ server_name }}
+# Generated at: {{ ansible_date_time.iso8601 if ansible_date_time is defined else "N/A" }}
+
+{% if upstreams %}
+# Upstream configurations
+{% for upstream in upstreams %}
+upstream {{ upstream.name }} {
+    {% if upstream.method == "ip_hash" %}
+    ip_hash;
+    {% elif upstream.method == "least_conn" %}
+    least_conn;
+    {% endif %}
+
+    {% for server in upstream.servers %}
+    server {{ server }};
+    {% endfor %}
+
+    {% if upstream.health_check %}
+    # Health check configuration would go here
+    {% endif %}
+}
+{% endfor %}
+
+{% endif %}
+server {
+    # Server name and listening ports
+    server_name {{ domains }};
+
+    {% for port in listen_ports %}
+    listen {{ port }}{% if port == 443 %} ssl http2{% endif %};
+    {% if ':' in ansible_default_ipv6.address|default('') %}
+    listen [::]:{{ port }}{% if port == 443 %} ssl http2{% endif %};
+    {% endif %}
+    {% endfor %}
+
+    {% if ssl %}
+    # SSL Configuration
+    ssl_certificate {{ ssl.certificate_path }};
+    ssl_certificate_key {{ ssl.certificate_key_path }};
+
+    # SSL protocols and ciphers
+    ssl_protocols {{ ssl.protocols | join(' ') }};
+    {% if ssl.ciphers %}
+    ssl_ciphers {{ ssl.ciphers }};
+    {% endif %}
+    ssl_prefer_server_ciphers on;
+
+    {% if ssl.hsts %}
+    # HSTS
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    {% endif %}
+
+    {% if ssl.ocsp_stapling %}
+    # OCSP Stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    {% endif %}
+
+    # SSL session optimization
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    {% endif %}
+
+    {% if force_https and ssl %}
+    # Force HTTPS redirect for HTTP requests
+    if ($scheme != "https") {
+        return 301 https://$host$request_uri;
+    }
+    {% endif %}
+
+    # Document root and index
+    {% if site.root %}
+    root {{ site.root }};
+    {% endif %}
+    index {{ site.index }};
+
+    # Logging
+    access_log {{ access_log }};
+    error_log {{ error_log }};
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Hide Nginx version
+    server_tokens off;
+
+    {% if site.rate_limiting %}
+    # Rate limiting
+    {% set rate_config = site.rate_limiting %}
+    limit_req_zone $binary_remote_addr zone={{ server_name | replace('.', '_') }}_rate:10m rate={{ rate_config.rate | default('10r/m') }};
+    limit_req zone={{ server_name | replace('.', '_') }}_rate burst={{ rate_config.burst | default(5) }} nodelay;
+    {% endif %}
+
+    {% if site.ip_whitelist %}
+    # IP whitelist
+    {% for ip in site.ip_whitelist %}
+    allow {{ ip }};
+    {% endfor %}
+    deny all;
+    {% endif %}
+
+    {% if site.ip_blacklist %}
+    # IP blacklist
+    {% for ip in site.ip_blacklist %}
+    deny {{ ip }};
+    {% endfor %}
+    {% endif %}
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/json
+        application/javascript
+        application/xml+rss
+        application/atom+xml
+        image/svg+xml;
+
+    {% if locations %}
+    # Location blocks
+    {% for location in locations %}
+    location {{ location.path }} {
+        {% if location.proxy_pass %}
+        # Proxy configuration
+        proxy_pass {{ location.proxy_pass }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+
+        # Proxy timeouts
+        proxy_connect_timeout 30s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+
+        # Proxy buffering
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+
+        {% elif location.upstream %}
+        # Upstream proxy
+        proxy_pass http://{{ location.upstream }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        {% elif location.root %}
+        # Static file serving
+        root {{ location.root }};
+        {% if location.index %}
+        index {{ location.index }};
+        {% endif %}
+        {% if location.try_files %}
+        try_files {{ location.try_files }};
+        {% endif %}
+
+        {% endif %}
+
+        {% if location.headers %}
+        # Custom headers
+        {% for header_name, header_value in location.headers.items() %}
+        add_header {{ header_name }} "{{ header_value }}" always;
+        {% endfor %}
+        {% endif %}
+
+        {% if location.custom_config %}
+        # Custom configuration
+        {% for config_line in location.custom_config %}
+        {{ config_line }};
+        {% endfor %}
+        {% endif %}
+    }
+    {% endfor %}
+    {% else %}
+    # Default location
+    location / {
+        {% if site.root %}
+        try_files $uri $uri/ =404;
+        {% else %}
+        return 444;
+        {% endif %}
+    }
+    {% endif %}
+
+    # Security: Block access to hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Security: Block access to backup files
+    location ~ ~$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Favicon and robots.txt
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+
+    location = /robots.txt {
+        log_not_found off;
+        access_log off;
+    }
+
+    {% if custom_config %}
+    # Custom configuration
+    {% for config_line in custom_config %}
+    {{ config_line }};
+    {% endfor %}
+    {% endif %}
+}

@@ -138,7 +138,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], JobQueuesController.prototype, "validateCron", null);
 exports.JobQueuesController = JobQueuesController = __decorate([
-    (0, common_1.Controller)('api/job-queues'),
+    (0, common_1.Controller)('job-queues'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [job_queues_service_1.JobQueuesService,
         job_executions_service_1.JobExecutionsService,
@@ -165,6 +165,12 @@ let JobExecutionsController = class JobExecutionsController {
             outputLog: execution.outputLog,
             errorLog: execution.errorLog,
         }));
+    }
+    getRedisStats() {
+        return this.jobExecutionsService.getRedisStats();
+    }
+    getRedisHealth() {
+        return this.jobExecutionsService.getRedisHealth();
     }
 };
 exports.JobExecutionsController = JobExecutionsController;
@@ -203,8 +209,20 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], JobExecutionsController.prototype, "getLogs", null);
+__decorate([
+    (0, common_1.Get)('redis/stats'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], JobExecutionsController.prototype, "getRedisStats", null);
+__decorate([
+    (0, common_1.Get)('redis/health'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], JobExecutionsController.prototype, "getRedisHealth", null);
 exports.JobExecutionsController = JobExecutionsController = __decorate([
-    (0, common_1.Controller)('api/job-executions'),
+    (0, common_1.Controller)('job-executions'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [job_executions_service_1.JobExecutionsService])
 ], JobExecutionsController);
@@ -265,7 +283,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], JobSchedulesController.prototype, "deleteSchedule", null);
 exports.JobSchedulesController = JobSchedulesController = __decorate([
-    (0, common_1.Controller)('api/job-schedules'),
+    (0, common_1.Controller)('job-schedules'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [job_scheduler_service_1.JobSchedulerService])
 ], JobSchedulesController);

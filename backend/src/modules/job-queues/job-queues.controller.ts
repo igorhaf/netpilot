@@ -19,7 +19,7 @@ import { ExecuteJobDto } from './dto/execute-job.dto';
 import { JobExecutionQueryDto } from './dto/job-execution-query.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 
-@Controller('api/job-queues')
+@Controller('job-queues')
 @UseGuards(JwtAuthGuard)
 export class JobQueuesController {
   constructor(
@@ -88,7 +88,7 @@ export class JobQueuesController {
   }
 }
 
-@Controller('api/job-executions')
+@Controller('job-executions')
 @UseGuards(JwtAuthGuard)
 export class JobExecutionsController {
   constructor(
@@ -122,9 +122,19 @@ export class JobExecutionsController {
       errorLog: execution.errorLog,
     }));
   }
+
+  @Get('redis/stats')
+  getRedisStats() {
+    return this.jobExecutionsService.getRedisStats();
+  }
+
+  @Get('redis/health')
+  getRedisHealth() {
+    return this.jobExecutionsService.getRedisHealth();
+  }
 }
 
-@Controller('api/job-schedules')
+@Controller('job-schedules')
 @UseGuards(JwtAuthGuard)
 export class JobSchedulesController {
   constructor(

@@ -1,0 +1,154 @@
+# NetPilot Traefik Dynamic Configuration Template
+# Generated automatically by NetPilot System Operations
+
+# HTTP routers
+http:
+  routers:
+    {% for site in sites %}
+    {{ site.name | replace('.', '-') | replace('_', '-') }}-http:
+      rule: "Host(`{{ site.domains | join('`, `') }}`)"
+      service: {{ site.name | replace('.', '-') | replace('_', '-') }}-service
+      {% if site.ssl %}
+      middlewares:
+        - https-redirect
+      {% endif %}
+      {% if site.middlewares %}
+      {% for middleware in site.middlewares %}
+        - {{ middleware }}
+      {% endfor %}
+      {% endif %}
+
+    {% if site.ssl %}
+    {{ site.name | replace('.', '-') | replace('_', '-') }}-https:
+      rule: "Host(`{{ site.domains | join('`, `') }}`)"
+      service: {{ site.name | replace('.', '-') | replace('_', '-') }}-service
+      tls:
+        certResolver: {{ site.ssl.cert_resolver | default('letsencrypt') }}
+        domains:
+          {% for domain in site.domains %}
+          - main: "{{ domain }}"
+          {% endfor %}
+      {% if site.middlewares %}
+      middlewares:
+      {% for middleware in site.middlewares %}
+        - {{ middleware }}
+      {% endfor %}
+      {% endif %}
+    {% endif %}
+    {% endfor %}
+
+  # Services
+  services:
+    {% for site in sites %}
+    {{ site.name | replace('.', '-') | replace('_', '-') }}-service:
+      loadBalancer:
+        servers:
+          {% for server in site.servers %}
+          - url: "{{ server.url }}"
+          {% endfor %}
+        {% if site.health_check %}
+        healthCheck:
+          path: {{ site.health_check.path | default('/') }}
+          interval: {{ site.health_check.interval | default('30s') }}
+          timeout: {{ site.health_check.timeout | default('5s') }}
+        {% endif %}
+        {% if site.sticky_sessions %}
+        sticky:
+          cookie:
+            name: {{ site.sticky_sessions.cookie_name | default('traefik') }}
+        {% endif %}
+    {% endfor %}
+
+  # Middlewares
+  middlewares:
+    # HTTPS redirect
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    # Security headers
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        burst: 10
+        average: 5
+
+    # Basic auth (example)
+    basic-auth:
+      basicAuth:
+        users:
+          - "admin:$2y$10$..."  # Generated password hash
+
+    # IP whitelist
+    ip-whitelist:
+      ipWhiteList:
+        sourceRange:
+          - "127.0.0.1/32"
+          - "192.168.1.0/24"
+
+# TCP routers (for non-HTTP services)
+tcp:
+  routers:
+    {% for tcp_service in tcp_services | default([]) %}
+    {{ tcp_service.name }}-tcp:
+      rule: "HostSNI(`{{ tcp_service.domain }}`)"
+      service: {{ tcp_service.name }}-tcp-service
+      {% if tcp_service.tls %}
+      tls:
+        passthrough: {{ tcp_service.tls.passthrough | default(true) }}
+      {% endif %}
+    {% endfor %}
+
+  services:
+    {% for tcp_service in tcp_services | default([]) %}
+    {{ tcp_service.name }}-tcp-service:
+      loadBalancer:
+        servers:
+          {% for server in tcp_service.servers %}
+          - address: "{{ server.address }}"
+          {% endfor %}
+    {% endfor %}
+
+# TLS configuration
+tls:
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_RSA_WITH_AES_128_GCM_SHA256"
+
+  # Certificate stores
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/ssl/certs/default.pem
+        keyFile: /etc/ssl/private/default.key
+
+# Certificate resolvers
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: {{ acme_email | default('admin@example.com') }}
+      storage: /etc/traefik/acme/acme.json
+      httpChallenge:
+        entryPoint: web
+      # Alternative: DNS challenge
+      # dnsChallenge:
+      #   provider: cloudflare
+      #   resolvers:
+      #     - "1.1.1.1:53"
+      #     - "8.8.8.8:53"

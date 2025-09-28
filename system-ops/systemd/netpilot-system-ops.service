@@ -1,0 +1,46 @@
+[Unit]
+Description=NetPilot System Operations - FastAPI Microservice
+Documentation=https://github.com/netpilot/system-operations
+After=network.target network-online.target
+Wants=network-online.target
+Requires=network.target
+
+[Service]
+Type=exec
+User=netpilot
+Group=netpilot
+WorkingDirectory=/home/projects/netpilot/system-ops
+Environment=PATH=/home/projects/netpilot/system-ops/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PYTHONPATH=/home/projects/netpilot/system-ops
+EnvironmentFile=-/home/projects/netpilot/system-ops/.env
+
+# Main process
+ExecStart=/home/projects/netpilot/system-ops/venv/bin/python main.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=always
+RestartSec=5
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log /var/lib/netpilot /tmp /home/projects/netpilot/system-ops
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=512M
+CPUQuota=200%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=netpilot-system-ops
+
+[Install]
+WantedBy=multi-user.target
