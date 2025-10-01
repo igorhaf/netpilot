@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Server, Route, Target, Hash, Container } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
 import { DockerApiService } from '@/lib/docker-api'
 import { useRequireAuth } from '@/hooks/useAuth'
@@ -78,7 +85,7 @@ export default function NewProxyRulePage() {
         }
 
         setSelectedPort('')
-        setFormData({ ...formData, targetUrl: '' })
+        setFormData(prev => ({ ...prev, targetUrl: '' }))
       }
     }
   }, [selectedContainer, containersResponse])
@@ -88,7 +95,7 @@ export default function NewProxyRulePage() {
     if (selectedContainerName && selectedPort) {
       // URL usando nome do container na rede interna Docker
       const targetUrl = `http://${selectedContainerName}:${selectedPort}`
-      setFormData({ ...formData, targetUrl })
+      setFormData(prev => ({ ...prev, targetUrl }))
     }
   }, [selectedContainerName, selectedPort])
 
@@ -196,44 +203,44 @@ export default function NewProxyRulePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Configurações Básicas */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Server className="h-5 w-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações Básicas
-                </h2>
-              </div>
-
+                <span>Configurações Básicas</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="domainId" className="block text-sm font-medium text-foreground mb-2">
+                <div className="space-y-2">
+                  <Label htmlFor="domainId">
                     Domínio <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="domainId"
+                  </Label>
+                  <Select
                     value={formData.domainId}
-                    onChange={(e) => setFormData({ ...formData, domainId: e.target.value })}
-                    className="input w-full"
-                    required
+                    onValueChange={(value) => setFormData({ ...formData, domainId: value })}
                   >
-                    <option value="">Selecione um domínio</option>
-                    {domains?.map((domain) => (
-                      <option key={domain.id} value={domain.id}>
-                        {domain.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um domínio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {domains?.map((domain) => (
+                        <SelectItem key={domain.id} value={domain.id}>
+                          {domain.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
                     Domínio onde a regra será aplicada
                   </p>
                 </div>
 
-                <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-foreground mb-2">
+                <div className="space-y-2">
+                  <Label htmlFor="priority">
                     Prioridade <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     id="priority"
                     type="number"
                     min="1"
@@ -241,235 +248,224 @@ export default function NewProxyRulePage() {
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 100 })}
                     placeholder="100"
-                    className="input w-full"
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground">
                     Menor número = maior prioridade (1-1000)
                   </p>
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
-                  Descrição
-                </label>
-                <textarea
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
                   id="description"
-                  value={formData.description}
+                  value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descrição opcional da regra de proxy..."
                   rows={3}
-                  className="input w-full resize-none"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground">
                   Descrição opcional para identificar a regra
                 </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Configurações de Roteamento */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Container className="h-5 w-5 text-green-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações de Roteamento
-                </h2>
+                <span>Configurações de Roteamento</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="sourcePath">
+                  Caminho de Origem <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="sourcePath"
+                  type="text"
+                  value={formData.sourcePath}
+                  onChange={(e) => setFormData({ ...formData, sourcePath: e.target.value })}
+                  placeholder="/api, /app, /"
+                  required
+                />
+                <p className="text-sm text-muted-foreground">
+                  Caminho que será interceptado (ex: /api, /app, /)
+                </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="sourcePath" className="block text-sm font-medium text-foreground mb-2">
-                    Caminho de Origem <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="sourcePath"
-                    type="text"
-                    value={formData.sourcePath}
-                    onChange={(e) => setFormData({ ...formData, sourcePath: e.target.value })}
-                    placeholder="/api, /app, /"
-                    className="input w-full"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Caminho que será interceptado (ex: /api, /app, /)
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="selectedContainer">
+                    Container Docker <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={selectedContainer}
+                    onValueChange={(value) => setSelectedContainer(value)}
+                  >
+                    <SelectTrigger disabled={containersLoading}>
+                      <SelectValue placeholder="Selecione um container" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {containersResponse?.data?.filter((container: any) => container.state === 'running').map((container: any) => (
+                        <SelectItem key={container.id} value={container.id}>
+                          {container.names[0].replace('/', '')} - {container.image}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Container ativo para onde o tráfego será direcionado
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="selectedContainer" className="block text-sm font-medium text-foreground mb-2">
-                      Container Docker <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="selectedContainer"
-                      value={selectedContainer}
-                      onChange={(e) => setSelectedContainer(e.target.value)}
-                      className="input w-full"
-                      required
-                      disabled={containersLoading}
-                    >
-                      <option value="">Selecione um container</option>
-                      {containersResponse?.data?.filter((container: any) => container.state === 'running').map((container: any) => (
-                        <option key={container.id} value={container.id}>
-                          {container.names[0].replace('/', '')} - {container.image}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Container ativo para onde o tráfego será direcionado
-                    </p>
-                  </div>
-
-                  <div>
-                    <label htmlFor="selectedPort" className="block text-sm font-medium text-foreground mb-2">
-                      Porta <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="selectedPort"
-                      value={selectedPort}
-                      onChange={(e) => setSelectedPort(e.target.value)}
-                      className="input w-full"
-                      required
-                      disabled={!selectedContainer || availablePorts.length === 0}
-                    >
-                      <option value="">Selecione uma porta</option>
+                <div className="space-y-2">
+                  <Label htmlFor="selectedPort">
+                    Porta <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={selectedPort}
+                    onValueChange={(value) => setSelectedPort(value)}
+                  >
+                    <SelectTrigger disabled={!selectedContainer || availablePorts.length === 0}>
+                      <SelectValue placeholder="Selecione uma porta" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {availablePorts.map((port: any, index: number) => {
-                        const containerPort = port.PrivatePort
+                        const containerPort = port.PrivatePort.toString()
                         return (
-                          <option key={index} value={containerPort}>
+                          <SelectItem key={index} value={containerPort}>
                             Porta {containerPort} - {port.Type.toUpperCase()}
                             {port.PublicPort ? ` (exposta no host:${port.PublicPort})` : ' (rede interna)'}
-                          </option>
+                          </SelectItem>
                         )
                       })}
-                    </select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Porta do container para receber o tráfego
-                    </p>
-                  </div>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Porta do container para receber o tráfego
+                  </p>
                 </div>
+              </div>
 
-                {/* Configuração gerada automaticamente */}
-                {formData.targetUrl && selectedContainerName && selectedPort && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Resolução de Rede Interna Docker
-                    </label>
-                    <div className="space-y-3 p-4 bg-muted rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <Container className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium">Container:</span>
-                        <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded">
-                          {selectedContainerName}
-                        </code>
+              {/* Configuração gerada automaticamente */}
+              {formData.targetUrl && selectedContainerName && selectedPort && (
+                <div className="space-y-2">
+                  <Label>Resolução de Rede Interna Docker</Label>
+                  <div className="space-y-3 p-4 bg-muted rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Container className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm font-medium">Container:</span>
+                      <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded">
+                        {selectedContainerName}
+                      </code>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Target className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium">URL de Destino:</span>
+                      <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded">
+                        {formData.targetUrl}
+                      </code>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Route className="h-4 w-4 text-purple-500" />
+                      <span className="text-sm font-medium">Roteamento:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Domínio → Proxy Reverso → Container na Rede Interna
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border bg-blue-50 p-3 rounded">
+                      <p className="font-medium text-blue-800 mb-2">🐳 Como funciona a Rede Interna Docker:</p>
+                      <div className="space-y-1 text-blue-700">
+                        <p>• <strong>Múltiplos containers</strong> podem usar a mesma porta (ex: 80)</p>
+                        <p>• <strong>Cada container</strong> tem seu próprio hostname na rede interna</p>
+                        <p>• <strong>Sem conflitos</strong> porque cada container é isolado</p>
+                        <p>• <strong>Proxy reverso</strong> resolve pelo nome do container</p>
                       </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Target className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium">URL de Destino:</span>
-                        <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded">
-                          {formData.targetUrl}
-                        </code>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Route className="h-4 w-4 text-purple-500" />
-                        <span className="text-sm font-medium">Roteamento:</span>
-                        <span className="text-sm text-muted-foreground">
-                          Domínio → Proxy Reverso → Container na Rede Interna
-                        </span>
-                      </div>
-
-                      <div className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border bg-blue-50 p-3 rounded">
-                        <p className="font-medium text-blue-800 mb-2">🐳 Como funciona a Rede Interna Docker:</p>
-                        <div className="space-y-1 text-blue-700">
-                          <p>• <strong>Múltiplos containers</strong> podem usar a mesma porta (ex: 80)</p>
-                          <p>• <strong>Cada container</strong> tem seu próprio hostname na rede interna</p>
-                          <p>• <strong>Sem conflitos</strong> porque cada container é isolado</p>
-                          <p>• <strong>Proxy reverso</strong> resolve pelo nome do container</p>
-                        </div>
-                        <div className="mt-2 pt-2 border-t border-blue-200">
-                          <p className="text-xs text-blue-600">
-                            <strong>Exemplo:</strong> nginx-site-x:80, nginx-site-y:80, nginx-site-z:80 todos funcionam simultaneamente!
-                          </p>
-                        </div>
+                      <div className="mt-2 pt-2 border-t border-blue-200">
+                        <p className="text-xs text-blue-600">
+                          <strong>Exemplo:</strong> nginx-site-x:80, nginx-site-y:80, nginx-site-z:80 todos funcionam simultaneamente!
+                        </p>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Configurações Avançadas */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Hash className="h-5 w-5 text-purple-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações Avançadas
-                </h2>
+                <span>Configurações Avançadas</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="isActive"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Ativar Regra
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    A regra ficará ativa imediatamente após a criação
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="isActive"
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Ativar Regra
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      A regra ficará ativa imediatamente após a criação
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="maintainQueryStrings"
-                    type="checkbox"
-                    checked={formData.maintainQueryStrings}
-                    onChange={(e) => setFormData({ ...formData, maintainQueryStrings: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Manter Query Strings
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Preservar parâmetros da URL (?param=value) no redirecionamento
-                    </p>
-                  </div>
-                </label>
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="maintainQueryStrings"
+                  checked={formData.maintainQueryStrings}
+                  onCheckedChange={(checked) => setFormData({ ...formData, maintainQueryStrings: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="maintainQueryStrings"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Manter Query Strings
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Preservar parâmetros da URL (?param=value) no redirecionamento
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Botões de Ação */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-border">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleBack}
-              className="btn-secondary"
             >
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={createProxyRuleMutation.isPending}
-              className="btn-primary"
             >
               {createProxyRuleMutation.isPending ? 'Criando...' : 'Criar Regra'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

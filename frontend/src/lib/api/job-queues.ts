@@ -5,24 +5,27 @@ export interface JobQueue {
   name: string
   description?: string
   scriptType: 'internal' | 'shell' | 'node' | 'python'
+  scriptPath?: string  // Comando ou caminho do script
   cronExpression?: string
   isActive: boolean
-  isLocked: boolean
-  priority: 'low' | 'normal' | 'high' | 'critical'
-  timeout: number
-  retryAttempts: number
-  environment: string
-  processor: string
-  queueName: string
+  isLocked?: boolean
+  priority: 'low' | 'normal' | 'high' | 'critical' | number
+  timeout?: number
+  timeoutSeconds?: number  // API retorna este campo
+  retryAttempts?: number
+  maxRetries?: number  // API retorna este campo
+  environment?: string
+  processor?: string
+  queueName?: string
   lastExecution?: Date
   nextExecution?: Date
-  status: 'running' | 'completed' | 'failed' | 'paused'
-  executionCount: number
-  successRate: number
-  avgExecutionTime: number
+  status?: 'running' | 'completed' | 'failed' | 'paused'
+  executionCount?: number
+  successRate?: number
+  avgExecutionTime?: number
   metadata?: Record<string, any>
-  createdAt: Date
-  updatedAt: Date
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export interface JobStatistics {
@@ -47,7 +50,18 @@ export interface JobExecution {
   executionTimeMs?: number
   outputLog?: string
   errorLog?: string
+  retryCount?: number
   metadata?: Record<string, any>
+  jobQueue?: {
+    id: string
+    name: string
+    scriptType: string
+  }
+  triggeredBy?: {
+    id: string
+    email: string
+  }
+  createdAt?: Date
 }
 
 export interface JobQueuesListResponse {
@@ -143,7 +157,7 @@ export const jobQueuesApi = {
 // Job Executions API
 export const jobExecutionsApi = {
   // List executions
-  async list(filters: { jobQueueId?: string; status?: string; page?: number; limit?: number } = {}): Promise<JobExecution[]> {
+  async list(filters: { jobQueueId?: string; status?: string; page?: number; limit?: number } = {}): Promise<{ data: JobExecution[]; total: number; page: number; limit: number }> {
     const params = new URLSearchParams()
 
     if (filters.jobQueueId) params.append('jobQueueId', filters.jobQueueId)
@@ -175,8 +189,11 @@ export const jobExecutionsApi = {
 
   // Get execution logs
   async getLogs(id: string): Promise<{ outputLog?: string; errorLog?: string }> {
-    const response = await api.get(`/job-executions/${id}/logs`)
-    return response.data
+    const execution = await this.get(id);
+    return {
+      outputLog: execution.outputLog,
+      errorLog: execution.errorLog
+    };
   }
 }
 

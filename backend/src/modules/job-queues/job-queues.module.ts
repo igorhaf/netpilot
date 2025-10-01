@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bull';
+import { HttpModule } from '@nestjs/axios';
 import { JobQueue } from '../../entities/job-queue.entity';
 import { JobExecution } from '../../entities/job-execution.entity';
 import { JobSchedule } from '../../entities/job-schedule.entity';
@@ -23,6 +24,7 @@ import {
     BullModule.registerQueue({
       name: 'job-processor',
     }),
+    HttpModule,
   ],
   controllers: [
     JobQueuesController,

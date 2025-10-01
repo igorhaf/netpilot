@@ -39,13 +39,31 @@ async def lifespan(app: FastAPI):
     try:
         from utils.system import SystemUtils
         from utils.security import SecurityValidator
+        from services.ssh_service import ssh_service
+        from services.docker_service import docker_service
+        from services.websocket_service import connection_manager
+        from services.monitoring_service import monitoring_service
+        from database.connection import init_db
+
+        # Inicializar banco de dados
+        init_db()
 
         # Verificar permissões e dependências
         system_utils = SystemUtils()
         security = SecurityValidator()
 
+        # Inicializar serviços
+        await ssh_service.start_service()
+        await docker_service.start_service()
+        await monitoring_service.start_service()
+
+        logger.info("✅ Banco de dados PostgreSQL conectado")
         logger.info("✅ Sistema de segurança inicializado")
         logger.info("✅ Utilitários de sistema carregados")
+        logger.info("✅ Serviço SSH inicializado")
+        logger.info("✅ Serviço Docker inicializado")
+        logger.info("✅ Serviço WebSocket inicializado")
+        logger.info("✅ Serviço de Monitoramento inicializado")
 
     except Exception as e:
         logger.error(f"❌ Erro na inicialização: {e}")
@@ -54,6 +72,19 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("🛑 NetPilot System Operations encerrando...")
+
+    # Finalizar serviços
+    try:
+        await ssh_service.stop_service()
+        await docker_service.stop_service()
+        await monitoring_service.stop_service()
+        await connection_manager.cleanup()
+        logger.info("✅ Serviço SSH finalizado")
+        logger.info("✅ Serviço Docker finalizado")
+        logger.info("✅ Serviço de Monitoramento finalizado")
+        logger.info("✅ Serviço WebSocket finalizado")
+    except Exception as e:
+        logger.error(f"❌ Erro ao finalizar serviços: {e}")
 
 # Configuração da aplicação FastAPI
 app = FastAPI(
@@ -80,12 +111,24 @@ from routes.ssl_routes import router as ssl_router
 from routes.user_routes import router as user_router
 from routes.traffic_routes import router as traffic_router
 from routes.system_routes import router as system_router
+from routes.jobs import router as jobs_router
+from routes.ssh import router as ssh_router
+from routes.docker_routes import router as docker_router
+from routes.websocket_routes import router as websocket_router
+from routes.monitoring_routes import router as monitoring_router
+from routes.config_routes import router as config_router
 
 app.include_router(nginx_router, prefix="/nginx", tags=["Nginx Operations"])
 app.include_router(ssl_router, prefix="/ssl", tags=["SSL Operations"])
 app.include_router(user_router, prefix="/users", tags=["User Management"])
 app.include_router(traffic_router, prefix="/traffic", tags=["Traffic Management"])
 app.include_router(system_router, prefix="/system", tags=["System Operations"])
+app.include_router(jobs_router, tags=["Job Execution"])
+app.include_router(ssh_router, tags=["SSH Operations"])
+app.include_router(docker_router, prefix="/docker", tags=["Docker Operations"])
+app.include_router(websocket_router, prefix="/ws", tags=["WebSocket Streaming"])
+app.include_router(monitoring_router, prefix="/monitoring", tags=["Advanced Monitoring"])
+app.include_router(config_router, tags=["Configuration Generation"])
 
 @app.get("/", response_model=dict)
 async def root():

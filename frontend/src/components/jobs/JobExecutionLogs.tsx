@@ -94,9 +94,9 @@ export function JobExecutionLogs({ executionId, jobQueueId, autoRefresh = false 
     URL.revokeObjectURL(url)
   }
 
-  const filteredExecutions = executions?.filter(execution =>
+  const filteredExecutions = (Array.isArray(executions) ? executions : []).filter(execution =>
     execution.id.toLowerCase().includes(filters.search.toLowerCase())
-  ) || []
+  )
 
   return (
     <div className="space-y-6">

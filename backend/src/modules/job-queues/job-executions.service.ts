@@ -53,19 +53,32 @@ export class JobExecutionsService {
 
     const savedExecution = await this.jobExecutionRepository.save(execution);
 
-    // Adicionar job à fila Redis
-    try {
-      await this.redisQueueService.addJob(jobQueue, savedExecution.id, {
-        delay: executeJobDto.delay || 0,
-        priority: executeJobDto.priority || 0,
-      });
-    } catch (error) {
-      // Se falhar ao adicionar no Redis, usar execução local como fallback
-      console.warn('Fallback para execução local devido a erro no Redis:', error.message);
+    // Verificar se deve usar execução local para scripts shell que são comandos diretos
+    const shouldUseLocalExecution = jobQueue.scriptType === ScriptType.SHELL &&
+                                   !fs.existsSync(jobQueue.scriptPath);
+
+    if (shouldUseLocalExecution) {
+      // Usar execução local para comandos shell diretos
+      console.log('Usando execução local para comando shell direto:', jobQueue.scriptPath);
       this.performExecution(savedExecution, jobQueue, executeJobDto.environmentVars)
         .catch(error => {
           console.error('Erro na execução local do job:', error);
         });
+    } else {
+      // Adicionar job à fila Redis para scripts de arquivo
+      try {
+        await this.redisQueueService.addJob(jobQueue, savedExecution.id, {
+          delay: executeJobDto.delay || 0,
+          priority: executeJobDto.priority || 0,
+        });
+      } catch (error) {
+        // Se falhar ao adicionar no Redis, usar execução local como fallback
+        console.warn('Fallback para execução local devido a erro no Redis:', error.message);
+        this.performExecution(savedExecution, jobQueue, executeJobDto.environmentVars)
+          .catch(error => {
+            console.error('Erro na execução local do job:', error);
+          });
+      }
     }
 
     return savedExecution;
@@ -184,18 +197,33 @@ export class JobExecutionsService {
       // Determinar comando baseado no tipo de script
       switch (jobQueue.scriptType) {
         case ScriptType.SHELL:
-          command = 'bash';
-          args = [jobQueue.scriptPath];
+          // Se o scriptPath não é um arquivo existente, trata como comando direto
+          if (fs.existsSync(jobQueue.scriptPath)) {
+            command = '/bin/sh';
+            args = [jobQueue.scriptPath];
+          } else {
+            // Executar comando direto via sh -c
+            command = '/bin/sh';
+            args = ['-c', jobQueue.scriptPath];
+          }
           break;
 
         case ScriptType.NODE:
           command = 'node';
           args = [jobQueue.scriptPath];
+          // Verificar se arquivo existe para Node
+          if (!fs.existsSync(jobQueue.scriptPath)) {
+            return reject(new Error(`Script não encontrado: ${jobQueue.scriptPath}`));
+          }
           break;
 
         case ScriptType.PYTHON:
           command = 'python3';
           args = [jobQueue.scriptPath];
+          // Verificar se arquivo existe para Python
+          if (!fs.existsSync(jobQueue.scriptPath)) {
+            return reject(new Error(`Script não encontrado: ${jobQueue.scriptPath}`));
+          }
           break;
 
         case ScriptType.INTERNAL:
@@ -208,11 +236,6 @@ export class JobExecutionsService {
           return reject(new Error(`Tipo de script não suportado: ${jobQueue.scriptType}`));
       }
 
-      // Verificar se arquivo existe
-      if (!fs.existsSync(jobQueue.scriptPath)) {
-        return reject(new Error(`Script não encontrado: ${jobQueue.scriptPath}`));
-      }
-
       const startTime = Date.now();
 
       // Executar processo
@@ -222,8 +245,12 @@ export class JobExecutionsService {
           ...environmentVars,
           JOB_ID: execution.id,
           JOB_NAME: jobQueue.name,
+          PATH: process.env.PATH || '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
         },
-        cwd: path.dirname(jobQueue.scriptPath),
+        cwd: jobQueue.scriptType === ScriptType.SHELL && !fs.existsSync(jobQueue.scriptPath)
+          ? process.cwd()
+          : (fs.existsSync(path.dirname(jobQueue.scriptPath)) ? path.dirname(jobQueue.scriptPath) : process.cwd()),
+        shell: false,
       });
 
       // Armazenar processo para possível cancelamento

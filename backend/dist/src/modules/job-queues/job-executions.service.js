@@ -49,18 +49,29 @@ let JobExecutionsService = class JobExecutionsService {
             metadata: executeJobDto.metadata,
         });
         const savedExecution = await this.jobExecutionRepository.save(execution);
-        try {
-            await this.redisQueueService.addJob(jobQueue, savedExecution.id, {
-                delay: executeJobDto.delay || 0,
-                priority: executeJobDto.priority || 0,
-            });
-        }
-        catch (error) {
-            console.warn('Fallback para execução local devido a erro no Redis:', error.message);
+        const shouldUseLocalExecution = jobQueue.scriptType === job_queue_entity_1.ScriptType.SHELL &&
+            !fs.existsSync(jobQueue.scriptPath);
+        if (shouldUseLocalExecution) {
+            console.log('Usando execução local para comando shell direto:', jobQueue.scriptPath);
             this.performExecution(savedExecution, jobQueue, executeJobDto.environmentVars)
                 .catch(error => {
                 console.error('Erro na execução local do job:', error);
             });
+        }
+        else {
+            try {
+                await this.redisQueueService.addJob(jobQueue, savedExecution.id, {
+                    delay: executeJobDto.delay || 0,
+                    priority: executeJobDto.priority || 0,
+                });
+            }
+            catch (error) {
+                console.warn('Fallback para execução local devido a erro no Redis:', error.message);
+                this.performExecution(savedExecution, jobQueue, executeJobDto.environmentVars)
+                    .catch(error => {
+                    console.error('Erro na execução local do job:', error);
+                });
+            }
         }
         return savedExecution;
     }
@@ -149,16 +160,28 @@ let JobExecutionsService = class JobExecutionsService {
             let error = '';
             switch (jobQueue.scriptType) {
                 case job_queue_entity_1.ScriptType.SHELL:
-                    command = 'bash';
-                    args = [jobQueue.scriptPath];
+                    if (fs.existsSync(jobQueue.scriptPath)) {
+                        command = '/bin/sh';
+                        args = [jobQueue.scriptPath];
+                    }
+                    else {
+                        command = '/bin/sh';
+                        args = ['-c', jobQueue.scriptPath];
+                    }
                     break;
                 case job_queue_entity_1.ScriptType.NODE:
                     command = 'node';
                     args = [jobQueue.scriptPath];
+                    if (!fs.existsSync(jobQueue.scriptPath)) {
+                        return reject(new Error(`Script não encontrado: ${jobQueue.scriptPath}`));
+                    }
                     break;
                 case job_queue_entity_1.ScriptType.PYTHON:
                     command = 'python3';
                     args = [jobQueue.scriptPath];
+                    if (!fs.existsSync(jobQueue.scriptPath)) {
+                        return reject(new Error(`Script não encontrado: ${jobQueue.scriptPath}`));
+                    }
                     break;
                 case job_queue_entity_1.ScriptType.INTERNAL:
                     return this.executeInternalScript(context)
@@ -167,9 +190,6 @@ let JobExecutionsService = class JobExecutionsService {
                 default:
                     return reject(new Error(`Tipo de script não suportado: ${jobQueue.scriptType}`));
             }
-            if (!fs.existsSync(jobQueue.scriptPath)) {
-                return reject(new Error(`Script não encontrado: ${jobQueue.scriptPath}`));
-            }
             const startTime = Date.now();
             const childProcess = (0, child_process_1.spawn)(command, args, {
                 env: {
@@ -177,8 +197,12 @@ let JobExecutionsService = class JobExecutionsService {
                     ...environmentVars,
                     JOB_ID: execution.id,
                     JOB_NAME: jobQueue.name,
+                    PATH: process.env.PATH || '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
                 },
-                cwd: path.dirname(jobQueue.scriptPath),
+                cwd: jobQueue.scriptType === job_queue_entity_1.ScriptType.SHELL && !fs.existsSync(jobQueue.scriptPath)
+                    ? process.cwd()
+                    : (fs.existsSync(path.dirname(jobQueue.scriptPath)) ? path.dirname(jobQueue.scriptPath) : process.cwd()),
+                shell: false,
             });
             this.runningProcesses.set(execution.id, childProcess);
             const timeoutId = setTimeout(() => {

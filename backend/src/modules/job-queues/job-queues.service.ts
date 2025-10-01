@@ -160,16 +160,16 @@ export class JobQueuesService {
       activeJobs,
       completedExecutions,
       failedExecutions,
-      averageResult
+      avgExecutionTime
     ] = await Promise.all([
       this.jobQueueRepository.count(),
       this.jobQueueRepository.count({ where: { isActive: true } }),
       this.jobExecutionRepository.count({ where: { status: ExecutionStatus.COMPLETED } }),
       this.jobExecutionRepository.count({ where: { status: ExecutionStatus.FAILED } }),
       this.jobExecutionRepository
-        .createQueryBuilder()
-        .select('AVG(executionTimeMs)', 'avg')
-        .where('status = :status', { status: ExecutionStatus.COMPLETED })
+        .createQueryBuilder('execution')
+        .select('AVG(execution."executionTimeMs")', 'avg')
+        .where('execution.status = :status', { status: ExecutionStatus.COMPLETED })
         .getRawOne()
     ]);
 
@@ -178,7 +178,7 @@ export class JobQueuesService {
       activeJobs,
       completedExecutions,
       failedExecutions,
-      averageExecutionTime: Math.round(averageResult?.avg || 0),
+      averageExecutionTime: Math.round(Number(avgExecutionTime?.avg) || 0),
       upcomingExecutions: 0, // TODO: Calcular execuções agendadas
     };
   }

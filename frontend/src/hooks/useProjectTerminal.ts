@@ -45,7 +45,7 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
 
   // Conectar ao WebSocket
   useEffect(() => {
-    const newSocket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:3001', {
+    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'https://netpilot.meadadigital.com', {
       path: '/socket.io',
       transports: ['websocket'],
       query: {

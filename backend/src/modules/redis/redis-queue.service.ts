@@ -6,9 +6,9 @@ import { JobExecution, ExecutionStatus } from '../../entities/job-execution.enti
 import { JobQueuesGateway } from '../job-queues/job-queues.gateway';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { spawn } from 'child_process';
-import * as path from 'path';
-import * as fs from 'fs';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 
 export interface JobData {
   jobQueueId: string;
@@ -32,6 +32,7 @@ export interface JobResult {
 @Processor('job-processor')
 export class RedisQueueService implements OnModuleInit {
   private readonly logger = new Logger(RedisQueueService.name);
+  private readonly systemOpsUrl: string;
 
   constructor(
     @InjectQueue('job-processor') private jobQueue: Queue,
@@ -40,52 +41,43 @@ export class RedisQueueService implements OnModuleInit {
     @InjectRepository(JobQueue)
     private jobQueueRepository: Repository<JobQueue>,
     private jobQueuesGateway: JobQueuesGateway,
-  ) {}
+    private httpService: HttpService,
+    private configService: ConfigService,
+  ) {
+    // URL do microserviço Python
+    this.systemOpsUrl = this.configService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
+  }
 
   async onModuleInit() {
     // Configurar listeners para eventos da fila
     this.setupQueueListeners();
-    this.logger.log('Redis Queue Service initialized');
+    this.logger.log('Redis Queue Service initialized with System Ops integration');
   }
 
   private setupQueueListeners() {
-    // Job adicionado à fila
-    this.jobQueue.on('waiting', (jobId: string) => {
-      this.logger.log(`Job ${jobId} adicionado à fila`);
+    this.jobQueue.on('waiting', (jobId) => {
+      this.logger.log(`Job ${jobId} está aguardando processamento`);
     });
 
-    // Job iniciado
-    this.jobQueue.on('active', (job: Job) => {
-      this.logger.log(`Job ${job.id} iniciado`);
+    this.jobQueue.on('active', (job) => {
+      this.logger.log(`Job ${job.id} iniciou processamento`);
     });
 
-    // Job concluído
-    this.jobQueue.on('completed', (job: Job, result: JobResult) => {
-      this.logger.log(`Job ${job.id} concluído com sucesso`);
+    this.jobQueue.on('completed', (job, result) => {
+      this.logger.log(`Job ${job.id} completado com sucesso`);
     });
 
-    // Job falhou
-    this.jobQueue.on('failed', (job: Job, err: Error) => {
-      this.logger.error(`Job ${job.id} falhou:`, err.message);
-    });
-
-    // Job travado
-    this.jobQueue.on('stalled', (job: Job) => {
-      this.logger.warn(`Job ${job.id} travado, será reprocessado`);
-    });
-
-    // Progresso do job
-    this.jobQueue.on('progress', (job: Job, progress: number) => {
-      this.logger.debug(`Job ${job.id} progresso: ${progress}%`);
+    this.jobQueue.on('failed', (job, err) => {
+      this.logger.error(`Job ${job.id} falhou: ${err.message}`);
     });
   }
 
-  // Adicionar job à fila
   async addJob(
     jobQueue: JobQueue,
     executionId: string,
-    options: Partial<JobOptions> = {}
-  ): Promise<Job<JobData>> {
+    metadata?: Record<string, any>,
+    options?: JobOptions
+  ): Promise<Job> {
     const jobData: JobData = {
       jobQueueId: jobQueue.id,
       executionId,
@@ -93,32 +85,26 @@ export class RedisQueueService implements OnModuleInit {
       scriptType: jobQueue.scriptType,
       environmentVars: jobQueue.environmentVars || {},
       timeoutSeconds: jobQueue.timeoutSeconds || 300,
-      metadata: {}
+      metadata
     };
 
     const jobOptions: JobOptions = {
-      attempts: jobQueue.maxRetries || 3,
-      backoff: {
-        type: 'exponential',
-        delay: 2000,
-      },
-      delay: options.delay || 0,
-      priority: options.priority || 0,
-      removeOnComplete: 50,
-      removeOnFail: 100,
+      delay: options?.delay || 0,
+      attempts: options?.attempts || 3,
+      backoff: options?.backoff || { type: 'exponential', delay: 2000 },
+      removeOnComplete: 10,
+      removeOnFail: 5,
       ...options
     };
 
     const job = await this.jobQueue.add('execute-script', jobData, jobOptions);
 
     this.logger.log(`Job ${job.id} adicionado à fila para execução: ${jobQueue.name}`);
-
     return job;
   }
 
-  // Processar job
   @Process('execute-script')
-  async handleExecuteScript(job: Job<JobData>): Promise<JobResult> {
+  async processJob(job: Job<JobData>): Promise<JobResult> {
     const { jobQueueId, executionId, scriptPath, scriptType, environmentVars, timeoutSeconds } = job.data;
     const startTime = Date.now();
 
@@ -133,16 +119,16 @@ export class RedisQueueService implements OnModuleInit {
         throw new Error(`Execução ${executionId} não encontrada`);
       }
 
-      // Atualizar status para running
+      // Marcar como executando
       execution.status = ExecutionStatus.RUNNING;
       execution.startedAt = new Date();
       await this.jobExecutionRepository.save(execution);
 
-      // Notificar início
+      // Notificar início via WebSocket
       this.jobQueuesGateway.notifyJobStarted(execution, execution.jobQueue);
 
-      // Executar script
-      const result = await this.executeScript(job.data, job);
+      // NOVA IMPLEMENTAÇÃO: Chamar Python ao invés de executar diretamente
+      const result = await this.executeScriptViaPython(job.data, job);
 
       // Atualizar execução com sucesso
       execution.status = ExecutionStatus.COMPLETED;
@@ -152,7 +138,7 @@ export class RedisQueueService implements OnModuleInit {
       execution.errorLog = result.error || '';
       await this.jobExecutionRepository.save(execution);
 
-      // Notificar conclusão
+      // Notificar conclusão via WebSocket
       this.jobQueuesGateway.notifyJobCompleted(execution, execution.jobQueue);
 
       return result;
@@ -173,7 +159,7 @@ export class RedisQueueService implements OnModuleInit {
         execution.errorLog = error.message;
         await this.jobExecutionRepository.save(execution);
 
-        // Notificar falha
+        // Notificar falha via WebSocket
         this.jobQueuesGateway.notifyJobFailed(execution, execution.jobQueue, error.message);
       }
 
@@ -181,168 +167,152 @@ export class RedisQueueService implements OnModuleInit {
     }
   }
 
-  private async executeScript(jobData: JobData, job: Job): Promise<JobResult> {
-    const { scriptPath, scriptType, environmentVars, timeoutSeconds } = jobData;
-    const startTime = Date.now();
+  /**
+   * NOVA IMPLEMENTAÇÃO: Executa script via microserviço Python
+   * Substitui a execução direta via spawn()
+   */
+  private async executeScriptViaPython(jobData: JobData, job: Job): Promise<JobResult> {
+    const { scriptPath, scriptType, environmentVars, timeoutSeconds, executionId } = jobData;
 
-    return new Promise((resolve, reject) => {
-      let command: string;
-      let args: string[] = [];
-      let output = '';
-      let error = '';
+    try {
+      this.logger.log(`🐍 Delegando execução para Python: ${scriptPath}`);
 
-      // Determinar comando baseado no tipo
-      switch (scriptType) {
-        case 'shell':
-          command = 'bash';
-          args = [scriptPath];
-          break;
-        case 'node':
-          command = 'node';
-          args = [scriptPath];
-          break;
-        case 'python':
-          command = 'python3';
-          args = [scriptPath];
-          break;
-        default:
-          return reject(new Error(`Tipo de script não suportado: ${scriptType}`));
-      }
-
-      // Verificar se arquivo existe
-      if (!fs.existsSync(scriptPath)) {
-        return reject(new Error(`Script não encontrado: ${scriptPath}`));
-      }
-
-      // Executar processo
-      const childProcess = spawn(command, args, {
-        env: {
-          ...process.env,
+      // Preparar dados para o microserviço Python
+      const requestData = {
+        scriptPath,
+        scriptType,
+        environmentVars: {
           ...environmentVars,
           JOB_ID: job.id.toString(),
-          EXECUTION_ID: jobData.executionId,
+          EXECUTION_ID: executionId,
           JOB_QUEUE_ID: jobData.jobQueueId,
         },
-        cwd: path.dirname(scriptPath),
-      });
+        timeoutSeconds,
+        jobId: job.id.toString(),
+        executionId
+      };
 
-      // Configurar timeout
-      const timeoutId = setTimeout(() => {
-        childProcess.kill('SIGTERM');
-        reject(new Error('Execução excedeu o tempo limite'));
-      }, timeoutSeconds * 1000);
+      // Fazer requisição para o microserviço Python
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.systemOpsUrl}/jobs/execute`, requestData, {
+          timeout: (timeoutSeconds + 10) * 1000, // Timeout da requisição HTTP
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.getSystemOpsToken()}`
+          }
+        })
+      );
 
-      // Capturar output
-      childProcess.stdout.on('data', (data) => {
-        output += data.toString();
-        // Reportar progresso baseado na saída (simples)
-        const lines = output.split('\n').length;
-        job.progress(Math.min(lines * 2, 90)); // Progresso estimado
-      });
+      const result = response.data as any;
 
-      childProcess.stderr.on('data', (data) => {
-        error += data.toString();
-      });
+      // Atualizar progresso do job baseado na resposta
+      job.progress(100);
 
-      // Finalização
-      childProcess.on('close', (code) => {
-        clearTimeout(timeoutId);
-        const executionTime = Date.now() - startTime;
+      this.logger.log(`✅ Script executado via Python com sucesso: ${scriptPath}`);
 
-        job.progress(100); // 100% concluído
+      return {
+        success: result.success || false,
+        output: result.output || '',
+        error: result.error || undefined,
+        executionTimeMs: result.executionTimeMs || 0,
+        exitCode: result.exitCode || 0,
+      };
 
-        if (code === 0) {
-          resolve({
-            success: true,
-            output,
-            error: error || undefined,
-            executionTimeMs: executionTime,
-            exitCode: code,
-          });
-        } else {
-          reject(new Error(`Script falhou com código ${code}: ${error}`));
-        }
-      });
+    } catch (error) {
+      this.logger.error(`❌ Erro ao executar script via Python: ${error.message}`);
 
-      childProcess.on('error', (err) => {
-        clearTimeout(timeoutId);
-        reject(err);
-      });
-    });
+      // Se for erro de HTTP, extrair detalhes
+      if (error.response) {
+        const httpError = error.response.data;
+        throw new Error(`Sistema Python falhou: ${httpError.detail || httpError.message || error.message}`);
+      }
+
+      // Se for erro de timeout ou conexão
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error('Microserviço Python não está disponível. Verifique se está executando na porta 3001.');
+      }
+
+      if (error.code === 'ETIMEDOUT') {
+        throw new Error(`Execução excedeu o tempo limite de ${timeoutSeconds} segundos`);
+      }
+
+      throw new Error(`Falha na comunicação com sistema Python: ${error.message}`);
+    }
   }
 
-  // Métodos utilitários para monitoramento
+  /**
+   * Gera token para autenticação com o microserviço Python
+   */
+  private getSystemOpsToken(): string {
+    // Em produção, usar JWT ou outro método seguro
+    return this.configService.get('SYSTEM_OPS_TOKEN', 'netpilot-internal-token');
+  }
+
+  /**
+   * Método de fallback: execução direta (DEPRECATED)
+   * Manter apenas para emergências ou desenvolvimento
+   */
+  private async executeScriptDirectly(jobData: JobData, job: Job): Promise<JobResult> {
+    this.logger.warn('⚠️ EXECUTANDO SCRIPT DIRETAMENTE - MODO DEPRECATED');
+
+    // TODO: Implementação original aqui como fallback
+    // Por enquanto, lançar erro para forçar uso do Python
+    throw new Error('Execução direta desabilitada. Use o microserviço Python.');
+  }
+
+  /**
+   * Verificar saúde do microserviço Python
+   */
+  async checkSystemOpsHealth(): Promise<boolean> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.systemOpsUrl}/health`, { timeout: 5000 })
+      );
+      return (response.data as any).status === 'healthy';
+    } catch (error) {
+      this.logger.error(`Sistema Python não está saudável: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Obter estatísticas do sistema Python
+   */
+  async getSystemOpsStats() {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`${this.systemOpsUrl}/system/info`, {
+          timeout: 5000,
+          headers: { 'Authorization': `Bearer ${this.getSystemOpsToken()}` }
+        })
+      );
+      return response.data as any;
+    } catch (error) {
+      this.logger.error(`Erro ao obter estatísticas do sistema Python: ${error.message}`);
+      return null;
+    }
+  }
+
+  // ========================
+  // MÉTODOS DE COMPATIBILIDADE
+  // ========================
+
   async getQueueStats() {
-    const waiting = await this.jobQueue.getWaiting();
-    const active = await this.jobQueue.getActive();
-    const completed = await this.jobQueue.getCompleted();
-    const failed = await this.jobQueue.getFailed();
-    const delayed = await this.jobQueue.getDelayed();
-    const paused = await this.jobQueue.isPaused();
+    // Para compatibilidade - delegar para Python ou retornar stats básicos
+    const health = await this.checkSystemOpsHealth();
+    const stats = await this.getSystemOpsStats();
 
     return {
-      waiting: waiting.length,
-      active: active.length,
-      completed: completed.length,
-      failed: failed.length,
-      delayed: delayed.length,
-      paused,
-      total: waiting.length + active.length + completed.length + failed.length + delayed.length,
+      healthy: health,
+      stats: stats,
+      python_integration: true
     };
   }
 
-  async getJob(jobId: string): Promise<Job | null> {
-    return this.jobQueue.getJob(jobId);
-  }
-
-  async removeJob(jobId: string): Promise<void> {
-    const job = await this.getJob(jobId);
-    if (job) {
-      await job.remove();
-    }
-  }
-
-  async retryJob(jobId: string): Promise<void> {
-    const job = await this.getJob(jobId);
-    if (!job) {
-      throw new Error(`Job ${jobId} não encontrado`);
-    }
-    await job.retry();
-  }
-
-  async pauseQueue(): Promise<void> {
-    await this.jobQueue.pause();
-    this.logger.log('Fila pausada');
-  }
-
-  async resumeQueue(): Promise<void> {
-    await this.jobQueue.resume();
-    this.logger.log('Fila resumida');
-  }
-
-  async cleanQueue(grace: number = 5000): Promise<void> {
-    await this.jobQueue.clean(grace, 'completed');
-    await this.jobQueue.clean(grace, 'failed');
-    this.logger.log('Fila limpa');
-  }
-
   async getQueueHealth() {
-    try {
-      const stats = await this.getQueueStats();
-      const isPaused = await this.jobQueue.isPaused();
-
-      return {
-        healthy: true,
-        paused: isPaused,
-        stats,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      return {
-        healthy: false,
-        error: error.message,
-        timestamp: new Date(),
-      };
-    }
+    return {
+      healthy: await this.checkSystemOpsHealth(),
+      python_service: true
+    };
   }
 }

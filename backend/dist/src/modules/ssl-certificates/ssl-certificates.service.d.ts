@@ -1,9 +1,15 @@
 import { Repository } from 'typeorm';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { SslCertificate } from '../../entities/ssl-certificate.entity';
 import { CreateSslCertificateDto, UpdateSslCertificateDto } from '../../dtos/ssl-certificate.dto';
 export declare class SslCertificatesService {
     private sslCertificateRepository;
-    constructor(sslCertificateRepository: Repository<SslCertificate>);
+    private readonly httpService;
+    private readonly configService;
+    private readonly logger;
+    private readonly systemOpsUrl;
+    constructor(sslCertificateRepository: Repository<SslCertificate>, httpService: HttpService, configService: ConfigService);
     create(createSslCertificateDto: CreateSslCertificateDto): Promise<SslCertificate>;
     private findDomainById;
     private validateDomainName;
@@ -21,8 +27,6 @@ export declare class SslCertificatesService {
         success: boolean;
         message: string;
     }>;
-    private renewCertificateWithAcme;
-    private issueNewCertificate;
     private deleteCertificateFiles;
     renewExpiredCertificates(): Promise<{
         success: boolean;

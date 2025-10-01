@@ -38,13 +38,9 @@ export declare class JobExecutionsController {
         errorLog: string;
     }>;
     getRedisStats(): Promise<{
-        waiting: number;
-        active: number;
-        completed: number;
-        failed: number;
-        delayed: number;
-        paused: boolean;
-        total: number;
+        healthy: boolean;
+        stats: any;
+        python_integration: boolean;
     } | {
         waiting: number;
         active: number;
@@ -57,24 +53,11 @@ export declare class JobExecutionsController {
     }>;
     getRedisHealth(): Promise<{
         healthy: boolean;
-        paused: boolean;
-        stats: {
-            waiting: number;
-            active: number;
-            completed: number;
-            failed: number;
-            delayed: number;
-            paused: boolean;
-            total: number;
-        };
-        timestamp: Date;
-        error?: undefined;
+        python_service: boolean;
     } | {
         healthy: boolean;
         error: any;
         timestamp: Date;
-        paused?: undefined;
-        stats?: undefined;
     }>;
 }
 export declare class JobSchedulesController {

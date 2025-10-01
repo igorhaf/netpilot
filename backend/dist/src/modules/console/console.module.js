@@ -10,6 +10,7 @@ exports.ConsoleModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const jwt_1 = require("@nestjs/jwt");
+const axios_1 = require("@nestjs/axios");
 const config_1 = require("@nestjs/config");
 const console_service_1 = require("./console.service");
 const console_controller_1 = require("./console.controller");
@@ -23,6 +24,7 @@ exports.ConsoleModule = ConsoleModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog]),
+            axios_1.HttpModule,
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: (configService) => ({

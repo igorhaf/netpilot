@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -98,15 +98,61 @@ export function JobNotifications() {
   // Sons de notificação
   useEffect(() => {
     if (typeof window !== 'undefined' && !audio) {
-      setAudio(new Audio('/sounds/notification.mp3'))
+      try {
+        const newAudio = new Audio('/sounds/notification.mp3')
+        // Test if audio can be loaded
+        newAudio.addEventListener('error', () => {
+          console.log('Notification sound not available')
+        }, { once: true })
+        setAudio(newAudio)
+      } catch (e) {
+        console.log('Audio not supported')
+      }
     }
-  }, [])
+  }, [audio])
+
+  const shouldShowNotification = useCallback((type: string): boolean => {
+    switch (type) {
+      case 'job:started': return settings.jobStarted
+      case 'job:completed': return settings.jobCompleted
+      case 'job:failed': return settings.jobFailed
+      case 'job:retry': return settings.jobRetry
+      case 'job:cancelled': return settings.jobCancelled
+      default: return true
+    }
+  }, [settings])
+
+  const addNotification = (notification: Notification) => {
+    setNotifications(prev => [notification, ...prev.slice(0, 99)]) // Manter apenas 100 notificações
+  }
+
+  const playNotificationSound = useCallback(() => {
+    if (settings.soundEnabled && audio) {
+      audio.play().catch(() => {
+        // Ignora erro se não conseguir tocar o som
+      })
+    }
+  }, [settings.soundEnabled, audio])
+
+  const showDesktopNotification = useCallback((data: any) => {
+    if (!settings.desktopNotifications || !('Notification' in window)) return
+
+    if (Notification.permission === 'granted') {
+      new Notification(`NetPilot - ${getNotificationTitle(data.type)}`, {
+        body: `${data.jobName || data.queueName || data.message}`,
+        icon: '/favicon.ico',
+        tag: data.executionId || data.queueId
+      })
+    } else if (Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [settings.desktopNotifications])
 
   // Conexão WebSocket
   useEffect(() => {
     if (!settings.enabled) return
 
-    const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:3001'
+    const wsUrl = process.env.NEXT_PUBLIC_API_URL || 'https://netpilot.meadadigital.com'
     const newSocket = io(`${wsUrl}/jobs`, {
       transports: ['websocket'],
       reconnection: true,
@@ -179,44 +225,7 @@ export function JobNotifications() {
     return () => {
       newSocket.disconnect()
     }
-  }, [settings])
-
-  const shouldShowNotification = (type: string): boolean => {
-    switch (type) {
-      case 'job:started': return settings.jobStarted
-      case 'job:completed': return settings.jobCompleted
-      case 'job:failed': return settings.jobFailed
-      case 'job:retry': return settings.jobRetry
-      case 'job:cancelled': return settings.jobCancelled
-      default: return true
-    }
-  }
-
-  const addNotification = (notification: Notification) => {
-    setNotifications(prev => [notification, ...prev.slice(0, 99)]) // Manter apenas 100 notificações
-  }
-
-  const playNotificationSound = () => {
-    if (settings.soundEnabled && audio) {
-      audio.play().catch(() => {
-        // Ignora erro se não conseguir tocar o som
-      })
-    }
-  }
-
-  const showDesktopNotification = (data: any) => {
-    if (!settings.desktopNotifications || !('Notification' in window)) return
-
-    if (Notification.permission === 'granted') {
-      new Notification(`NetPilot - ${getNotificationTitle(data.type)}`, {
-        body: `${data.jobName || data.queueName || data.message}`,
-        icon: '/favicon.ico',
-        tag: data.executionId || data.queueId
-      })
-    } else if (Notification.permission === 'default') {
-      Notification.requestPermission()
-    }
-  }
+  }, [settings, playNotificationSound, shouldShowNotification, showDesktopNotification])
 
   const getNotificationTitle = (type: string): string => {
     const titles: Record<string, string> = {

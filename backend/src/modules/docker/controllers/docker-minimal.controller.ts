@@ -309,12 +309,19 @@ export class DockerMinimalController {
       const logs = await container.logs({
         stdout: true,
         stderr: true,
-        tail: 100,
+        tail: 500,
         timestamps: true
       });
 
+      // Convert buffer to string and remove Docker stream control characters
+      let logsString = logs.toString('utf-8');
+
+      // Remove Docker multiplexing headers (first 8 bytes of each message)
+      // Pattern: [stream_type (1 byte)][padding (3 bytes)][size (4 bytes)]
+      logsString = logsString.replace(/[\x00-\x02][\x00]{3}[\x00-\xFF]{4}/g, '');
+
       return {
-        logs: logs.toString(),
+        logs: logsString,
         success: true
       };
     } catch (error) {

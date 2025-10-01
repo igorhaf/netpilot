@@ -43,19 +43,19 @@
   }
 
   .btn-primary {
-    @apply btn bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2;
+    @apply btn bg-primary text-primary-foreground hover:bg-primary/90 hover:border hover:border-border h-10 px-4 py-2;
   }
 
   .btn-secondary {
-    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2;
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:border hover:border-border h-10 px-4 py-2;
   }
 
   .btn-destructive {
-    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2;
+    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:border hover:border-border h-10 px-4 py-2;
   }
 
   .btn-ghost {
-    @apply btn hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
+    @apply btn hover:bg-accent hover:text-accent-foreground hover:border hover:border-border h-10 px-4 py-2;
   }
 
   .btn-sm {

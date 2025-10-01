@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MainLayout } from '@/components/layout/main-layout';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   HardDrive,
   Plus,
@@ -194,7 +195,7 @@ export default function VolumesPage() {
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
-          ) : (
+          ) : volumes && volumes.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -268,6 +269,16 @@ export default function VolumesPage() {
                 ))}
               </TableBody>
             </Table>
+          ) : (
+            <div className="p-6">
+              <EmptyState
+                icon={HardDrive}
+                title="Nenhum volume encontrado"
+                description="Crie volumes Docker para persistir dados dos seus containers e aplicações."
+                actionLabel="Criar Volume"
+                onAction={() => window.location.href = '/docker/volumes/create'}
+              />
+            </div>
           )}
         </CardContent>
       </Card>

@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -46,6 +47,7 @@ export default function ProxyRulesPage() {
         targetUrl: rule.targetUrl,
         priority: rule.priority,
         isActive,
+        isLocked: rule.isLocked,
         maintainQueryStrings: rule.maintainQueryStrings,
         description: rule.description,
         domainId: rule.domainId,
@@ -84,8 +86,20 @@ export default function ProxyRulesPage() {
 
   // Mutation para travar/destravar regra
   const toggleLockMutation = useMutation({
-    mutationFn: (id: string) => api.patch(`/proxy-rules/${id}/toggle-lock`),
-    onSuccess: (_, id) => {
+    mutationFn: async (rule: ProxyRule) => {
+      const response = await api.patch(`/proxy-rules/${rule.id}`, {
+        sourcePath: rule.sourcePath,
+        targetUrl: rule.targetUrl,
+        priority: rule.priority,
+        isActive: rule.isActive,
+        isLocked: !rule.isLocked,
+        maintainQueryStrings: rule.maintainQueryStrings,
+        description: rule.description,
+        domainId: rule.domainId,
+      })
+      return response.data
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proxy-rules'] })
       toast.success('Status do travamento atualizado!')
     },
@@ -123,7 +137,7 @@ export default function ProxyRulesPage() {
   }
 
   const handleToggleLock = (rule: ProxyRule) => {
-    toggleLockMutation.mutate(rule.id)
+    toggleLockMutation.mutate(rule)
   }
 
   const handleEditRule = (rule: ProxyRule) => {
@@ -213,24 +227,25 @@ export default function ProxyRulesPage() {
           />
         </div>
 
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Origem</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Destino</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Prioridade</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {proxyRules && proxyRules.length > 0 ? (
-                    proxyRules.map((rule) => (
+        {/* Proxy Rules Table or Empty State */}
+        {proxyRules && proxyRules.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Origem</th>
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Destino</th>
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio</th>
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Prioridade</th>
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {proxyRules.map((rule) => (
                       <tr key={rule.id} className={`border-b border-border hover:bg-muted/50 ${
-                        rule.isLocked ? 'bg-gray-50 opacity-60' : ''
+                        rule.isLocked ? 'bg-muted/30 opacity-70' : ''
                       }`}>
                         <td className="py-3 px-6">
                           <div className="flex items-center gap-2">
@@ -251,20 +266,6 @@ export default function ProxyRulesPage() {
                         </td>
                         <td className="py-3 px-6">
                           <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleToggleLock(rule)}
-                              disabled={toggleLockMutation.isPending}
-                              title={rule.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
-                            >
-                              {rule.isLocked ? (
-                                <Lock className="h-4 w-4" />
-                              ) : (
-                                <Unlock className="h-4 w-4" />
-                              )}
-                            </Button>
-
                             {!rule.isLocked && (
                               <>
                                 {rule.isActive ? (
@@ -310,22 +311,38 @@ export default function ProxyRulesPage() {
                                 </Button>
                               </>
                             )}
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleToggleLock(rule)}
+                              disabled={toggleLockMutation.isPending}
+                              title={rule.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
+                            >
+                              {rule.isLocked ? (
+                                <Lock className="h-4 w-4" />
+                              ) : (
+                                <Unlock className="h-4 w-4" />
+                              )}
+                            </Button>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="py-12 text-center text-muted-foreground">
-                        Nenhuma regra de proxy encontrada
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <EmptyState
+            icon={ArrowRight}
+            title="Nenhuma regra de proxy encontrada"
+            description="Configure regras de proxy reverso para direcionar o tráfego de seus domínios."
+            actionLabel="Nova Regra"
+            onAction={handleCreateProxyRule}
+          />
+        )}
 
         {/* Confirmation Modal */}
         <ConfirmationModal

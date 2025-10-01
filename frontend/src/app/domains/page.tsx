@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -54,11 +55,13 @@ export default function DomainsPage() {
         name: domain.name,
         description: domain.description,
         isActive,
+        isLocked: domain.isLocked,
         autoTls: domain.autoTls,
         forceHttps: domain.forceHttps,
         blockExternalAccess: domain.blockExternalAccess,
         enableWwwRedirect: domain.enableWwwRedirect,
         bindIp: domain.bindIp,
+        projectId: domain.projectId,
       }),
     onSuccess: (_, { isActive }) => {
       queryClient.invalidateQueries({ queryKey: ['domains'] })
@@ -78,17 +81,7 @@ export default function DomainsPage() {
 
   const toggleLockMutation = useMutation({
     mutationFn: async (domain: Domain) => {
-      const response = await api.patch(`/domains/${domain.id}`, {
-        name: domain.name,
-        description: domain.description,
-        isActive: domain.isActive,
-        isLocked: !domain.isLocked,
-        autoTls: domain.autoTls,
-        forceHttps: domain.forceHttps,
-        blockExternalAccess: domain.blockExternalAccess,
-        enableWwwRedirect: domain.enableWwwRedirect,
-        bindIp: domain.bindIp,
-      })
+      const response = await api.patch(`/domains/${domain.id}/toggle-lock`)
       return response.data
     },
     onSuccess: () => {
@@ -231,24 +224,24 @@ export default function DomainsPage() {
           />
         </div>
 
-        {/* Domains Table */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground">Domínio</th>
-                    <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden sm:table-cell">Auto TLS</th>
-                    <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden md:table-cell">Rotas</th>
-                    <th className="text-right py-3 px-3 md:px-6 font-medium text-muted-foreground">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {domains && domains.length > 0 ? (
-                    domains.map((domain) => (
+        {/* Domains Table or Empty State */}
+        {domains && domains.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground">Domínio</th>
+                      <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden sm:table-cell">Auto TLS</th>
+                      <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden md:table-cell">Rotas</th>
+                      <th className="text-right py-3 px-3 md:px-6 font-medium text-muted-foreground">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {domains.map((domain) => (
                       <tr key={domain.id} className={`border-b border-border hover:bg-muted/50 ${
-                        domain.isLocked ? 'bg-gray-50 opacity-60' : ''
+                        domain.isLocked ? 'bg-muted/30 opacity-70' : ''
                       }`}>
                         <td className="py-3 px-3 md:px-6">
                           <div className="flex items-center gap-2">
@@ -291,21 +284,6 @@ export default function DomainsPage() {
                         </td>
                         <td className="py-3 px-3 md:px-6">
                           <div className="flex items-center justify-end gap-0.5 md:gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleToggleLock(domain)}
-                              disabled={toggleLockMutation.isPending}
-                              className="h-8 w-8 md:h-9 md:w-9 p-0"
-                              title={domain.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
-                            >
-                              {domain.isLocked ? (
-                                <Lock className="h-3 w-3 md:h-4 md:w-4" />
-                              ) : (
-                                <Unlock className="h-3 w-3 md:h-4 md:w-4" />
-                              )}
-                            </Button>
-
                             {!domain.isLocked && (
                               <>
                                 <Button
@@ -361,22 +339,39 @@ export default function DomainsPage() {
                                 </Button>
                               </>
                             )}
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleToggleLock(domain)}
+                              disabled={toggleLockMutation.isPending}
+                              className="h-8 w-8 md:h-9 md:w-9 p-0"
+                              title={domain.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
+                            >
+                              {domain.isLocked ? (
+                                <Lock className="h-3 w-3 md:h-4 md:w-4" />
+                              ) : (
+                                <Unlock className="h-3 w-3 md:h-4 md:w-4" />
+                              )}
+                            </Button>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="py-12 text-center text-muted-foreground">
-                        Nenhum domínio encontrado
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <EmptyState
+            icon={Globe}
+            title="Nenhum domínio encontrado"
+            description="Adicione seu primeiro domínio para começar a configurar seus serviços web."
+            actionLabel="Adicionar Domínio"
+            onAction={handleCreateDomain}
+          />
+        )}
 
         {/* Confirmation Modal */}
         <ConfirmationModal

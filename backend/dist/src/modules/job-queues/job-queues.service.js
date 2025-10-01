@@ -129,15 +129,15 @@ let JobQueuesService = class JobQueuesService {
         }
     }
     async getStatistics() {
-        const [totalJobs, activeJobs, completedExecutions, failedExecutions, averageResult] = await Promise.all([
+        const [totalJobs, activeJobs, completedExecutions, failedExecutions, avgExecutionTime] = await Promise.all([
             this.jobQueueRepository.count(),
             this.jobQueueRepository.count({ where: { isActive: true } }),
             this.jobExecutionRepository.count({ where: { status: job_execution_entity_1.ExecutionStatus.COMPLETED } }),
             this.jobExecutionRepository.count({ where: { status: job_execution_entity_1.ExecutionStatus.FAILED } }),
             this.jobExecutionRepository
-                .createQueryBuilder()
-                .select('AVG(executionTimeMs)', 'avg')
-                .where('status = :status', { status: job_execution_entity_1.ExecutionStatus.COMPLETED })
+                .createQueryBuilder('execution')
+                .select('AVG(execution."executionTimeMs")', 'avg')
+                .where('execution.status = :status', { status: job_execution_entity_1.ExecutionStatus.COMPLETED })
                 .getRawOne()
         ]);
         return {
@@ -145,7 +145,7 @@ let JobQueuesService = class JobQueuesService {
             activeJobs,
             completedExecutions,
             failedExecutions,
-            averageExecutionTime: Math.round(averageResult?.avg || 0),
+            averageExecutionTime: Math.round(Number(avgExecutionTime?.avg) || 0),
             upcomingExecutions: 0,
         };
     }

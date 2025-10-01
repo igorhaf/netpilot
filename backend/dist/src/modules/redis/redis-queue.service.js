@@ -21,42 +21,39 @@ const job_execution_entity_1 = require("../../entities/job-execution.entity");
 const job_queues_gateway_1 = require("../job-queues/job-queues.gateway");
 const typeorm_1 = require("typeorm");
 const typeorm_2 = require("@nestjs/typeorm");
-const child_process_1 = require("child_process");
-const path = require("path");
-const fs = require("fs");
+const axios_1 = require("@nestjs/axios");
+const config_1 = require("@nestjs/config");
+const rxjs_1 = require("rxjs");
 let RedisQueueService = RedisQueueService_1 = class RedisQueueService {
-    constructor(jobQueue, jobExecutionRepository, jobQueueRepository, jobQueuesGateway) {
+    constructor(jobQueue, jobExecutionRepository, jobQueueRepository, jobQueuesGateway, httpService, configService) {
         this.jobQueue = jobQueue;
         this.jobExecutionRepository = jobExecutionRepository;
         this.jobQueueRepository = jobQueueRepository;
         this.jobQueuesGateway = jobQueuesGateway;
+        this.httpService = httpService;
+        this.configService = configService;
         this.logger = new common_1.Logger(RedisQueueService_1.name);
+        this.systemOpsUrl = this.configService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
     }
     async onModuleInit() {
         this.setupQueueListeners();
-        this.logger.log('Redis Queue Service initialized');
+        this.logger.log('Redis Queue Service initialized with System Ops integration');
     }
     setupQueueListeners() {
         this.jobQueue.on('waiting', (jobId) => {
-            this.logger.log(`Job ${jobId} adicionado à fila`);
+            this.logger.log(`Job ${jobId} está aguardando processamento`);
         });
         this.jobQueue.on('active', (job) => {
-            this.logger.log(`Job ${job.id} iniciado`);
+            this.logger.log(`Job ${job.id} iniciou processamento`);
         });
         this.jobQueue.on('completed', (job, result) => {
-            this.logger.log(`Job ${job.id} concluído com sucesso`);
+            this.logger.log(`Job ${job.id} completado com sucesso`);
         });
         this.jobQueue.on('failed', (job, err) => {
-            this.logger.error(`Job ${job.id} falhou:`, err.message);
-        });
-        this.jobQueue.on('stalled', (job) => {
-            this.logger.warn(`Job ${job.id} travado, será reprocessado`);
-        });
-        this.jobQueue.on('progress', (job, progress) => {
-            this.logger.debug(`Job ${job.id} progresso: ${progress}%`);
+            this.logger.error(`Job ${job.id} falhou: ${err.message}`);
         });
     }
-    async addJob(jobQueue, executionId, options = {}) {
+    async addJob(jobQueue, executionId, metadata, options) {
         const jobData = {
             jobQueueId: jobQueue.id,
             executionId,
@@ -64,25 +61,21 @@ let RedisQueueService = RedisQueueService_1 = class RedisQueueService {
             scriptType: jobQueue.scriptType,
             environmentVars: jobQueue.environmentVars || {},
             timeoutSeconds: jobQueue.timeoutSeconds || 300,
-            metadata: {}
+            metadata
         };
         const jobOptions = {
-            attempts: jobQueue.maxRetries || 3,
-            backoff: {
-                type: 'exponential',
-                delay: 2000,
-            },
-            delay: options.delay || 0,
-            priority: options.priority || 0,
-            removeOnComplete: 50,
-            removeOnFail: 100,
+            delay: options?.delay || 0,
+            attempts: options?.attempts || 3,
+            backoff: options?.backoff || { type: 'exponential', delay: 2000 },
+            removeOnComplete: 10,
+            removeOnFail: 5,
             ...options
         };
         const job = await this.jobQueue.add('execute-script', jobData, jobOptions);
         this.logger.log(`Job ${job.id} adicionado à fila para execução: ${jobQueue.name}`);
         return job;
     }
-    async handleExecuteScript(job) {
+    async processJob(job) {
         const { jobQueueId, executionId, scriptPath, scriptType, environmentVars, timeoutSeconds } = job.data;
         const startTime = Date.now();
         try {
@@ -97,7 +90,7 @@ let RedisQueueService = RedisQueueService_1 = class RedisQueueService {
             execution.startedAt = new Date();
             await this.jobExecutionRepository.save(execution);
             this.jobQueuesGateway.notifyJobStarted(execution, execution.jobQueue);
-            const result = await this.executeScript(job.data, job);
+            const result = await this.executeScriptViaPython(job.data, job);
             execution.status = job_execution_entity_1.ExecutionStatus.COMPLETED;
             execution.completedAt = new Date();
             execution.executionTimeMs = result.executionTimeMs;
@@ -124,142 +117,100 @@ let RedisQueueService = RedisQueueService_1 = class RedisQueueService {
             throw error;
         }
     }
-    async executeScript(jobData, job) {
-        const { scriptPath, scriptType, environmentVars, timeoutSeconds } = jobData;
-        const startTime = Date.now();
-        return new Promise((resolve, reject) => {
-            let command;
-            let args = [];
-            let output = '';
-            let error = '';
-            switch (scriptType) {
-                case 'shell':
-                    command = 'bash';
-                    args = [scriptPath];
-                    break;
-                case 'node':
-                    command = 'node';
-                    args = [scriptPath];
-                    break;
-                case 'python':
-                    command = 'python3';
-                    args = [scriptPath];
-                    break;
-                default:
-                    return reject(new Error(`Tipo de script não suportado: ${scriptType}`));
-            }
-            if (!fs.existsSync(scriptPath)) {
-                return reject(new Error(`Script não encontrado: ${scriptPath}`));
-            }
-            const childProcess = (0, child_process_1.spawn)(command, args, {
-                env: {
-                    ...process.env,
+    async executeScriptViaPython(jobData, job) {
+        const { scriptPath, scriptType, environmentVars, timeoutSeconds, executionId } = jobData;
+        try {
+            this.logger.log(`🐍 Delegando execução para Python: ${scriptPath}`);
+            const requestData = {
+                scriptPath,
+                scriptType,
+                environmentVars: {
                     ...environmentVars,
                     JOB_ID: job.id.toString(),
-                    EXECUTION_ID: jobData.executionId,
+                    EXECUTION_ID: executionId,
                     JOB_QUEUE_ID: jobData.jobQueueId,
                 },
-                cwd: path.dirname(scriptPath),
-            });
-            const timeoutId = setTimeout(() => {
-                childProcess.kill('SIGTERM');
-                reject(new Error('Execução excedeu o tempo limite'));
-            }, timeoutSeconds * 1000);
-            childProcess.stdout.on('data', (data) => {
-                output += data.toString();
-                const lines = output.split('\n').length;
-                job.progress(Math.min(lines * 2, 90));
-            });
-            childProcess.stderr.on('data', (data) => {
-                error += data.toString();
-            });
-            childProcess.on('close', (code) => {
-                clearTimeout(timeoutId);
-                const executionTime = Date.now() - startTime;
-                job.progress(100);
-                if (code === 0) {
-                    resolve({
-                        success: true,
-                        output,
-                        error: error || undefined,
-                        executionTimeMs: executionTime,
-                        exitCode: code,
-                    });
+                timeoutSeconds,
+                jobId: job.id.toString(),
+                executionId
+            };
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${this.systemOpsUrl}/jobs/execute`, requestData, {
+                timeout: (timeoutSeconds + 10) * 1000,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getSystemOpsToken()}`
                 }
-                else {
-                    reject(new Error(`Script falhou com código ${code}: ${error}`));
-                }
-            });
-            childProcess.on('error', (err) => {
-                clearTimeout(timeoutId);
-                reject(err);
-            });
-        });
-    }
-    async getQueueStats() {
-        const waiting = await this.jobQueue.getWaiting();
-        const active = await this.jobQueue.getActive();
-        const completed = await this.jobQueue.getCompleted();
-        const failed = await this.jobQueue.getFailed();
-        const delayed = await this.jobQueue.getDelayed();
-        const paused = await this.jobQueue.isPaused();
-        return {
-            waiting: waiting.length,
-            active: active.length,
-            completed: completed.length,
-            failed: failed.length,
-            delayed: delayed.length,
-            paused,
-            total: waiting.length + active.length + completed.length + failed.length + delayed.length,
-        };
-    }
-    async getJob(jobId) {
-        return this.jobQueue.getJob(jobId);
-    }
-    async removeJob(jobId) {
-        const job = await this.getJob(jobId);
-        if (job) {
-            await job.remove();
-        }
-    }
-    async retryJob(jobId) {
-        const job = await this.getJob(jobId);
-        if (!job) {
-            throw new Error(`Job ${jobId} não encontrado`);
-        }
-        await job.retry();
-    }
-    async pauseQueue() {
-        await this.jobQueue.pause();
-        this.logger.log('Fila pausada');
-    }
-    async resumeQueue() {
-        await this.jobQueue.resume();
-        this.logger.log('Fila resumida');
-    }
-    async cleanQueue(grace = 5000) {
-        await this.jobQueue.clean(grace, 'completed');
-        await this.jobQueue.clean(grace, 'failed');
-        this.logger.log('Fila limpa');
-    }
-    async getQueueHealth() {
-        try {
-            const stats = await this.getQueueStats();
-            const isPaused = await this.jobQueue.isPaused();
+            }));
+            const result = response.data;
+            job.progress(100);
+            this.logger.log(`✅ Script executado via Python com sucesso: ${scriptPath}`);
             return {
-                healthy: true,
-                paused: isPaused,
-                stats,
-                timestamp: new Date(),
+                success: result.success || false,
+                output: result.output || '',
+                error: result.error || undefined,
+                executionTimeMs: result.executionTimeMs || 0,
+                exitCode: result.exitCode || 0,
             };
         }
         catch (error) {
-            return {
-                healthy: false,
-                error: error.message,
-                timestamp: new Date(),
-            };
+            this.logger.error(`❌ Erro ao executar script via Python: ${error.message}`);
+            if (error.response) {
+                const httpError = error.response.data;
+                throw new Error(`Sistema Python falhou: ${httpError.detail || httpError.message || error.message}`);
+            }
+            if (error.code === 'ECONNREFUSED') {
+                throw new Error('Microserviço Python não está disponível. Verifique se está executando na porta 3001.');
+            }
+            if (error.code === 'ETIMEDOUT') {
+                throw new Error(`Execução excedeu o tempo limite de ${timeoutSeconds} segundos`);
+            }
+            throw new Error(`Falha na comunicação com sistema Python: ${error.message}`);
         }
+    }
+    getSystemOpsToken() {
+        return this.configService.get('SYSTEM_OPS_TOKEN', 'netpilot-internal-token');
+    }
+    async executeScriptDirectly(jobData, job) {
+        this.logger.warn('⚠️ EXECUTANDO SCRIPT DIRETAMENTE - MODO DEPRECATED');
+        throw new Error('Execução direta desabilitada. Use o microserviço Python.');
+    }
+    async checkSystemOpsHealth() {
+        try {
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.get(`${this.systemOpsUrl}/health`, { timeout: 5000 }));
+            return response.data.status === 'healthy';
+        }
+        catch (error) {
+            this.logger.error(`Sistema Python não está saudável: ${error.message}`);
+            return false;
+        }
+    }
+    async getSystemOpsStats() {
+        try {
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.get(`${this.systemOpsUrl}/system/info`, {
+                timeout: 5000,
+                headers: { 'Authorization': `Bearer ${this.getSystemOpsToken()}` }
+            }));
+            return response.data;
+        }
+        catch (error) {
+            this.logger.error(`Erro ao obter estatísticas do sistema Python: ${error.message}`);
+            return null;
+        }
+    }
+    async getQueueStats() {
+        const health = await this.checkSystemOpsHealth();
+        const stats = await this.getSystemOpsStats();
+        return {
+            healthy: health,
+            stats: stats,
+            python_integration: true
+        };
+    }
+    async getQueueHealth() {
+        return {
+            healthy: await this.checkSystemOpsHealth(),
+            python_service: true
+        };
     }
 };
 exports.RedisQueueService = RedisQueueService;
@@ -268,7 +219,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], RedisQueueService.prototype, "handleExecuteScript", null);
+], RedisQueueService.prototype, "processJob", null);
 exports.RedisQueueService = RedisQueueService = RedisQueueService_1 = __decorate([
     (0, common_1.Injectable)(),
     (0, bull_1.Processor)('job-processor'),
@@ -277,6 +228,8 @@ exports.RedisQueueService = RedisQueueService = RedisQueueService_1 = __decorate
     __param(2, (0, typeorm_2.InjectRepository)(job_queue_entity_1.JobQueue)),
     __metadata("design:paramtypes", [Object, typeorm_1.Repository,
         typeorm_1.Repository,
-        job_queues_gateway_1.JobQueuesGateway])
+        job_queues_gateway_1.JobQueuesGateway,
+        axios_1.HttpService,
+        config_1.ConfigService])
 ], RedisQueueService);
 //# sourceMappingURL=redis-queue.service.js.map

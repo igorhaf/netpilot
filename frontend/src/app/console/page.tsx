@@ -87,7 +87,7 @@ export default function ConsolePage() {
                 off('ssh:status', handleConnectionStatus)
             }
         }
-    }, [wsConnected, on, off])
+    }, [wsConnected, on, off, connectToSession, sessionStarted])
 
     const handleExecuteCommand = async () => {
         if (!command.trim() || !wsConnected) return

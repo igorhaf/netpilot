@@ -303,3 +303,6 @@ class CallbackManager:
         except Exception as e:
             logger.error(f"Erro no teste de conectividade: {e}")
             return False
+
+# Instância global do CallbackManager
+callback_manager = CallbackManager()

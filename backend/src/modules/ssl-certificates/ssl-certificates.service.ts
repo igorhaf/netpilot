@@ -1,15 +1,25 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 import { SslCertificate, CertificateStatus } from '../../entities/ssl-certificate.entity';
 import { CreateSslCertificateDto, UpdateSslCertificateDto } from '../../dtos/ssl-certificate.dto';
 
 @Injectable()
 export class SslCertificatesService {
+  private readonly logger = new Logger(SslCertificatesService.name);
+  private readonly systemOpsUrl: string;
+
   constructor(
     @InjectRepository(SslCertificate)
     private sslCertificateRepository: Repository<SslCertificate>,
-  ) {}
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.systemOpsUrl = this.configService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
+  }
 
   async create(createSslCertificateDto: CreateSslCertificateDto): Promise<SslCertificate> {
     // Validate domain exists
@@ -37,27 +47,51 @@ export class SslCertificatesService {
       });
     }
 
-    // Create certificate
-    const certificate = this.sslCertificateRepository.create(createSslCertificateDto);
-
     try {
-      // Issue new certificate via ACME
-      const certData = await this.issueNewCertificate(
-        createSslCertificateDto.primaryDomain,
-        createSslCertificateDto.sanDomains
+      this.logger.log(`📝 Solicitando emissão de certificado SSL ao Python service para ${createSslCertificateDto.primaryDomain}`);
+
+      // Preparar request para Python service
+      const allDomains = [createSslCertificateDto.primaryDomain];
+      if (createSslCertificateDto.sanDomains?.length > 0) {
+        allDomains.push(...createSslCertificateDto.sanDomains);
+      }
+
+      const sslRequest = {
+        domains: allDomains,
+        provider: 'letsencrypt',
+        email: process.env.SSL_EMAIL || 'admin@netpilot.local',
+        agree_tos: true,
+        staging: process.env.ACME_STAGING === 'true',
+        challenge_type: 'http-01',
+        webroot_path: process.env.ACME_CHALLENGE_PATH || '/var/www/certbot'
+      };
+
+      // Chamar Python service para emitir certificado
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.systemOpsUrl}/ssl/issue`, sslRequest, {
+          timeout: 120000 // 2 minutos para ACME challenge
+        })
       );
 
-      certificate.certificatePath = certData.certificatePath;
-      certificate.privateKeyPath = certData.privateKeyPath;
-      certificate.expiresAt = certData.expiresAt;
-      certificate.status = CertificateStatus.VALID;
+      if (response.data.success) {
+        this.logger.log(`✅ Certificado SSL emitido com sucesso para ${createSslCertificateDto.primaryDomain}`);
+
+        // Buscar certificado criado pelo Python service
+        const certificate = await this.sslCertificateRepository.findOne({
+          where: { id: response.data.certificate_id }
+        });
+
+        if (certificate) {
+          return certificate;
+        }
+      }
+
+      throw new Error(response.data.message || 'Erro ao emitir certificado');
 
     } catch (error) {
-      certificate.status = CertificateStatus.FAILED;
-      certificate.lastError = error.message;
+      this.logger.error(`❌ Erro ao comunicar com Python service: ${error.message}`);
+      throw new BadRequestException(`Erro ao emitir certificado: ${error.message}`);
     }
-
-    return await this.sslCertificateRepository.save(certificate);
   }
 
   private async findDomainById(domainId: string): Promise<any> {
@@ -155,27 +189,40 @@ export class SslCertificatesService {
     const certificate = await this.findOne(id);
 
     try {
+      this.logger.log(`🔄 Solicitando renovação de certificado SSL ao Python service para ${certificate.primaryDomain}`);
+
       // Set certificate as pending renewal
       certificate.status = CertificateStatus.PENDING;
       await this.sslCertificateRepository.save(certificate);
 
-      // Call ACME renewal method
-      const renewalResult = await this.renewCertificateWithAcme(certificate);
-
-      // Update certificate with new data
-      certificate.status = CertificateStatus.VALID;
-      certificate.expiresAt = renewalResult.expiresAt;
-      certificate.certificatePath = renewalResult.certificatePath;
-      certificate.privateKeyPath = renewalResult.privateKeyPath;
-      certificate.lastError = null;
-
-      await this.sslCertificateRepository.save(certificate);
-
-      return {
-        success: true,
-        message: 'Certificado renovado com sucesso',
+      // Chamar Python service para renovar certificado
+      const renewalRequest = {
+        certificate_id: id,
+        domains: [certificate.primaryDomain, ...(certificate.sanDomains || [])],
+        force: false,
+        days_before_expiry: 30
       };
+
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.systemOpsUrl}/ssl/renew`, renewalRequest, {
+          timeout: 120000 // 2 minutos para renovação
+        })
+      );
+
+      if (response.data.success) {
+        this.logger.log(`✅ Certificado SSL renovado com sucesso para ${certificate.primaryDomain}`);
+
+        return {
+          success: true,
+          message: 'Certificado renovado com sucesso',
+        };
+      } else {
+        throw new Error(response.data.message || 'Erro ao renovar certificado');
+      }
+
     } catch (error) {
+      this.logger.error(`❌ Erro ao renovar certificado: ${error.message}`);
+
       certificate.status = CertificateStatus.FAILED;
       certificate.lastError = error.message;
       await this.sslCertificateRepository.save(certificate);
@@ -187,42 +234,10 @@ export class SslCertificatesService {
     }
   }
 
-  private async renewCertificateWithAcme(certificate: SslCertificate): Promise<{
-    certificatePath: string;
-    privateKeyPath: string;
-    expiresAt: Date;
-  }> {
-    // TODO: Implement ACME client logic for certificate renewal
-    // For now, simulate the renewal process
-    const basePath = `/ssl/${certificate.primaryDomain}`;
-
-    return {
-      certificatePath: `${basePath}.crt`,
-      privateKeyPath: `${basePath}.key`,
-      expiresAt: new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)), // 90 days
-    };
-  }
-
-  private async issueNewCertificate(domain: string, sanDomains?: string[]): Promise<{
-    certificatePath: string;
-    privateKeyPath: string;
-    expiresAt: Date;
-  }> {
-    // TODO: Implement ACME client logic for new certificate issuance
-    // For now, simulate the issuance process
-    const basePath = `/ssl/${domain}`;
-
-    return {
-      certificatePath: `${basePath}.crt`,
-      privateKeyPath: `${basePath}.key`,
-      expiresAt: new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)), // 90 days
-    };
-  }
-
   private async deleteCertificateFiles(certificate: SslCertificate): Promise<void> {
-    // TODO: Implement file system cleanup
-    // Remove certificate and private key files from disk
-    console.log(`Deleting certificate files for ${certificate.primaryDomain}`);
+    // Certificados são gerenciados pelo Python service
+    // Os arquivos físicos serão mantidos para histórico
+    this.logger.log(`Marcando certificado como deletado: ${certificate.primaryDomain}`);
   }
 
   async renewExpiredCertificates(): Promise<{ success: boolean; renewed: number; failed: number }> {

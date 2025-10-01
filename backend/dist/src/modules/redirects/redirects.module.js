@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RedirectsModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const axios_1 = require("@nestjs/axios");
+const config_1 = require("@nestjs/config");
 const redirects_controller_1 = require("./redirects.controller");
 const redirects_service_1 = require("./redirects.service");
 const redirect_entity_1 = require("../../entities/redirect.entity");
@@ -20,7 +22,12 @@ let RedirectsModule = class RedirectsModule {
 exports.RedirectsModule = RedirectsModule;
 exports.RedirectsModule = RedirectsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([redirect_entity_1.Redirect, domain_entity_1.Domain]), config_module_1.ConfigModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([redirect_entity_1.Redirect, domain_entity_1.Domain]),
+            config_module_1.ConfigModule,
+            axios_1.HttpModule,
+            config_1.ConfigModule,
+        ],
         controllers: [redirects_controller_1.RedirectsController],
         providers: [redirects_service_1.RedirectsService, config_generation_service_1.ConfigGenerationService],
     })

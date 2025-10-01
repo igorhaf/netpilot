@@ -7,6 +7,13 @@ import { ArrowLeft, Server, Route, Target, Hash, Lock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
 import { useRequireAuth } from '@/hooks/useAuth'
 import { Domain, ProxyRule } from '@/types'
@@ -167,75 +174,74 @@ export default function EditProxyRulePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Configurações de Travamento */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Lock className="h-5 w-5 text-red-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Controle de Travamento
-                </h2>
-              </div>
-
-              <label className="flex items-start space-x-3">
-                <input
+                <span>Controle de Travamento</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-start space-x-3">
+                <Checkbox
                   id="isLocked"
-                  type="checkbox"
                   checked={formData.isLocked}
-                  onChange={(e) => setFormData({ ...formData, isLocked: e.target.checked })}
-                  className="mt-0.5 h-4 w-4 rounded"
+                  onCheckedChange={(checked) => setFormData({ ...formData, isLocked: !!checked })}
                 />
-                <div>
-                  <span className="text-sm font-medium text-foreground">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="isLocked"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
                     Travar Regra
-                  </span>
+                  </Label>
                   <p className="text-sm text-muted-foreground">
                     Quando travada, a regra não pode ser editada ou excluída acidentalmente
                   </p>
                 </div>
-              </label>
-            </div>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Configurações Básicas */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Server className="h-5 w-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações Básicas
-                </h2>
-              </div>
-
+                <span>Configurações Básicas</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="domainId" className="block text-sm font-medium text-foreground mb-2">
+                <div className="space-y-2">
+                  <Label htmlFor="domainId">
                     Domínio <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="domainId"
+                  </Label>
+                  <Select
                     value={formData.domainId}
-                    onChange={(e) => setFormData({ ...formData, domainId: e.target.value })}
-                    className="input w-full"
-                    required
-                    disabled={proxyRule.isLocked && !formData.isLocked}
+                    onValueChange={(value) => setFormData({ ...formData, domainId: value })}
                   >
-                    <option value="">Selecione um domínio</option>
-                    {domains?.map((domain) => (
-                      <option key={domain.id} value={domain.id}>
-                        {domain.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">
+                    <SelectTrigger disabled={proxyRule.isLocked && !formData.isLocked}>
+                      <SelectValue placeholder="Selecione um domínio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {domains?.map((domain) => (
+                        <SelectItem key={domain.id} value={domain.id}>
+                          {domain.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
                     Domínio onde a regra será aplicada
                   </p>
                 </div>
 
-                <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-foreground mb-2">
+                <div className="space-y-2">
+                  <Label htmlFor="priority">
                     Prioridade <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     id="priority"
                     type="number"
                     min="1"
@@ -243,156 +249,146 @@ export default function EditProxyRulePage() {
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 100 })}
                     placeholder="100"
-                    className="input w-full"
                     required
                     disabled={proxyRule.isLocked && !formData.isLocked}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground">
                     Menor número = maior prioridade (1-1000)
                   </p>
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
-                  Descrição
-                </label>
-                <textarea
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
                   id="description"
-                  value={formData.description}
+                  value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descrição opcional da regra de proxy..."
                   rows={3}
-                  className="input w-full resize-none"
                   disabled={proxyRule.isLocked && !formData.isLocked}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground">
                   Descrição opcional para identificar a regra
                 </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Configurações de Roteamento */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Route className="h-5 w-5 text-green-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações de Roteamento
-                </h2>
+                <span>Configurações de Roteamento</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="sourcePath">
+                  Caminho de Origem <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="sourcePath"
+                  type="text"
+                  value={formData.sourcePath}
+                  onChange={(e) => setFormData({ ...formData, sourcePath: e.target.value })}
+                  placeholder="/api, /app, /"
+                  required
+                  disabled={proxyRule.isLocked && !formData.isLocked}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Caminho que será interceptado (ex: /api, /app, /)
+                </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="sourcePath" className="block text-sm font-medium text-foreground mb-2">
-                    Caminho de Origem <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="sourcePath"
-                    type="text"
-                    value={formData.sourcePath}
-                    onChange={(e) => setFormData({ ...formData, sourcePath: e.target.value })}
-                    placeholder="/api, /app, /"
-                    className="input w-full"
-                    required
-                    disabled={proxyRule.isLocked && !formData.isLocked}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Caminho que será interceptado (ex: /api, /app, /)
-                  </p>
-                </div>
-
-                <div>
-                  <label htmlFor="targetUrl" className="block text-sm font-medium text-foreground mb-2">
-                    URL de Destino <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="targetUrl"
-                    type="url"
-                    value={formData.targetUrl}
-                    onChange={(e) => setFormData({ ...formData, targetUrl: e.target.value })}
-                    placeholder="http://meadadigital.com:3001, http://api.exemplo.com"
-                    className="input w-full"
-                    required
-                    disabled={proxyRule.isLocked && !formData.isLocked}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    URL completa para onde o tráfego será direcionado
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="targetUrl">
+                  URL de Destino <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="targetUrl"
+                  type="url"
+                  value={formData.targetUrl}
+                  onChange={(e) => setFormData({ ...formData, targetUrl: e.target.value })}
+                  placeholder="http://meadadigital.com:3001, http://api.exemplo.com"
+                  required
+                  disabled={proxyRule.isLocked && !formData.isLocked}
+                />
+                <p className="text-sm text-muted-foreground">
+                  URL completa para onde o tráfego será direcionado
+                </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Configurações Avançadas */}
-          <div className="card">
-            <div className="card-content">
-              <div className="flex items-center space-x-2 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
                 <Hash className="h-5 w-5 text-purple-500" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Configurações Avançadas
-                </h2>
+                <span>Configurações Avançadas</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: !!checked })}
+                  disabled={proxyRule.isLocked && !formData.isLocked}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="isActive"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Ativar Regra
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    A regra ficará ativa imediatamente após a atualização
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="isActive"
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                    disabled={proxyRule.isLocked && !formData.isLocked}
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Ativar Regra
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      A regra ficará ativa imediatamente após a atualização
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex items-start space-x-3">
-                  <input
-                    id="maintainQueryStrings"
-                    type="checkbox"
-                    checked={formData.maintainQueryStrings}
-                    onChange={(e) => setFormData({ ...formData, maintainQueryStrings: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded"
-                    disabled={proxyRule.isLocked && !formData.isLocked}
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-foreground">
-                      Manter Query Strings
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      Preservar parâmetros da URL (?param=value) no redirecionamento
-                    </p>
-                  </div>
-                </label>
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="maintainQueryStrings"
+                  checked={formData.maintainQueryStrings}
+                  onCheckedChange={(checked) => setFormData({ ...formData, maintainQueryStrings: !!checked })}
+                  disabled={proxyRule.isLocked && !formData.isLocked}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="maintainQueryStrings"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Manter Query Strings
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Preservar parâmetros da URL (?param=value) no redirecionamento
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Botões de Ação */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-border">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleBack}
-              className="btn-secondary"
             >
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={updateProxyRuleMutation.isPending}
-              className="btn-primary"
             >
               {updateProxyRuleMutation.isPending ? 'Atualizando...' : 'Atualizar Regra'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { jobExecutionsApi } from '@/lib/api/job-queues';
 import {
   Table,
   TableBody,
@@ -34,99 +35,6 @@ import {
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
 
-// Mock data para desenvolvimento
-const mockExecutions = [
-  {
-    id: 'exec_1',
-    jobQueue: {
-      id: 'job_1',
-      name: 'Análise por IA',
-      scriptType: 'internal'
-    },
-    status: 'running',
-    triggerType: 'scheduled',
-    startedAt: new Date('2024-01-15T14:30:00Z'),
-    completedAt: null,
-    executionTimeMs: null,
-    retryCount: 0,
-    outputLog: 'Iniciando análise por IA dos logs...',
-    errorLog: null,
-    triggeredBy: null,
-    createdAt: new Date('2024-01-15T14:30:00Z')
-  },
-  {
-    id: 'exec_2',
-    jobQueue: {
-      id: 'job_2',
-      name: 'Backup Automático',
-      scriptType: 'shell'
-    },
-    status: 'completed',
-    triggerType: 'scheduled',
-    startedAt: new Date('2024-01-15T02:00:00Z'),
-    completedAt: new Date('2024-01-15T02:45:23Z'),
-    executionTimeMs: 2723000,
-    retryCount: 0,
-    outputLog: 'Backup concluído com sucesso. Arquivo: backup-2024-01-15.tar.gz (1.2GB)',
-    errorLog: null,
-    triggeredBy: null,
-    createdAt: new Date('2024-01-15T02:00:00Z')
-  },
-  {
-    id: 'exec_3',
-    jobQueue: {
-      id: 'job_3',
-      name: 'Verificação SSL',
-      scriptType: 'internal'
-    },
-    status: 'failed',
-    triggerType: 'manual',
-    startedAt: new Date('2024-01-15T12:15:00Z'),
-    completedAt: new Date('2024-01-15T12:15:45Z'),
-    executionTimeMs: 45000,
-    retryCount: 2,
-    outputLog: 'Verificando certificados SSL...',
-    errorLog: 'Erro: Timeout ao conectar com api.netpilot.local:443',
-    triggeredBy: { id: 'user_1', name: 'Admin User' },
-    createdAt: new Date('2024-01-15T12:15:00Z')
-  },
-  {
-    id: 'exec_4',
-    jobQueue: {
-      id: 'job_1',
-      name: 'Análise por IA',
-      scriptType: 'internal'
-    },
-    status: 'completed',
-    triggerType: 'scheduled',
-    startedAt: new Date('2024-01-15T09:30:00Z'),
-    completedAt: new Date('2024-01-15T09:32:15Z'),
-    executionTimeMs: 135000,
-    retryCount: 0,
-    outputLog: 'Análise concluída. 1.247 logs analisados. 3 alertas de segurança detectados.',
-    errorLog: null,
-    triggeredBy: null,
-    createdAt: new Date('2024-01-15T09:30:00Z')
-  },
-  {
-    id: 'exec_5',
-    jobQueue: {
-      id: 'job_4',
-      name: 'Limpeza de Logs',
-      scriptType: 'internal'
-    },
-    status: 'cancelled',
-    triggerType: 'manual',
-    startedAt: new Date('2024-01-15T11:20:00Z'),
-    completedAt: new Date('2024-01-15T11:21:30Z'),
-    executionTimeMs: 90000,
-    retryCount: 0,
-    outputLog: 'Limpeza iniciada...',
-    errorLog: null,
-    triggeredBy: { id: 'user_1', name: 'Admin User' },
-    createdAt: new Date('2024-01-15T11:20:00Z')
-  }
-];
 
 export default function JobExecutionsPage() {
   const [filters, setFilters] = useState({
@@ -145,55 +53,42 @@ export default function JobExecutionsPage() {
   // Query para listar execuções
   const { data, isLoading, error } = useQuery({
     queryKey: ['job-executions', filters],
-    queryFn: () => {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          let filteredExecutions = [...mockExecutions];
+    queryFn: async () => {
+      const apiFilters = {
+        status: filters.status || undefined,
+        page: filters.page,
+        limit: filters.limit
+      };
 
-          // Aplicar filtros
-          if (filters.search) {
-            filteredExecutions = filteredExecutions.filter(exec =>
-              exec.jobQueue.name.toLowerCase().includes(filters.search.toLowerCase())
-            );
-          }
+      const response = await jobExecutionsApi.list(apiFilters);
 
-          if (filters.status) {
-            filteredExecutions = filteredExecutions.filter(exec => exec.status === filters.status);
-          }
+      // Filtrar por busca no frontend se necessário
+      let filteredData = response.data || [];
 
-          if (filters.triggerType) {
-            filteredExecutions = filteredExecutions.filter(exec => exec.triggerType === filters.triggerType);
-          }
+      if (filters.search) {
+        filteredData = filteredData.filter((exec: any) =>
+          exec.jobQueue?.name?.toLowerCase().includes(filters.search.toLowerCase())
+        );
+      }
 
-          if (filters.jobQueueId) {
-            filteredExecutions = filteredExecutions.filter(exec => exec.jobQueue.id === filters.jobQueueId);
-          }
+      if (filters.triggerType) {
+        filteredData = filteredData.filter((exec: any) => exec.triggerType === filters.triggerType);
+      }
 
-          const total = filteredExecutions.length;
-          const start = (filters.page - 1) * filters.limit;
-          const end = start + filters.limit;
-          const executions = filteredExecutions.slice(start, end);
-
-          resolve({
-            data: executions,
-            total,
-            page: filters.page,
-            limit: filters.limit,
-            pages: Math.ceil(total / filters.limit)
-          });
-        }, 500);
-      });
+      return {
+        data: filteredData,
+        total: response.total,
+        page: response.page,
+        limit: response.limit,
+        pages: Math.ceil(response.total / response.limit)
+      };
     },
-    refetchInterval: 10000
+    refetchInterval: 5000 // Atualizar a cada 5 segundos
   });
 
   // Mutação para cancelar execução
   const cancelMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(`Execução ${id} cancelada`), 1000);
-      });
-    },
+    mutationFn: ({ id }: { id: string }) => jobExecutionsApi.cancel(id),
     onSuccess: () => {
       toast({
         title: 'Execução cancelada',
@@ -212,11 +107,7 @@ export default function JobExecutionsPage() {
 
   // Mutação para tentar novamente
   const retryMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(`Execução ${id} reexecutada`), 1000);
-      });
-    },
+    mutationFn: ({ id }: { id: string }) => jobExecutionsApi.retry(id),
     onSuccess: () => {
       toast({
         title: 'Execução iniciada',
@@ -461,10 +352,16 @@ export default function JobExecutionsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <div>{new Date(execution.startedAt).toLocaleDateString('pt-BR')}</div>
-                            <div className="text-muted-foreground">
-                              {new Date(execution.startedAt).toLocaleTimeString('pt-BR')}
-                            </div>
+                            {execution.startedAt ? (
+                              <>
+                                <div>{new Date(execution.startedAt).toLocaleDateString('pt-BR')}</div>
+                                <div className="text-muted-foreground">
+                                  {new Date(execution.startedAt).toLocaleTimeString('pt-BR')}
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>

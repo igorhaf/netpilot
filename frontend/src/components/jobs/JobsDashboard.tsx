@@ -36,7 +36,7 @@ export function JobsDashboard({ compact = false }: JobsDashboardProps) {
 
   // WebSocket para atualizações em tempo real
   useEffect(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:3001'
+    const wsUrl = process.env.NEXT_PUBLIC_API_URL || 'https://netpilot.meadadigital.com'
     const newSocket = io(wsUrl, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -108,7 +108,7 @@ export function JobsDashboard({ compact = false }: JobsDashboardProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Executando</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {realtimeStats?.runningJobs || runningExecutions?.length || 0}
+                  {realtimeStats?.runningJobs || runningExecutions?.data?.length || 0}
                 </p>
               </div>
               <Activity className="h-5 w-5 text-blue-500" />
@@ -165,7 +165,7 @@ export function JobsDashboard({ compact = false }: JobsDashboardProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Jobs em Execução</p>
                 <p className="text-3xl font-bold text-blue-600">
-                  {realtimeStats?.runningJobs || runningExecutions?.length || 0}
+                  {realtimeStats?.runningJobs || runningExecutions?.data?.length || 0}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {realtimeStats?.lastActivity &&
@@ -227,18 +227,18 @@ export function JobsDashboard({ compact = false }: JobsDashboardProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-yellow-500" />
-            Jobs em Execução ({runningExecutions?.length || 0})
+            Jobs em Execução ({runningExecutions?.data?.length || 0})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!runningExecutions || runningExecutions.length === 0 ? (
+          {!runningExecutions?.data || runningExecutions.data.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nenhum job em execução no momento</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {runningExecutions.map((execution: any) => (
+              {runningExecutions.data.map((execution: any) => (
                 <div
                   key={execution.id}
                   className="flex items-center justify-between p-4 border rounded-lg bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800"
@@ -280,7 +280,7 @@ export function JobsDashboard({ compact = false }: JobsDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {recentExecutions?.slice(0, 10).map((execution: any) => (
+            {recentExecutions?.data?.slice(0, 10).map((execution: any) => (
               <div
                 key={execution.id}
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"

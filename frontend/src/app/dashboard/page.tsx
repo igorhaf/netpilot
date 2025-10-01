@@ -16,6 +16,8 @@ import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
+import { JobsDashboard } from '@/components/jobs/JobsDashboard'
 import { getStatusColor, formatRelativeTime } from '@/lib/utils'
 import api from '@/lib/api'
 import { DashboardStats, Log, SslCertificate } from '@/types'
@@ -140,6 +142,12 @@ export default function DashboardPage() {
           </Card>
         </div>
 
+        {/* Jobs Statistics */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Jobs</h2>
+          <JobsDashboard compact />
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-2">
           {/* System Status */}
           <Card>
@@ -205,9 +213,11 @@ export default function DashboardPage() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  Nenhum log encontrado
-                </div>
+                <EmptyState
+                  icon={FileText}
+                  title="Nenhum log encontrado"
+                  description="Quando houver atividade no sistema, os logs aparecerão aqui."
+                />
               )}
             </CardContent>
           </Card>

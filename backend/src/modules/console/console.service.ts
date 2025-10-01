@@ -1,41 +1,460 @@
 import { Injectable, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Client } from 'ssh2';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
 import { SshSession } from '../../entities/ssh-session.entity';
 import { ConsoleLog } from '../../entities/console-log.entity';
 import { CreateSshSessionDto, UpdateSshSessionDto, ExecuteCommandDto } from '../../dtos/ssh-session.dto';
 
-interface ActiveConnection {
-    client: Client;
-    sessionId: string;
-    userId: string;
-    connectedAt: Date;
-    lastActivity: Date;
-}
-
 @Injectable()
 export class ConsoleService implements OnModuleInit {
-    private activeConnections: Map<string, ActiveConnection> = new Map();
-    private readonly connectionTimeout = 30 * 60 * 1000; // 30 minutos
+    private readonly systemOpsUrl: string;
+    private readonly systemOpsToken: string;
 
     constructor(
         @InjectRepository(SshSession)
         private readonly sshSessionRepository: Repository<SshSession>,
         @InjectRepository(ConsoleLog)
         private readonly consoleLogRepository: Repository<ConsoleLog>,
+        private readonly httpService: HttpService,
+        private readonly configService: ConfigService,
     ) {
-        // Limpar conexões inativas a cada 5 minutos
-        setInterval(() => this.cleanupInactiveConnections(), 5 * 60 * 1000);
+        // URL do microserviço Python
+        this.systemOpsUrl = this.configService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
+        this.systemOpsToken = this.configService.get('SYSTEM_OPS_TOKEN', 'netpilot-internal-token');
     }
 
     async onModuleInit() {
+        // Verificar se microserviço Python está disponível
+        await this.checkSystemOpsHealth();
+
         // Criar sessão SSH padrão se não existir
         await this.ensureDefaultSshSession();
     }
 
-    // Criar sessão SSH padrão se não existir
+    // ========================
+    // MÉTODOS MIGRADOS PARA PYTHON
+    // ========================
+
+    /**
+     * Conectar-se a uma sessão SSH via microserviço Python
+     */
+    async connectToSession(userId: string, sessionId: string): Promise<{ success: boolean; message: string; connectionId?: string }> {
+        try {
+            // Buscar sessão no banco
+            const session = await this.sshSessionRepository.findOne({
+                where: { id: sessionId, userId, isActive: true }
+            });
+
+            if (!session) {
+                throw new NotFoundException('Sessão SSH não encontrada ou não pertence ao usuário');
+            }
+
+            // Preparar dados para conexão Python
+            const connectionRequest = {
+                sessionId: session.id,
+                hostname: session.hostname,
+                port: session.port,
+                username: session.username,
+                authType: session.authType,
+                password: session.authType === 'password' ? this.decrypt(session.password) : undefined,
+                privateKey: session.authType === 'key' ? this.decrypt(session.privateKey) : undefined,
+                passphrase: session.passphrase ? this.decrypt(session.passphrase) : undefined,
+                timeout: session.connectionOptions?.readyTimeout ? Math.floor(session.connectionOptions.readyTimeout / 1000) : 30,
+                keepalive: session.connectionOptions?.keepaliveInterval ? Math.floor(session.connectionOptions.keepaliveInterval / 1000) : 60
+            };
+
+            // Chamar microserviço Python
+            const response = await firstValueFrom(
+                this.httpService.post(`${this.systemOpsUrl}/ssh/connect`, connectionRequest, {
+                    headers: {
+                        'Authorization': `Bearer ${this.systemOpsToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 60000 // 1 minuto
+                })
+            );
+
+            const result = response.data as any;
+
+            if (result.success) {
+                // Atualizar sessão no banco
+                await this.sshSessionRepository.update(sessionId, {
+                    lastConnectedAt: new Date(),
+                    status: 'active'
+                });
+
+                return {
+                    success: true,
+                    message: result.message,
+                    connectionId: result.connectionId
+                };
+            } else {
+                return {
+                    success: false,
+                    message: result.message
+                };
+            }
+
+        } catch (error) {
+            if (error.response?.status === 400) {
+                throw new BadRequestException(error.response.data.detail || 'Erro na conexão SSH');
+            }
+
+            if (error.code === 'ECONNREFUSED') {
+                throw new BadRequestException('Microserviço SSH não está disponível');
+            }
+
+            throw new BadRequestException(`Erro ao conectar SSH: ${error.message}`);
+        }
+    }
+
+    /**
+     * Executar comando SSH via microserviço Python
+     */
+    async executeCommand(userId: string, executeDto: ExecuteCommandDto): Promise<ConsoleLog> {
+        try {
+            // Validar se sessão existe e pertence ao usuário
+            const session = await this.sshSessionRepository.findOne({
+                where: { id: executeDto.sessionId, userId, isActive: true }
+            });
+
+            if (!session) {
+                throw new BadRequestException('Sessão SSH não encontrada ou não pertence ao usuário');
+            }
+
+            // Preparar requisição para Python
+            const commandRequest = {
+                sessionId: executeDto.sessionId,
+                command: executeDto.command,
+                workingDirectory: executeDto.workingDirectory,
+                environment: executeDto.environment || {},
+                timeout: executeDto.timeout || 30,
+                userId: userId
+            };
+
+            // Executar comando via Python
+            const response = await firstValueFrom(
+                this.httpService.post(`${this.systemOpsUrl}/ssh/execute`, commandRequest, {
+                    headers: {
+                        'Authorization': `Bearer ${this.systemOpsToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: (executeDto.timeout || 30) * 1000 + 10000 // Timeout do comando + 10s buffer
+                })
+            );
+
+            const result = response.data as any;
+
+            // Atualizar contador de comandos na sessão
+            await this.sshSessionRepository.increment(
+                { id: executeDto.sessionId },
+                'commandCount',
+                1
+            );
+
+            // Salvar log da execução no banco local
+            const consoleLog = this.consoleLogRepository.create({
+                command: result.command,
+                output: result.output,
+                errorOutput: result.errorOutput || '',
+                exitCode: result.exitCode,
+                executionTime: result.executionTimeMs,
+                status: result.success ? 'completed' : 'failed',
+                workingDirectory: result.workingDirectory || '~',
+                environment: result.environment || {},
+                sessionId: executeDto.sessionId,
+                userId: userId,
+                executedAt: new Date(result.executedAt)
+            });
+
+            const savedLog = await this.consoleLogRepository.save(consoleLog);
+
+            return savedLog;
+
+        } catch (error) {
+            if (error.response?.status === 400) {
+                throw new BadRequestException(error.response.data.detail || 'Erro na execução do comando');
+            }
+
+            if (error.code === 'ECONNREFUSED') {
+                throw new BadRequestException('Microserviço SSH não está disponível');
+            }
+
+            if (error.code === 'ETIMEDOUT') {
+                throw new BadRequestException('Comando excedeu o tempo limite');
+            }
+
+            throw new BadRequestException(`Erro ao executar comando: ${error.message}`);
+        }
+    }
+
+    /**
+     * Desconectar sessão SSH via microserviço Python
+     */
+    async disconnectFromSession(userId: string, sessionId: string): Promise<{ success: boolean; message: string }> {
+        try {
+            // Validar se sessão existe e pertence ao usuário
+            const session = await this.sshSessionRepository.findOne({
+                where: { id: sessionId, userId, isActive: true }
+            });
+
+            if (!session) {
+                throw new BadRequestException('Sessão SSH não encontrada ou não pertence ao usuário');
+            }
+
+            // Desconectar via Python
+            const disconnectRequest = {
+                sessionId: sessionId,
+                userId: userId
+            };
+
+            const response = await firstValueFrom(
+                this.httpService.post(`${this.systemOpsUrl}/ssh/disconnect`, disconnectRequest, {
+                    headers: {
+                        'Authorization': `Bearer ${this.systemOpsToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 30000
+                })
+            );
+
+            const result = response.data as any;
+
+            if (result.success) {
+                // Atualizar status da sessão no banco
+                await this.sshSessionRepository.update(sessionId, {
+                    status: 'disconnected',
+                    lastDisconnectedAt: new Date()
+                });
+            }
+
+            return {
+                success: result.success,
+                message: result.message
+            };
+
+        } catch (error) {
+            if (error.response?.status >= 400 && error.response?.status < 500) {
+                throw new BadRequestException(error.response.data.detail || 'Erro na desconexão SSH');
+            }
+
+            throw new BadRequestException(`Erro ao desconectar SSH: ${error.message}`);
+        }
+    }
+
+    /**
+     * Listar sessões SSH ativas via microserviço Python
+     */
+    async getActiveSSHSessions(): Promise<any[]> {
+        try {
+            const response = await firstValueFrom(
+                this.httpService.get(`${this.systemOpsUrl}/ssh/sessions`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.systemOpsToken}`
+                    },
+                    timeout: 10000
+                })
+            );
+
+            return (response.data as any).sessions || [];
+
+        } catch (error) {
+            console.error('Erro ao obter sessões SSH ativas:', error.message);
+            return [];
+        }
+    }
+
+    // ========================
+    // MÉTODOS DE COMPATIBILIDADE E ALIASES
+    // ========================
+
+    // Aliases para manter compatibilidade com controllers existentes
+    async createSession(userId: string, createSshSessionDto: CreateSshSessionDto): Promise<SshSession> {
+        return this.create(createSshSessionDto, userId);
+    }
+
+    async findUserSessions(userId: string): Promise<SshSession[]> {
+        return this.findAll(userId);
+    }
+
+    async findSessionById(userId: string, id: string): Promise<SshSession> {
+        return this.findOne(id, userId);
+    }
+
+    async updateSession(userId: string, id: string, updateSshSessionDto: UpdateSshSessionDto): Promise<SshSession> {
+        return this.update(id, updateSshSessionDto, userId);
+    }
+
+    async deleteSession(userId: string, id: string): Promise<void> {
+        return this.remove(id, userId);
+    }
+
+    async disconnectSession(userId: string, sessionId: string): Promise<{ success: boolean; message: string }> {
+        return this.disconnectFromSession(userId, sessionId);
+    }
+
+    async getCommandLogs(userId: string, sessionId: string, page: number = 1, limit: number = 50): Promise<{
+        logs: ConsoleLog[];
+        total: number;
+        page: number;
+        totalPages: number;
+    }> {
+        return this.getCommandHistory(sessionId, userId, page, limit);
+    }
+
+    async getUserSessionStats(userId: string): Promise<any> {
+        const sessions = await this.findAll(userId);
+        const activeSessions = await this.getActiveSSHSessions();
+
+        return {
+            totalSessions: sessions.length,
+            activeSessions: activeSessions.filter(s => sessions.some(us => us.id === s.sessionId)).length,
+            lastActivity: sessions.length > 0 ? Math.max(...sessions.map(s => s.lastConnectedAt?.getTime() || 0)) : null
+        };
+    }
+
+    isSessionConnected(userId: string, sessionId: string): boolean {
+        // Para compatibilidade, sempre retorna false já que delegamos para Python
+        return false;
+    }
+
+    // ========================
+    // MÉTODOS DE COMPATIBILIDADE (mantidos inalterados)
+    // ========================
+
+    async create(createSshSessionDto: CreateSshSessionDto, userId: string): Promise<SshSession> {
+        // Criptografar dados sensíveis
+        const encryptedPassword = createSshSessionDto.password ? this.encrypt(createSshSessionDto.password) : null;
+        const encryptedPrivateKey = createSshSessionDto.privateKey ? this.encrypt(createSshSessionDto.privateKey) : null;
+        const encryptedPassphrase = createSshSessionDto.passphrase ? this.encrypt(createSshSessionDto.passphrase) : null;
+
+        const sshSession = this.sshSessionRepository.create({
+            ...createSshSessionDto,
+            password: encryptedPassword,
+            privateKey: encryptedPrivateKey,
+            passphrase: encryptedPassphrase,
+            userId,
+        });
+
+        return await this.sshSessionRepository.save(sshSession);
+    }
+
+    async findAll(userId: string): Promise<SshSession[]> {
+        const sessions = await this.sshSessionRepository.find({
+            where: { userId, isActive: true },
+            order: { createdAt: 'DESC' }
+        });
+
+        // Remover dados sensíveis do retorno
+        return sessions.map(session => ({
+            ...session,
+            password: session.password ? '***' : null,
+            privateKey: session.privateKey ? '***' : null,
+            passphrase: session.passphrase ? '***' : null,
+        }) as SshSession);
+    }
+
+    async findOne(id: string, userId: string): Promise<SshSession> {
+        const session = await this.sshSessionRepository.findOne({
+            where: { id, userId, isActive: true }
+        });
+
+        if (!session) {
+            throw new NotFoundException('Sessão SSH não encontrada');
+        }
+
+        // Remover dados sensíveis do retorno
+        return {
+            ...session,
+            password: session.password ? '***' : null,
+            privateKey: session.privateKey ? '***' : null,
+            passphrase: session.passphrase ? '***' : null,
+        } as SshSession;
+    }
+
+    async update(id: string, updateSshSessionDto: UpdateSshSessionDto, userId: string): Promise<SshSession> {
+        const session = await this.findOne(id, userId);
+
+        // Criptografar novos dados sensíveis se fornecidos
+        if (updateSshSessionDto.password) {
+            updateSshSessionDto.password = this.encrypt(updateSshSessionDto.password);
+        }
+        if (updateSshSessionDto.privateKey) {
+            updateSshSessionDto.privateKey = this.encrypt(updateSshSessionDto.privateKey);
+        }
+        if (updateSshSessionDto.passphrase) {
+            updateSshSessionDto.passphrase = this.encrypt(updateSshSessionDto.passphrase);
+        }
+
+        await this.sshSessionRepository.update(id, updateSshSessionDto);
+        return this.findOne(id, userId);
+    }
+
+    async remove(id: string, userId: string): Promise<void> {
+        const session = await this.findOne(id, userId);
+
+        // Primeiro desconectar se estiver conectada
+        try {
+            await this.disconnectFromSession(userId, id);
+        } catch (error) {
+            // Ignorar erros de desconexão na remoção
+        }
+
+        await this.sshSessionRepository.update(id, { isActive: false });
+    }
+
+    async getCommandHistory(sessionId: string, userId: string, page: number = 1, limit: number = 50): Promise<{
+        logs: ConsoleLog[];
+        total: number;
+        page: number;
+        totalPages: number;
+    }> {
+        // Verificar se a sessão pertence ao usuário
+        await this.findOne(sessionId, userId);
+
+        const [logs, total] = await this.consoleLogRepository.findAndCount({
+            where: { sessionId, userId },
+            order: { executedAt: 'DESC' },
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+
+        return {
+            logs,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
+
+    // ========================
+    // MÉTODOS AUXILIARES
+    // ========================
+
+    private async checkSystemOpsHealth(): Promise<void> {
+        try {
+            const response = await firstValueFrom(
+                this.httpService.get(`${this.systemOpsUrl}/ssh/health`, {
+                    timeout: 5000
+                })
+            );
+
+            if ((response.data as any).status !== 'healthy') {
+                console.warn('⚠️ Microserviço SSH não está saudável:', (response.data as any).message);
+            } else {
+                console.log('✅ Microserviço SSH está saudável');
+            }
+
+        } catch (error) {
+            console.error('❌ Microserviço SSH não está disponível:', error.message);
+            throw new Error('Microserviço SSH não está disponível. Verifique se está executando na porta 3001.');
+        }
+    }
+
     private async ensureDefaultSshSession() {
         try {
             const defaultHost = process.env.SSH_DEFAULT_HOST;
@@ -51,32 +470,21 @@ export class ConsoleService implements OnModuleInit {
                 return;
             }
 
-            if (defaultAuthType === 'password' && !defaultPassword) {
-                console.log('⚠️  SSH password authentication selected but SSH_DEFAULT_PASSWORD not found in .env');
-                return;
-            }
-
-            if (defaultAuthType === 'key' && !defaultPrivateKeyPath) {
-                console.log('⚠️  SSH key authentication selected but SSH_DEFAULT_PRIVATE_KEY_PATH not found in .env');
-                return;
-            }
-
-            // Verificar se já existe uma sessão SSH padrão
+            // Verificar se já existe uma sessão padrão
             const existingSession = await this.sshSessionRepository.findOne({
                 where: {
                     hostname: defaultHost,
                     port: parseInt(defaultPort),
                     username: defaultUser,
-                    sessionName: 'Local Server'
+                    isActive: true
                 }
             });
 
             if (existingSession) {
-                console.log('ℹ️  Default SSH session already exists');
+                console.log('✅ Default SSH session already exists');
                 return;
             }
 
-            // Criar sessão SSH padrão para o usuário admin
             const adminUser = await this.sshSessionRepository.manager.findOne('User', {
                 where: { email: 'admin@netpilot.local' }
             }) as any;
@@ -91,8 +499,17 @@ export class ConsoleService implements OnModuleInit {
             let encryptedPassphrase = null;
 
             if (defaultAuthType === 'password') {
+                if (!defaultPassword) {
+                    console.log('⚠️  SSH_DEFAULT_PASSWORD not found for password auth');
+                    return;
+                }
                 encryptedPassword = this.encrypt(defaultPassword);
             } else {
+                if (!defaultPrivateKeyPath) {
+                    console.log('⚠️  SSH_DEFAULT_PRIVATE_KEY_PATH not found for key auth');
+                    return;
+                }
+
                 // Ler chave privada do arquivo
                 const fs = require('fs');
                 if (!fs.existsSync(defaultPrivateKeyPath)) {
@@ -117,7 +534,7 @@ export class ConsoleService implements OnModuleInit {
                 privateKey: encryptedPrivateKey,
                 passphrase: encryptedPassphrase,
                 isActive: true,
-                description: `Sessão SSH padrão para servidor externo (${defaultHost})`,
+                description: `Sessão SSH padrão para servidor externo (${defaultHost}) - Via Python SSH Service`,
                 userId: adminUser.id,
                 connectionOptions: {
                     readyTimeout: 20000,
@@ -126,363 +543,37 @@ export class ConsoleService implements OnModuleInit {
             });
 
             await this.sshSessionRepository.save(defaultSession);
-            console.log(`✅ Default SSH session created for external server: ${defaultHost} (${defaultAuthType})`);
+            console.log(`✅ Default SSH session created for external server: ${defaultHost} (${defaultAuthType}) - Python SSH Service`);
+
         } catch (error) {
             console.error('❌ Error creating default SSH session:', error.message);
         }
     }
 
-    // Criar nova sessão SSH
-    async createSession(userId: string, createDto: CreateSshSessionDto): Promise<SshSession> {
-        // Criptografar senha/chave privada
-        const encryptedPassword = createDto.password ? this.encrypt(createDto.password) : null;
-        const encryptedPrivateKey = createDto.privateKey ? this.encrypt(createDto.privateKey) : null;
-        const encryptedPassphrase = createDto.passphrase ? this.encrypt(createDto.passphrase) : null;
-
-        const session = this.sshSessionRepository.create({
-            ...createDto,
-            userId,
-            password: encryptedPassword,
-            privateKey: encryptedPrivateKey,
-            passphrase: encryptedPassphrase,
-        });
-
-        return await this.sshSessionRepository.save(session);
-    }
-
-    // Listar sessões do usuário
-    async findUserSessions(userId: string): Promise<SshSession[]> {
-        return await this.sshSessionRepository.find({
-            where: { userId, isActive: true },
-            order: { createdAt: 'DESC' },
-        });
-    }
-
-    // Obter sessão por ID
-    async findSessionById(userId: string, sessionId: string): Promise<SshSession> {
-        const session = await this.sshSessionRepository.findOne({
-            where: { id: sessionId, userId },
-        });
-
-        if (!session) {
-            throw new NotFoundException('Sessão SSH não encontrada');
-        }
-
-        return session;
-    }
-
-    // Atualizar sessão
-    async updateSession(
-        userId: string,
-        sessionId: string,
-        updateDto: UpdateSshSessionDto,
-    ): Promise<SshSession> {
-        const session = await this.findSessionById(userId, sessionId);
-
-        // Criptografar novos dados sensíveis se fornecidos
-        if (updateDto.password) {
-            updateDto.password = this.encrypt(updateDto.password);
-        }
-        if (updateDto.privateKey) {
-            updateDto.privateKey = this.encrypt(updateDto.privateKey);
-        }
-        if (updateDto.passphrase) {
-            updateDto.passphrase = this.encrypt(updateDto.passphrase);
-        }
-
-        Object.assign(session, updateDto);
-        return await this.sshSessionRepository.save(session);
-    }
-
-    // Deletar sessão
-    async deleteSession(userId: string, sessionId: string): Promise<void> {
-        const session = await this.findSessionById(userId, sessionId);
-
-        // Fechar conexão se estiver ativa
-        const connectionKey = `${userId}:${sessionId}`;
-        if (this.activeConnections.has(connectionKey)) {
-            const connection = this.activeConnections.get(connectionKey);
-            connection.client.end();
-            this.activeConnections.delete(connectionKey);
-        }
-
-        await this.sshSessionRepository.remove(session);
-    }
-
-    // Conectar à sessão SSH
-    async connectToSession(userId: string, sessionId: string): Promise<boolean> {
-        const session = await this.sshSessionRepository.findOne({
-            where: { id: sessionId, userId },
-            select: ['id', 'hostname', 'port', 'username', 'password', 'privateKey', 'passphrase', 'authType', 'connectionOptions'],
-        });
-
-        if (!session) {
-            throw new NotFoundException('Sessão SSH não encontrada');
-        }
-
-        const connectionKey = `${userId}:${sessionId}`;
-
-        // Se já existe uma conexão ativa, fechar antes de criar nova
-        if (this.activeConnections.has(connectionKey)) {
-            const existingConnection = this.activeConnections.get(connectionKey);
-            existingConnection.client.end();
-            this.activeConnections.delete(connectionKey);
-        }
-
-        return new Promise((resolve, reject) => {
-            const client = new Client();
-
-            client.on('ready', async () => {
-                // Atualizar status da sessão
-                await this.sshSessionRepository.update(sessionId, {
-                    status: 'active',
-                    lastConnectedAt: new Date(),
-                    lastError: null,
-                });
-
-                // Armazenar conexão ativa
-                this.activeConnections.set(connectionKey, {
-                    client,
-                    sessionId,
-                    userId,
-                    connectedAt: new Date(),
-                    lastActivity: new Date(),
-                });
-
-                resolve(true);
-            });
-
-            client.on('error', async (err) => {
-                await this.sshSessionRepository.update(sessionId, {
-                    status: 'error',
-                    lastError: err.message,
-                });
-
-                reject(new BadRequestException(`Erro de conexão SSH: ${err.message}`));
-            });
-
-            client.on('end', async () => {
-                await this.sshSessionRepository.update(sessionId, {
-                    status: 'disconnected',
-                    lastDisconnectedAt: new Date(),
-                });
-
-                this.activeConnections.delete(connectionKey);
-            });
-
-            // Configurar conexão
-            const config: any = {
-                host: session.hostname,
-                port: session.port,
-                username: session.username,
-                readyTimeout: 20000,
-                keepaliveInterval: 60000,
-                ...session.connectionOptions,
-            };
-
-            if (session.authType === 'password') {
-                config.password = this.decrypt(session.password);
-            } else {
-                config.privateKey = this.decrypt(session.privateKey);
-                if (session.passphrase) {
-                    config.passphrase = this.decrypt(session.passphrase);
-                }
-            }
-
-            client.connect(config);
-        });
-    }
-
-    // Desconectar da sessão
-    async disconnectSession(userId: string, sessionId: string): Promise<void> {
-        const connectionKey = `${userId}:${sessionId}`;
-
-        if (this.activeConnections.has(connectionKey)) {
-            const connection = this.activeConnections.get(connectionKey);
-            connection.client.end();
-            this.activeConnections.delete(connectionKey);
-
-            await this.sshSessionRepository.update(sessionId, {
-                status: 'disconnected',
-                lastDisconnectedAt: new Date(),
-            });
-        }
-    }
-
-    // Executar comando SSH
-    async executeCommand(userId: string, executeDto: ExecuteCommandDto): Promise<ConsoleLog> {
-        const connectionKey = `${userId}:${executeDto.sessionId}`;
-        const connection = this.activeConnections.get(connectionKey);
-
-        if (!connection) {
-            throw new BadRequestException('Conexão SSH não encontrada. Conecte-se primeiro.');
-        }
-
-        const startTime = Date.now();
-
-        return new Promise((resolve, reject) => {
-            // Preparar comando com diretório de trabalho e variáveis de ambiente para SSH
-            let fullCommand = executeDto.command;
-
-            // Adicionar mudança de diretório se especificado
-            if (executeDto.workingDirectory) {
-                fullCommand = `cd "${executeDto.workingDirectory}" && ${executeDto.command}`;
-            }
-
-            // Adicionar variáveis de ambiente se especificadas
-            if (executeDto.environment && Object.keys(executeDto.environment).length > 0) {
-                const envVars = Object.entries(executeDto.environment)
-                    .map(([key, value]) => `${key}="${value}"`)
-                    .join(' ');
-                fullCommand = `${envVars} ${fullCommand}`;
-            }
-
-            connection.client.exec(fullCommand, (err, stream) => {
-                if (err) {
-                    reject(new BadRequestException(`Erro ao executar comando: ${err.message}`));
-                    return;
-                }
-
-                let output = '';
-                let errorOutput = '';
-
-                stream.on('close', async (code, signal) => {
-                    const executionTime = Date.now() - startTime;
-
-                    // Atualizar atividade da conexão
-                    connection.lastActivity = new Date();
-
-                    // Incrementar contador de comandos
-                    await this.sshSessionRepository.increment(
-                        { id: executeDto.sessionId },
-                        'commandCount',
-                        1
-                    );
-
-                    // Salvar log da execução
-                    const consoleLog = this.consoleLogRepository.create({
-                        command: executeDto.command,
-                        output,
-                        errorOutput,
-                        exitCode: code || 0,
-                        executionTime,
-                        status: 'completed',
-                        workingDirectory: executeDto.workingDirectory || '~',
-                        environment: executeDto.environment || {},
-                        sessionId: executeDto.sessionId,
-                        userId,
-                        metadata: {
-                            signal,
-                            startTime: new Date(startTime),
-                            endTime: new Date(),
-                        },
-                    });
-
-                    const savedLog = await this.consoleLogRepository.save(consoleLog);
-                    resolve(savedLog);
-                });
-
-                stream.on('data', (data: Buffer) => {
-                    output += data.toString();
-                });
-
-                stream.stderr.on('data', (data: Buffer) => {
-                    errorOutput += data.toString();
-                });
-
-                // Timeout opcional
-                if (executeDto.timeout) {
-                    setTimeout(() => {
-                        stream.destroy();
-                        reject(new BadRequestException('Comando excedeu o tempo limite'));
-                    }, executeDto.timeout);
-                }
-            });
-        });
-    }
-
-    // Obter logs de comandos
-    async getCommandLogs(
-        userId: string,
-        sessionId: string,
-        page: number = 1,
-        limit: number = 50
-    ): Promise<{ logs: ConsoleLog[], total: number }> {
-        const [logs, total] = await this.consoleLogRepository.findAndCount({
-            where: { userId, sessionId },
-            order: { executedAt: 'DESC' },
-            take: limit,
-            skip: (page - 1) * limit,
-        });
-
-        return { logs, total };
-    }
-
-    // Verificar se sessão está conectada
-    isSessionConnected(userId: string, sessionId: string): boolean {
-        const connectionKey = `${userId}:${sessionId}`;
-        return this.activeConnections.has(connectionKey);
-    }
-
-    // Obter estatísticas das sessões
-    async getUserSessionStats(userId: string) {
-        const totalSessions = await this.sshSessionRepository.count({ where: { userId } });
-        const activeSessions = await this.sshSessionRepository.count({
-            where: { userId, status: 'active' }
-        });
-        const totalCommands = await this.consoleLogRepository.count({ where: { userId } });
-
-        const connectedSessions = Array.from(this.activeConnections.values())
-            .filter(conn => conn.userId === userId).length;
-
-        return {
-            totalSessions,
-            activeSessions,
-            connectedSessions,
-            totalCommands,
-        };
-    }
-
-    // Limpar conexões inativas
-    private cleanupInactiveConnections(): void {
-        const now = Date.now();
-
-        for (const [key, connection] of this.activeConnections.entries()) {
-            const timeSinceLastActivity = now - connection.lastActivity.getTime();
-
-            if (timeSinceLastActivity > this.connectionTimeout) {
-                connection.client.end();
-                this.activeConnections.delete(key);
-
-                // Atualizar status no banco
-                this.sshSessionRepository.update(connection.sessionId, {
-                    status: 'disconnected',
-                    lastDisconnectedAt: new Date(),
-                });
-            }
-        }
-    }
-
-    // Utilitários de criptografia
     private encrypt(text: string): string {
         const algorithm = 'aes-256-cbc';
-        const key = crypto.scryptSync(process.env.JWT_SECRET || 'default-secret', 'salt', 32);
+        const key = crypto.scryptSync(process.env.SSH_ENCRYPTION_KEY || 'netpilot-ssh-key', 'salt', 32);
         const iv = crypto.randomBytes(16);
         const cipher = crypto.createCipher(algorithm, key);
+
         let encrypted = cipher.update(text, 'utf8', 'hex');
         encrypted += cipher.final('hex');
+
         return iv.toString('hex') + ':' + encrypted;
     }
 
     private decrypt(encryptedText: string): string {
         const algorithm = 'aes-256-cbc';
-        const key = crypto.scryptSync(process.env.JWT_SECRET || 'default-secret', 'salt', 32);
+        const key = crypto.scryptSync(process.env.SSH_ENCRYPTION_KEY || 'netpilot-ssh-key', 'salt', 32);
+
         const textParts = encryptedText.split(':');
         const iv = Buffer.from(textParts.shift()!, 'hex');
         const encryptedData = textParts.join(':');
+
         const decipher = crypto.createDecipher(algorithm, key);
         let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
+
         return decrypted;
     }
 }

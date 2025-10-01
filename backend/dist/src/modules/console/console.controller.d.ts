@@ -5,12 +5,7 @@ export declare class ConsoleController {
     constructor(consoleService: ConsoleService);
     createSession(req: any, createSshSessionDto: CreateSshSessionDto): Promise<import("../../entities/ssh-session.entity").SshSession>;
     findAllSessions(req: any): Promise<import("../../entities/ssh-session.entity").SshSession[]>;
-    getSessionStats(req: any): Promise<{
-        totalSessions: number;
-        activeSessions: number;
-        connectedSessions: number;
-        totalCommands: number;
-    }>;
+    getSessionStats(req: any): Promise<any>;
     findSession(req: any, id: string): Promise<import("../../entities/ssh-session.entity").SshSession>;
     updateSession(req: any, id: string, updateSshSessionDto: UpdateSshSessionDto): Promise<import("../../entities/ssh-session.entity").SshSession>;
     removeSession(req: any, id: string): Promise<{
@@ -18,7 +13,11 @@ export declare class ConsoleController {
     }>;
     connectSession(req: any, sessionId: string): Promise<{
         sessionId: string;
-        connected: boolean;
+        connected: {
+            success: boolean;
+            message: string;
+            connectionId?: string;
+        };
         message: string;
     }>;
     disconnectSession(req: any, sessionId: string): Promise<{
@@ -34,9 +33,16 @@ export declare class ConsoleController {
     getCommandLogs(req: any, sessionId: string, page: number, limit: number): Promise<{
         logs: import("../../entities/console-log.entity").ConsoleLog[];
         total: number;
+        page: number;
+        totalPages: number;
     }>;
     getAllCommandLogs(req: any, page: number, limit: number, sessionId?: string): Promise<{
         logs: import("../../entities/console-log.entity").ConsoleLog[];
+        total: number;
+        page: number;
+        totalPages: number;
+    } | {
+        logs: any[];
         total: number;
     }>;
 }

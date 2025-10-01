@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DomainsModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const axios_1 = require("@nestjs/axios");
+const config_1 = require("@nestjs/config");
 const domains_controller_1 = require("./domains.controller");
 const domains_service_1 = require("./domains.service");
 const domain_entity_1 = require("../../entities/domain.entity");
@@ -19,7 +21,12 @@ let DomainsModule = class DomainsModule {
 exports.DomainsModule = DomainsModule;
 exports.DomainsModule = DomainsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([domain_entity_1.Domain]), config_module_1.ConfigModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([domain_entity_1.Domain]),
+            config_module_1.ConfigModule,
+            axios_1.HttpModule,
+            config_1.ConfigModule,
+        ],
         controllers: [domains_controller_1.DomainsController],
         providers: [domains_service_1.DomainsService, config_generation_service_1.ConfigGenerationService],
         exports: [domains_service_1.DomainsService],

@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { MainLayout } from '@/components/layout/main-layout';
 import {
   Play,
@@ -54,7 +55,7 @@ export default function JobQueuesPage() {
   });
 
   const [selectedJob, setSelectedJob] = useState<JobQueue | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'jobs' | 'logs' | 'retry' | 'performance' | 'notifications'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'logs' | 'retry' | 'performance' | 'notifications'>('jobs');
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -134,7 +135,7 @@ export default function JobQueuesPage() {
     },
   });
 
-  const getStatusColor = (status: string, isActive: boolean) => {
+  const getStatusColor = (status: string | undefined, isActive: boolean) => {
     if (!isActive) {
       return 'bg-gray-400';
     }
@@ -164,7 +165,8 @@ export default function JobQueuesPage() {
     return <Badge variant={variants[type as keyof typeof variants] || 'outline'}>{type}</Badge>;
   };
 
-  const formatTime = (ms: number) => {
+  const formatTime = (ms: number | undefined) => {
+    if (!ms) return 'N/A';
     if (ms < 1000) return `${ms}ms`;
     if (ms < 60000) return `${Math.round(ms / 1000)}s`;
     return `${Math.round(ms / 60000)}m`;
@@ -261,7 +263,6 @@ export default function JobQueuesPage() {
         {/* Navegação por Abas */}
         <div className="flex space-x-1 border-b">
           {[
-            { id: 'dashboard', label: 'Dashboard', icon: Activity },
             { id: 'jobs', label: 'Jobs', icon: Settings },
             { id: 'logs', label: 'Logs', icon: Eye },
             { id: 'retry', label: 'Retry Stats', icon: RotateCcw },
@@ -284,12 +285,6 @@ export default function JobQueuesPage() {
         </div>
 
         {/* Conteúdo baseado na aba ativa */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6">
-            <JobsDashboard compact />
-          </div>
-        )}
-
         {activeTab === 'logs' && (
           <div className="space-y-6">
             <JobExecutionLogs />
@@ -400,7 +395,7 @@ export default function JobQueuesPage() {
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ) : (
+            ) : (data as any)?.data && (data as any).data.length > 0 ? (
               <div className="space-y-4">
                 <div className="overflow-x-auto">
                   <Table>
@@ -533,6 +528,14 @@ export default function JobQueuesPage() {
                   </Table>
                 </div>
               </div>
+            ) : (
+              <EmptyState
+                icon={Clock}
+                title="Nenhum job encontrado"
+                description="Crie novos jobs para automatizar tarefas e processos agendados no sistema."
+                actionLabel="Novo Job"
+                onAction={() => window.location.href = '/job-queues/create'}
+              />
             )}
           </CardContent>
         </Card>
@@ -597,6 +600,15 @@ export default function JobQueuesPage() {
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Ativo</label>
                       <p className="mt-1 text-sm text-foreground">{selectedJob.isActive ? 'Sim' : 'Não'}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Comando/Script</label>
+                    <div className="mt-1">
+                      <code className="bg-muted px-3 py-2 rounded text-sm block overflow-x-auto">
+                        {selectedJob.scriptPath || 'Não especificado'}
+                      </code>
                     </div>
                   </div>
 

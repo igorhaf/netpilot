@@ -11,15 +11,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var SslCertificatesService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SslCertificatesService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const axios_1 = require("@nestjs/axios");
+const config_1 = require("@nestjs/config");
+const rxjs_1 = require("rxjs");
 const ssl_certificate_entity_1 = require("../../entities/ssl-certificate.entity");
-let SslCertificatesService = class SslCertificatesService {
-    constructor(sslCertificateRepository) {
+let SslCertificatesService = SslCertificatesService_1 = class SslCertificatesService {
+    constructor(sslCertificateRepository, httpService, configService) {
         this.sslCertificateRepository = sslCertificateRepository;
+        this.httpService = httpService;
+        this.configService = configService;
+        this.logger = new common_1.Logger(SslCertificatesService_1.name);
+        this.systemOpsUrl = this.configService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
     }
     async create(createSslCertificateDto) {
         const domain = await this.findDomainById(createSslCertificateDto.domainId);
@@ -38,19 +46,39 @@ let SslCertificatesService = class SslCertificatesService {
                 this.validateDomainName(domain);
             });
         }
-        const certificate = this.sslCertificateRepository.create(createSslCertificateDto);
         try {
-            const certData = await this.issueNewCertificate(createSslCertificateDto.primaryDomain, createSslCertificateDto.sanDomains);
-            certificate.certificatePath = certData.certificatePath;
-            certificate.privateKeyPath = certData.privateKeyPath;
-            certificate.expiresAt = certData.expiresAt;
-            certificate.status = ssl_certificate_entity_1.CertificateStatus.VALID;
+            this.logger.log(`📝 Solicitando emissão de certificado SSL ao Python service para ${createSslCertificateDto.primaryDomain}`);
+            const allDomains = [createSslCertificateDto.primaryDomain];
+            if (createSslCertificateDto.sanDomains?.length > 0) {
+                allDomains.push(...createSslCertificateDto.sanDomains);
+            }
+            const sslRequest = {
+                domains: allDomains,
+                provider: 'letsencrypt',
+                email: process.env.SSL_EMAIL || 'admin@netpilot.local',
+                agree_tos: true,
+                staging: process.env.ACME_STAGING === 'true',
+                challenge_type: 'http-01',
+                webroot_path: process.env.ACME_CHALLENGE_PATH || '/var/www/certbot'
+            };
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${this.systemOpsUrl}/ssl/issue`, sslRequest, {
+                timeout: 120000
+            }));
+            if (response.data.success) {
+                this.logger.log(`✅ Certificado SSL emitido com sucesso para ${createSslCertificateDto.primaryDomain}`);
+                const certificate = await this.sslCertificateRepository.findOne({
+                    where: { id: response.data.certificate_id }
+                });
+                if (certificate) {
+                    return certificate;
+                }
+            }
+            throw new Error(response.data.message || 'Erro ao emitir certificado');
         }
         catch (error) {
-            certificate.status = ssl_certificate_entity_1.CertificateStatus.FAILED;
-            certificate.lastError = error.message;
+            this.logger.error(`❌ Erro ao comunicar com Python service: ${error.message}`);
+            throw new common_1.BadRequestException(`Erro ao emitir certificado: ${error.message}`);
         }
-        return await this.sslCertificateRepository.save(certificate);
     }
     async findDomainById(domainId) {
         return { id: domainId, name: 'example.com' };
@@ -124,21 +152,31 @@ let SslCertificatesService = class SslCertificatesService {
     async renewCertificate(id) {
         const certificate = await this.findOne(id);
         try {
+            this.logger.log(`🔄 Solicitando renovação de certificado SSL ao Python service para ${certificate.primaryDomain}`);
             certificate.status = ssl_certificate_entity_1.CertificateStatus.PENDING;
             await this.sslCertificateRepository.save(certificate);
-            const renewalResult = await this.renewCertificateWithAcme(certificate);
-            certificate.status = ssl_certificate_entity_1.CertificateStatus.VALID;
-            certificate.expiresAt = renewalResult.expiresAt;
-            certificate.certificatePath = renewalResult.certificatePath;
-            certificate.privateKeyPath = renewalResult.privateKeyPath;
-            certificate.lastError = null;
-            await this.sslCertificateRepository.save(certificate);
-            return {
-                success: true,
-                message: 'Certificado renovado com sucesso',
+            const renewalRequest = {
+                certificate_id: id,
+                domains: [certificate.primaryDomain, ...(certificate.sanDomains || [])],
+                force: false,
+                days_before_expiry: 30
             };
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${this.systemOpsUrl}/ssl/renew`, renewalRequest, {
+                timeout: 120000
+            }));
+            if (response.data.success) {
+                this.logger.log(`✅ Certificado SSL renovado com sucesso para ${certificate.primaryDomain}`);
+                return {
+                    success: true,
+                    message: 'Certificado renovado com sucesso',
+                };
+            }
+            else {
+                throw new Error(response.data.message || 'Erro ao renovar certificado');
+            }
         }
         catch (error) {
+            this.logger.error(`❌ Erro ao renovar certificado: ${error.message}`);
             certificate.status = ssl_certificate_entity_1.CertificateStatus.FAILED;
             certificate.lastError = error.message;
             await this.sslCertificateRepository.save(certificate);
@@ -148,24 +186,8 @@ let SslCertificatesService = class SslCertificatesService {
             };
         }
     }
-    async renewCertificateWithAcme(certificate) {
-        const basePath = `/ssl/${certificate.primaryDomain}`;
-        return {
-            certificatePath: `${basePath}.crt`,
-            privateKeyPath: `${basePath}.key`,
-            expiresAt: new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)),
-        };
-    }
-    async issueNewCertificate(domain, sanDomains) {
-        const basePath = `/ssl/${domain}`;
-        return {
-            certificatePath: `${basePath}.crt`,
-            privateKeyPath: `${basePath}.key`,
-            expiresAt: new Date(Date.now() + (90 * 24 * 60 * 60 * 1000)),
-        };
-    }
     async deleteCertificateFiles(certificate) {
-        console.log(`Deleting certificate files for ${certificate.primaryDomain}`);
+        this.logger.log(`Marcando certificado como deletado: ${certificate.primaryDomain}`);
     }
     async renewExpiredCertificates() {
         const expiredCertificates = await this.sslCertificateRepository.find({
@@ -193,9 +215,11 @@ let SslCertificatesService = class SslCertificatesService {
     }
 };
 exports.SslCertificatesService = SslCertificatesService;
-exports.SslCertificatesService = SslCertificatesService = __decorate([
+exports.SslCertificatesService = SslCertificatesService = SslCertificatesService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(ssl_certificate_entity_1.SslCertificate)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        axios_1.HttpService,
+        config_1.ConfigService])
 ], SslCertificatesService);
 //# sourceMappingURL=ssl-certificates.service.js.map

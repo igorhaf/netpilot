@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { HttpModule } from '@nestjs/axios';
+import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { DomainsController } from './domains.controller';
 import { DomainsService } from './domains.service';
 import { Domain } from '../../entities/domain.entity';
@@ -7,7 +9,12 @@ import { ConfigGenerationService } from '../../services/config-generation.servic
 import { ConfigModule } from '../config/config.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Domain]), ConfigModule],
+  imports: [
+    TypeOrmModule.forFeature([Domain]),
+    ConfigModule,
+    HttpModule,
+    NestConfigModule,
+  ],
   controllers: [DomainsController],
   providers: [DomainsService, ConfigGenerationService],
   exports: [DomainsService],

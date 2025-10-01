@@ -7,7 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { DomainsModule } from './modules/domains/domains.module';
 import { ProxyRulesModule } from './modules/proxy-rules/proxy-rules.module';
-// import { RedirectsModule } from './modules/redirects/redirects.module'; // Temporarily disabled
+import { RedirectsModule } from './modules/redirects/redirects.module';
 import { SslCertificatesModule } from './modules/ssl-certificates/ssl-certificates.module';
 import { LogsModule } from './modules/logs/logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
@@ -23,7 +23,7 @@ import { User } from './entities/user.entity';
 import { Project } from './entities/project.entity';
 import { Domain } from './entities/domain.entity';
 import { ProxyRule } from './entities/proxy-rule.entity';
-// import { Redirect } from './entities/redirect.entity'; // Temporarily disabled
+import { Redirect } from './entities/redirect.entity';
 import { SslCertificate } from './entities/ssl-certificate.entity';
 import { Log } from './entities/log.entity';
 import { SshSession } from './entities/ssh-session.entity';
@@ -43,7 +43,7 @@ import { JobSchedule } from './entities/job-schedule.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User, Project, Domain, ProxyRule, SslCertificate, Log, SshSession, ConsoleLog, JobQueue, JobExecution, JobSchedule],
+        entities: [User, Project, Domain, ProxyRule, Redirect, SslCertificate, Log, SshSession, ConsoleLog, JobQueue, JobExecution, JobSchedule],
         synchronize: true, // Temporarily enabled to recognize new isLocked column
         logging: process.env.NODE_ENV === 'development',
       }),
@@ -74,7 +74,7 @@ import { JobSchedule } from './entities/job-schedule.entity';
     ProjectsModule,
     DomainsModule,
     ProxyRulesModule,
-    // RedirectsModule, // Temporarily disabled
+    RedirectsModule,
     SslCertificatesModule,
     LogsModule,
     DashboardModule,

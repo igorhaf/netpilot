@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MainLayout } from '@/components/layout/main-layout';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Image as ImageIcon,
   Plus,
@@ -344,7 +345,7 @@ export default function ImagesPage() {
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               </div>
-            ) : (
+            ) : (data as any)?.images && (data as any).images.length > 0 ? (
               <div className="space-y-4">
                 <Table className="table-fixed">
                   <TableHeader>
@@ -462,6 +463,16 @@ export default function ImagesPage() {
                     </div>
                   </div>
                 ) : null}
+              </div>
+            ) : (
+              <div className="p-6">
+                <EmptyState
+                  icon={ImageIcon}
+                  title="Nenhuma imagem encontrada"
+                  description="Baixe ou construa imagens Docker para executar seus containers e aplicações."
+                  actionLabel="Pull Image"
+                  onAction={handlePull}
+                />
               </div>
             )}
           </CardContent>

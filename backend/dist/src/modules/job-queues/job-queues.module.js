@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const schedule_1 = require("@nestjs/schedule");
 const bull_1 = require("@nestjs/bull");
+const axios_1 = require("@nestjs/axios");
 const job_queue_entity_1 = require("../../entities/job-queue.entity");
 const job_execution_entity_1 = require("../../entities/job-execution.entity");
 const job_schedule_entity_1 = require("../../entities/job-schedule.entity");
@@ -31,6 +32,7 @@ exports.JobQueuesModule = JobQueuesModule = __decorate([
             bull_1.BullModule.registerQueue({
                 name: 'job-processor',
             }),
+            axios_1.HttpModule,
         ],
         controllers: [
             job_queues_controller_1.JobQueuesController,

@@ -11,33 +11,42 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var ConfigGenerationService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConfigGenerationService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const fs = require("fs-extra");
-const path = require("path");
+const axios_1 = require("@nestjs/axios");
+const config_1 = require("@nestjs/config");
+const rxjs_1 = require("rxjs");
 const domain_entity_1 = require("../entities/domain.entity");
 const config_service_1 = require("./config.service");
-let ConfigGenerationService = class ConfigGenerationService {
-    constructor(domainRepository, configService) {
+let ConfigGenerationService = ConfigGenerationService_1 = class ConfigGenerationService {
+    constructor(domainRepository, configService, httpService, nestConfigService) {
         this.domainRepository = domainRepository;
         this.configService = configService;
+        this.httpService = httpService;
+        this.nestConfigService = nestConfigService;
+        this.logger = new common_1.Logger(ConfigGenerationService_1.name);
+        this.systemOpsUrl = this.nestConfigService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
     }
     async generateNginxConfig() {
-        const domains = await this.domainRepository.find({
-            where: { isActive: true },
-            relations: ['proxyRules'],
-        });
-        const nginxConfigPath = this.configService.nginxConfigPath;
-        await fs.ensureDir(nginxConfigPath);
-        for (const domain of domains) {
-            const config = this.generateNginxVirtualHost(domain);
-            const configFile = path.join(nginxConfigPath, `${domain.name}.conf`);
-            await fs.writeFile(configFile, config);
+        try {
+            this.logger.log('📝 Solicitando geração de configurações Nginx ao Python service');
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${this.systemOpsUrl}/config/generate-nginx`));
+            if (response.data.success) {
+                this.logger.log(`✅ Configurações Nginx geradas: ${response.data.domains_count} domínios`);
+            }
+            else {
+                this.logger.error('❌ Falha ao gerar configurações Nginx');
+                throw new Error(response.data.message || 'Erro ao gerar configurações Nginx');
+            }
         }
-        await this.reloadNginx();
+        catch (error) {
+            this.logger.error(`❌ Erro ao comunicar com Python service: ${error.message}`);
+            throw error;
+        }
     }
     generateNginxVirtualHost(domain) {
         const activeProxyRules = domain.proxyRules
@@ -97,24 +106,21 @@ server {
         return config;
     }
     async generateTraefikConfig() {
-        const domains = await this.domainRepository.find({
-            where: { isActive: true },
-            relations: ['proxyRules'],
-        });
-        const traefikConfigPath = this.configService.traefikConfigPath;
-        await fs.ensureDir(traefikConfigPath);
-        const config = {
-            http: {
-                routers: {},
-                services: {},
-                middlewares: {},
-            },
-        };
-        for (const domain of domains) {
-            this.addTraefikDomainConfig(config, domain);
+        try {
+            this.logger.log('📝 Solicitando geração de configuração Traefik ao Python service');
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${this.systemOpsUrl}/config/generate-traefik`));
+            if (response.data.success) {
+                this.logger.log(`✅ Configuração Traefik gerada: ${response.data.domains_count} domínios`);
+            }
+            else {
+                this.logger.error('❌ Falha ao gerar configuração Traefik');
+                throw new Error(response.data.message || 'Erro ao gerar configuração Traefik');
+            }
         }
-        const configFile = path.join(traefikConfigPath, 'dynamic.yml');
-        await fs.writeFile(configFile, this.yamlStringify(config));
+        catch (error) {
+            this.logger.error(`❌ Erro ao comunicar com Python service: ${error.message}`);
+            throw error;
+        }
     }
     addTraefikDomainConfig(config, domain) {
         const routerName = domain.name.replace(/\./g, '-');
@@ -243,10 +249,12 @@ server {
     }
 };
 exports.ConfigGenerationService = ConfigGenerationService;
-exports.ConfigGenerationService = ConfigGenerationService = __decorate([
+exports.ConfigGenerationService = ConfigGenerationService = ConfigGenerationService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(domain_entity_1.Domain)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        config_service_1.ConfigService])
+        config_service_1.ConfigService,
+        axios_1.HttpService,
+        config_1.ConfigService])
 ], ConfigGenerationService);
 //# sourceMappingURL=config-generation.service.js.map

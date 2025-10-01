@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MainLayout } from '@/components/layout/main-layout';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Play,
   Square,
@@ -241,7 +242,7 @@ export default function ContainersPage() {
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
-          ) : (
+          ) : data?.data && data.data.length > 0 ? (
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
@@ -389,6 +390,16 @@ export default function ContainersPage() {
                 ))}
               </TableBody>
             </Table>
+          ) : (
+            <div className="p-6">
+              <EmptyState
+                icon={ImageIcon}
+                title="Nenhum container encontrado"
+                description="Crie novos containers Docker para executar suas aplicações e serviços."
+                actionLabel="Novo Container"
+                onAction={() => window.location.href = '/docker/containers/create'}
+              />
+            </div>
           )}
         </CardContent>
       </Card>

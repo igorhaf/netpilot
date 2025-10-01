@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WebSocketGateway as WSGateway } from './websocket.gateway';
 import { WebSocketService } from './services/websocket.service';
@@ -14,16 +15,16 @@ import { ConsoleLog } from '../../entities/console-log.entity';
 // import { DockerJob } from '../docker/entities/docker-job.entity'; // Temporarily disabled
 
 // Import modules
+import { ConsoleModule } from '../console/console.module';
 // import { DockerModule } from '../docker/docker.module'; // Temporarily disabled
-
-// Import services
-import { ConsoleService } from '../console/console.service';
 import { WebSocketRateLimitGuard } from './guards/websocket-rate-limit.guard';
 
 @Module({
   imports: [
     JwtModule.register({}),
+    HttpModule,
     TypeOrmModule.forFeature([SshSession, ConsoleLog]), // DockerJob temporarily disabled
+    ConsoleModule,
     // DockerModule // Temporarily disabled
   ],
   providers: [
@@ -31,8 +32,7 @@ import { WebSocketRateLimitGuard } from './guards/websocket-rate-limit.guard';
     WebSocketService,
     SshWebSocketHandler,
     // DockerWebSocketHandler, // Temporarily disabled due to DOCKER_CONFIG dependency
-    WebSocketRateLimitGuard,
-    ConsoleService
+    WebSocketRateLimitGuard
   ],
   exports: [WebSocketService, WSGateway, SshWebSocketHandler] // DockerWebSocketHandler temporarily disabled
 })

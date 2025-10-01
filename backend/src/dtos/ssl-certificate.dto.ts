@@ -1,5 +1,6 @@
 import { IsString, IsArray, IsBoolean, IsOptional, IsUUID, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateSslCertificateDto {
   @ApiProperty({ example: 'exemplo.com' })
@@ -27,7 +28,7 @@ export class CreateSslCertificateDto {
   domainId: string;
 }
 
-export class UpdateSslCertificateDto extends CreateSslCertificateDto {}
+export class UpdateSslCertificateDto extends PartialType(CreateSslCertificateDto) {}
 
 export class RenewCertificateDto {
   @ApiProperty({ example: 'uuid-do-certificado' })

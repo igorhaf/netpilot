@@ -4,6 +4,8 @@ import { JobQueue } from '../../entities/job-queue.entity';
 import { JobExecution } from '../../entities/job-execution.entity';
 import { JobQueuesGateway } from '../job-queues/job-queues.gateway';
 import { Repository } from 'typeorm';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 export interface JobData {
     jobQueueId: string;
     executionId: string;
@@ -25,47 +27,27 @@ export declare class RedisQueueService implements OnModuleInit {
     private jobExecutionRepository;
     private jobQueueRepository;
     private jobQueuesGateway;
+    private httpService;
+    private configService;
     private readonly logger;
-    constructor(jobQueue: Queue, jobExecutionRepository: Repository<JobExecution>, jobQueueRepository: Repository<JobQueue>, jobQueuesGateway: JobQueuesGateway);
+    private readonly systemOpsUrl;
+    constructor(jobQueue: Queue, jobExecutionRepository: Repository<JobExecution>, jobQueueRepository: Repository<JobQueue>, jobQueuesGateway: JobQueuesGateway, httpService: HttpService, configService: ConfigService);
     onModuleInit(): Promise<void>;
     private setupQueueListeners;
-    addJob(jobQueue: JobQueue, executionId: string, options?: Partial<JobOptions>): Promise<Job<JobData>>;
-    handleExecuteScript(job: Job<JobData>): Promise<JobResult>;
-    private executeScript;
+    addJob(jobQueue: JobQueue, executionId: string, metadata?: Record<string, any>, options?: JobOptions): Promise<Job>;
+    processJob(job: Job<JobData>): Promise<JobResult>;
+    private executeScriptViaPython;
+    private getSystemOpsToken;
+    private executeScriptDirectly;
+    checkSystemOpsHealth(): Promise<boolean>;
+    getSystemOpsStats(): Promise<any>;
     getQueueStats(): Promise<{
-        waiting: number;
-        active: number;
-        completed: number;
-        failed: number;
-        delayed: number;
-        paused: boolean;
-        total: number;
+        healthy: boolean;
+        stats: any;
+        python_integration: boolean;
     }>;
-    getJob(jobId: string): Promise<Job | null>;
-    removeJob(jobId: string): Promise<void>;
-    retryJob(jobId: string): Promise<void>;
-    pauseQueue(): Promise<void>;
-    resumeQueue(): Promise<void>;
-    cleanQueue(grace?: number): Promise<void>;
     getQueueHealth(): Promise<{
         healthy: boolean;
-        paused: boolean;
-        stats: {
-            waiting: number;
-            active: number;
-            completed: number;
-            failed: number;
-            delayed: number;
-            paused: boolean;
-            total: number;
-        };
-        timestamp: Date;
-        error?: undefined;
-    } | {
-        healthy: boolean;
-        error: any;
-        timestamp: Date;
-        paused?: undefined;
-        stats?: undefined;
+        python_service: boolean;
     }>;
 }

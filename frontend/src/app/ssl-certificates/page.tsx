@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Shield, Search, RefreshCw, CheckCircle, AlertTriangle, XCircle, Trash2 } from 'lucide-react'
+import { Shield, Search, RefreshCw, CheckCircle, AlertTriangle, XCircle, Trash2, Lock, Unlock } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,8 @@ export default function SslCertificatesPage() {
   const [search, setSearch] = useState('')
   const queryClient = useQueryClient()
   const [certificateToDelete, setCertificateToDelete] = useState<SslCertificate | null>(null)
+  const [certificateToRenew, setCertificateToRenew] = useState<SslCertificate | null>(null)
+  const [showRenewExpiredModal, setShowRenewExpiredModal] = useState(false)
 
   // Get domain filter from URL
   const domainFilter = searchParams.get('domain')
@@ -83,16 +86,56 @@ export default function SslCertificatesPage() {
     },
   })
 
-  const handleRenewCertificate = (certificateId: string) => {
-    renewCertificateMutation.mutate(certificateId)
+  // Mutation para travar/destravar certificado
+  const toggleLockMutation = useMutation({
+    mutationFn: async (certificate: SslCertificate) => {
+      // TODO: Implementar quando o backend suportar isLocked para certificados SSL
+      const response = await api.patch(`/ssl-certificates/${certificate.id}`, {
+        primaryDomain: certificate.primaryDomain,
+        sanDomains: certificate.sanDomains,
+        autoRenew: certificate.autoRenew,
+        renewBeforeDays: certificate.renewBeforeDays,
+        isLocked: !certificate.isLocked,
+        domainId: certificate.domainId,
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ssl-certificates'] })
+      queryClient.invalidateQueries({ queryKey: ['ssl-certificates-stats'] })
+      toast.success('Status do travamento atualizado!')
+    },
+    onError: (error: any) => {
+      toast.error('Funcionalidade de travamento ainda não implementada no backend para certificados SSL')
+    },
+  })
+
+  const handleRenewCertificate = (certificate: SslCertificate) => {
+    setCertificateToRenew(certificate)
   }
 
   const handleRenewExpired = () => {
+    setShowRenewExpiredModal(true)
+  }
+
+  const confirmRenewCertificate = () => {
+    if (certificateToRenew) {
+      renewCertificateMutation.mutate(certificateToRenew.id)
+      setCertificateToRenew(null)
+    }
+  }
+
+  const confirmRenewExpired = () => {
     renewExpiredMutation.mutate()
+    setShowRenewExpiredModal(false)
   }
 
   const handleDeleteCertificate = (certificate: SslCertificate) => {
     setCertificateToDelete(certificate)
+  }
+
+  const handleToggleLock = (certificate: SslCertificate) => {
+    toggleLockMutation.mutate(certificate)
   }
 
   const confirmDeleteCertificate = () => {
@@ -217,22 +260,25 @@ export default function SslCertificatesPage() {
           />
         </div>
 
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio Principal</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Expira em</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Auto Renovação</th>
-                    <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {certificates && certificates.length > 0 ? (
-                    certificates.map((cert) => (
-                      <tr key={cert.id} className="border-b border-border hover:bg-muted/50">
+        {/* SSL Certificates Table or Empty State */}
+        {certificates && certificates.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio Principal</th>
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Expira em</th>
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Auto Renovação</th>
+                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {certificates.map((cert) => (
+                      <tr key={cert.id} className={`border-b border-border hover:bg-muted/50 ${
+                        cert.isLocked ? 'bg-muted/30 opacity-70' : ''
+                      }`}>
                         <td className="py-3 px-6">
                           <div className="flex items-center gap-3">
                             <div className={`h-2 w-2 rounded-full ${
@@ -274,40 +320,60 @@ export default function SslCertificatesPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleRenewCertificate(cert.id)}
-                              disabled={renewCertificateMutation.isPending}
-                              title="Renovar certificado"
+                              onClick={() => handleToggleLock(cert)}
+                              disabled={toggleLockMutation.isPending}
+                              title={cert.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
                             >
-                              <RefreshCw className="h-4 w-4" />
+                              {cert.isLocked ? (
+                                <Lock className="h-4 w-4" />
+                              ) : (
+                                <Unlock className="h-4 w-4" />
+                              )}
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDeleteCertificate(cert)}
-                              disabled={deleteCertificateMutation.isPending}
-                              className="text-red-600 hover:text-red-700"
-                              title="Excluir certificado"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+
+                            {!cert.isLocked && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRenewCertificate(cert)}
+                                  disabled={renewCertificateMutation.isPending}
+                                  title="Renovar certificado"
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteCertificate(cert)}
+                                  disabled={deleteCertificateMutation.isPending}
+                                  className="text-red-600 hover:text-red-700"
+                                  title="Excluir certificado"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="py-12 text-center text-muted-foreground">
-                        Nenhum certificado encontrado
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <EmptyState
+            icon={Shield}
+            title="Nenhum certificado SSL encontrado"
+            description="Configure certificados SSL para seus domínios para garantir conexões seguras HTTPS."
+            actionLabel="Renovar Expirados"
+            onAction={handleRenewExpired}
+          />
+        )}
 
-        {/* Confirmation Modal */}
+        {/* Confirmation Modals */}
         <ConfirmationModal
           isOpen={!!certificateToDelete}
           onClose={() => setCertificateToDelete(null)}
@@ -322,6 +388,39 @@ export default function SslCertificatesPage() {
           ]}
           confirmText="Excluir Certificado"
           isLoading={deleteCertificateMutation.isPending}
+        />
+
+        <ConfirmationModal
+          isOpen={!!certificateToRenew}
+          onClose={() => setCertificateToRenew(null)}
+          onConfirm={confirmRenewCertificate}
+          title="Confirmar Renovação"
+          subtitle="O certificado será renovado automaticamente."
+          itemName={`Certificado SSL para ${certificateToRenew?.primaryDomain}`}
+          consequences={[
+            'Solicitar novo certificado SSL via Let\'s Encrypt',
+            'Atualizar automaticamente as configurações do servidor',
+            'Manter o domínio online durante o processo'
+          ]}
+          isLoading={renewCertificateMutation.isPending}
+          confirmText="Renovar"
+        />
+
+        <ConfirmationModal
+          isOpen={showRenewExpiredModal}
+          onClose={() => setShowRenewExpiredModal(false)}
+          onConfirm={confirmRenewExpired}
+          title="Confirmar Renovação em Massa"
+          subtitle="Todos os certificados expirados serão renovados automaticamente."
+          itemName="Certificados SSL expirados"
+          consequences={[
+            'Identificar todos os certificados expirados',
+            'Solicitar novos certificados via Let\'s Encrypt',
+            'Atualizar configurações automaticamente',
+            'Processo pode levar alguns minutos'
+          ]}
+          isLoading={renewExpiredMutation.isPending}
+          confirmText="Renovar Todos"
         />
       </div>
     </MainLayout>

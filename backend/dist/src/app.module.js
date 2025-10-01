@@ -16,6 +16,7 @@ const auth_module_1 = require("./modules/auth/auth.module");
 const projects_module_1 = require("./modules/projects/projects.module");
 const domains_module_1 = require("./modules/domains/domains.module");
 const proxy_rules_module_1 = require("./modules/proxy-rules/proxy-rules.module");
+const redirects_module_1 = require("./modules/redirects/redirects.module");
 const ssl_certificates_module_1 = require("./modules/ssl-certificates/ssl-certificates.module");
 const logs_module_1 = require("./modules/logs/logs.module");
 const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
@@ -31,6 +32,7 @@ const user_entity_1 = require("./entities/user.entity");
 const project_entity_1 = require("./entities/project.entity");
 const domain_entity_1 = require("./entities/domain.entity");
 const proxy_rule_entity_1 = require("./entities/proxy-rule.entity");
+const redirect_entity_1 = require("./entities/redirect.entity");
 const ssl_certificate_entity_1 = require("./entities/ssl-certificate.entity");
 const log_entity_1 = require("./entities/log.entity");
 const ssh_session_entity_1 = require("./entities/ssh-session.entity");
@@ -52,7 +54,7 @@ exports.AppModule = AppModule = __decorate([
                 useFactory: (configService) => ({
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
-                    entities: [user_entity_1.User, project_entity_1.Project, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, job_queue_entity_1.JobQueue, job_execution_entity_1.JobExecution, job_schedule_entity_1.JobSchedule],
+                    entities: [user_entity_1.User, project_entity_1.Project, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, job_queue_entity_1.JobQueue, job_execution_entity_1.JobExecution, job_schedule_entity_1.JobSchedule],
                     synchronize: true,
                     logging: process.env.NODE_ENV === 'development',
                 }),
@@ -83,6 +85,7 @@ exports.AppModule = AppModule = __decorate([
             projects_module_1.ProjectsModule,
             domains_module_1.DomainsModule,
             proxy_rules_module_1.ProxyRulesModule,
+            redirects_module_1.RedirectsModule,
             ssl_certificates_module_1.SslCertificatesModule,
             logs_module_1.LogsModule,
             dashboard_module_1.DashboardModule,

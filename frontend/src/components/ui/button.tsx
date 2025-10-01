@@ -9,11 +9,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant = 'default', size = 'default', ...props }, ref) => {
         const variants = {
-            default: 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400',
-            destructive: 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400',
-            outline: 'border border-gray-300 bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800',
-            secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
-            ghost: 'bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
+            default: 'bg-primary text-white hover:bg-primary/90 hover:border hover:border-border disabled:bg-primary/50',
+            destructive: 'bg-red-600 text-white hover:bg-red-700 hover:border hover:border-border disabled:bg-red-400',
+            outline: 'border border-gray-300 bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-border',
+            secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 hover:border hover:border-border',
+            ghost: 'bg-transparent text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border hover:border-border'
         }
 
         const sizes = {

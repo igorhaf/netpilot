@@ -278,11 +278,13 @@ let DockerMinimalController = class DockerMinimalController {
             const logs = await container.logs({
                 stdout: true,
                 stderr: true,
-                tail: 100,
+                tail: 500,
                 timestamps: true
             });
+            let logsString = logs.toString('utf-8');
+            logsString = logsString.replace(/[\x00-\x02][\x00]{3}[\x00-\xFF]{4}/g, '');
             return {
-                logs: logs.toString(),
+                logs: logsString,
                 success: true
             };
         }

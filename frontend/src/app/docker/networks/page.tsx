@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MainLayout } from '@/components/layout/main-layout';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Network,
   Plus,
@@ -252,7 +253,7 @@ export default function NetworksPage() {
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               </div>
-            ) : (
+            ) : (data as any)?.networks && (data as any).networks.length > 0 ? (
               <div className="space-y-4">
                 <Table>
                   <TableHeader>
@@ -363,6 +364,16 @@ export default function NetworksPage() {
                     </div>
                   </div>
                 ) : null}
+              </div>
+            ) : (
+              <div className="p-6">
+                <EmptyState
+                  icon={Network}
+                  title="Nenhuma rede encontrada"
+                  description="Crie redes Docker personalizadas para conectar e isolar seus containers."
+                  actionLabel="Nova Rede"
+                  onAction={() => window.location.href = '/docker/networks/create'}
+                />
               </div>
             )}
           </CardContent>

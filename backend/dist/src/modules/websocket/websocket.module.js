@@ -9,13 +9,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebSocketModule = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
+const axios_1 = require("@nestjs/axios");
 const typeorm_1 = require("@nestjs/typeorm");
 const websocket_gateway_1 = require("./websocket.gateway");
 const websocket_service_1 = require("./services/websocket.service");
 const ssh_websocket_handler_1 = require("./handlers/ssh-websocket.handler");
 const ssh_session_entity_1 = require("../../entities/ssh-session.entity");
 const console_log_entity_1 = require("../../entities/console-log.entity");
-const console_service_1 = require("../console/console.service");
+const console_module_1 = require("../console/console.module");
 const websocket_rate_limit_guard_1 = require("./guards/websocket-rate-limit.guard");
 let WebSocketModule = class WebSocketModule {
 };
@@ -24,14 +25,15 @@ exports.WebSocketModule = WebSocketModule = __decorate([
     (0, common_1.Module)({
         imports: [
             jwt_1.JwtModule.register({}),
+            axios_1.HttpModule,
             typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog]),
+            console_module_1.ConsoleModule,
         ],
         providers: [
             websocket_gateway_1.WebSocketGateway,
             websocket_service_1.WebSocketService,
             ssh_websocket_handler_1.SshWebSocketHandler,
-            websocket_rate_limit_guard_1.WebSocketRateLimitGuard,
-            console_service_1.ConsoleService
+            websocket_rate_limit_guard_1.WebSocketRateLimitGuard
         ],
         exports: [websocket_service_1.WebSocketService, websocket_gateway_1.WebSocketGateway, ssh_websocket_handler_1.SshWebSocketHandler]
     })

@@ -14,13 +14,9 @@ export declare class JobExecutionsService {
     constructor(jobExecutionRepository: Repository<JobExecution>, jobQueueRepository: Repository<JobQueue>, jobQueuesGateway: JobQueuesGateway, redisQueueService: RedisQueueService);
     executeJob(jobQueueId: string, executeJobDto: ExecuteJobDto, userId?: string): Promise<JobExecution>;
     getRedisStats(): Promise<{
-        waiting: number;
-        active: number;
-        completed: number;
-        failed: number;
-        delayed: number;
-        paused: boolean;
-        total: number;
+        healthy: boolean;
+        stats: any;
+        python_integration: boolean;
     } | {
         waiting: number;
         active: number;
@@ -33,24 +29,11 @@ export declare class JobExecutionsService {
     }>;
     getRedisHealth(): Promise<{
         healthy: boolean;
-        paused: boolean;
-        stats: {
-            waiting: number;
-            active: number;
-            completed: number;
-            failed: number;
-            delayed: number;
-            paused: boolean;
-            total: number;
-        };
-        timestamp: Date;
-        error?: undefined;
+        python_service: boolean;
     } | {
         healthy: boolean;
         error: any;
         timestamp: Date;
-        paused?: undefined;
-        stats?: undefined;
     }>;
     private performExecution;
     private executeScript;

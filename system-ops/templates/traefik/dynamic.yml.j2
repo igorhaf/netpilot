@@ -1,0 +1,123 @@
+# Traefik Dynamic Configuration
+# Generated at: {{ generation_time }}
+# NetPilot System Operations
+
+http:
+  routers:
+{% for domain in domains %}
+  {% set router_name = domain.name | replace('.', '-') %}
+  {% set is_netpilot = domain.name == 'netpilot.meadadigital.com' %}
+
+  {% if is_netpilot %}
+    # NetPilot Domain - Special routing for API + Frontend
+    {{ router_name }}-api:
+      rule: "Host(`{{ domain.name }}`) && PathPrefix(`/api`)"
+      service: {{ router_name }}-api-service
+      middlewares: []
+      priority: 10
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    {{ router_name }}:
+      rule: "Host(`{{ domain.name }}`)"
+      service: {{ router_name }}-service
+      middlewares: []
+      priority: 1
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+  {% else %}
+    # Regular domain routing
+    {% for rule in domain.proxyRules %}
+      {% if rule.isActive %}
+        {% set current_router = router_name %}
+        {% if rule.sourcePath.startswith('/api') %}
+          {% set current_router = router_name ~ '-api' %}
+        {% elif rule.sourcePath != '/' %}
+          {% set current_router = router_name ~ '-' ~ rule.sourcePath | replace('/', '-') | replace('*', '') | trim('-') %}
+        {% endif %}
+
+    {{ current_router }}:
+      rule: "Host(`{{ domain.name }}`){% if rule.sourcePath != '/' %} && PathPrefix(`{{ rule.sourcePath | replace('/*', '') }}`){% endif %}"
+      service: {{ current_router }}-service
+      middlewares: []
+      priority: {{ rule.priority }}
+      entryPoints:
+        {% if rule.sourcePort == 80 %}
+        - web
+        {% elif rule.sourcePort == 443 or domain.autoTls %}
+        - websecure
+        {% else %}
+        - web
+        {% endif %}
+      {% if domain.autoTls and (rule.sourcePort == 443 or not rule.sourcePort) %}
+      tls:
+        certResolver: letsencrypt
+      {% endif %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if domain.forceHttps %}
+    # HTTPS redirect for {{ domain.name }}
+    {{ router_name }}-redirect:
+      rule: "Host(`{{ domain.name }}`)"
+      middlewares:
+        - {{ router_name }}-redirect-https
+      entryPoints:
+        - web
+  {% endif %}
+
+{% endfor %}
+
+  services:
+{% for domain in domains %}
+  {% set router_name = domain.name | replace('.', '-') %}
+  {% set is_netpilot = domain.name == 'netpilot.meadadigital.com' %}
+
+  {% if is_netpilot %}
+    # NetPilot services
+    {{ router_name }}-api-service:
+      loadBalancer:
+        servers:
+          - url: http://backend:3001
+
+    {{ router_name }}-service:
+      loadBalancer:
+        servers:
+          - url: http://frontend:3000
+
+  {% else %}
+    # Regular domain services
+    {% for rule in domain.proxyRules %}
+      {% if rule.isActive %}
+        {% set current_router = router_name %}
+        {% if rule.sourcePath.startswith('/api') %}
+          {% set current_router = router_name ~ '-api' %}
+        {% elif rule.sourcePath != '/' %}
+          {% set current_router = router_name ~ '-' ~ rule.sourcePath | replace('/', '-') | replace('*', '') | trim('-') %}
+        {% endif %}
+
+    {{ current_router }}-service:
+      loadBalancer:
+        servers:
+          - url: {{ rule.targetUrl }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+
+  middlewares:
+{% for domain in domains %}
+  {% if domain.forceHttps %}
+  {% set router_name = domain.name | replace('.', '-') %}
+    {{ router_name }}-redirect-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+  {% endif %}
+{% endfor %}

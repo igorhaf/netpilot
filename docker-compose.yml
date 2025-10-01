@@ -91,15 +91,15 @@ services:
       timeout: 5s
       retries: 5
 
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: netpilot-redis-commander
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-      - HTTP_USER=admin
-      - HTTP_PASSWORD=netpilot123
+  # RedisInsight - Painel de monitoramento do Redis (similar ao Laravel Horizon)
+  # Interface moderna e poderosa para visualizar filas, jobs e dados do Redis
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: netpilot-redisinsight
     ports:
-      - "8874:8081"
+      - "8082:5540"
+    volumes:
+      - redisinsight_data:/data
     networks:
       - netpilot-network
     depends_on:
@@ -121,6 +121,7 @@ services:
       - SSH_PORT=22
       - SSH_USER=windsurf
       - SSH_PRIVATE_KEY_PATH=./id_ed25519
+      - SYSTEM_OPS_URL=http://172.18.0.1:8001
       - DOCKER_SOCKET_PATH=/var/run/docker.sock
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -220,6 +221,7 @@ volumes:
   mysql_data:
   pgadmin_data:
   redis_data:
+  redisinsight_data:
   traefik_letsencrypt:
   nginx_logs:
 

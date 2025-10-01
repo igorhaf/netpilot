@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
+import { jobQueuesApi } from '@/lib/api/job-queues';
 
 interface JobQueueFormData {
   id: string;
@@ -22,6 +23,8 @@ interface JobQueueFormData {
   scriptType: string;
   scriptContent?: string;
   scriptPath?: string;
+  shellCommand?: string; // Para comandos shell simples
+  internalInstruction?: string; // Para tipo internal
   cronExpression: string;
   isActive: boolean;
   priority: number;
@@ -36,49 +39,6 @@ interface JobQueueFormData {
   };
 }
 
-// Mock data for the job (should be replaced with real API call)
-const mockJobData: Record<string, JobQueueFormData> = {
-  'job_1': {
-    id: 'job_1',
-    name: 'Análise por IA',
-    description: 'Análise automática de logs usando IA para detectar padrões suspeitos',
-    scriptType: 'internal',
-    scriptContent: '',
-    scriptPath: '',
-    cronExpression: '0 */5 * * *',
-    isActive: true,
-    priority: 1,
-    timeout: 2400,
-    retryAttempts: 3,
-    retryDelay: 60,
-    environment: 'production',
-    notifications: {
-      onSuccess: false,
-      onFailure: true,
-      email: 'admin@netpilot.local'
-    }
-  },
-  'job_2': {
-    id: 'job_2',
-    name: 'Backup Automático',
-    description: 'Backup diário do banco PostgreSQL e configurações',
-    scriptType: 'shell',
-    scriptContent: '#!/bin/bash\necho "Running backup..."\npg_dump netpilot > /backups/netpilot_$(date +%Y%m%d).sql',
-    scriptPath: '/scripts/backup.sh',
-    cronExpression: '0 2 * * *',
-    isActive: true,
-    priority: 2,
-    timeout: 45000,
-    retryAttempts: 2,
-    retryDelay: 300,
-    environment: 'production',
-    notifications: {
-      onSuccess: true,
-      onFailure: true,
-      email: 'admin@netpilot.local'
-    }
-  }
-};
 
 export default function EditJobQueuePage() {
   const router = useRouter();
@@ -92,17 +52,33 @@ export default function EditJobQueuePage() {
   const { data: jobData, isLoading, error } = useQuery({
     queryKey: ['job-queue', jobId],
     queryFn: async () => {
-      // Simulate API call
-      return new Promise<JobQueueFormData>((resolve, reject) => {
-        setTimeout(() => {
-          const job = mockJobData[jobId];
-          if (job) {
-            resolve(job);
-          } else {
-            reject(new Error('Job não encontrado'));
-          }
-        }, 500);
-      });
+      const job = await jobQueuesApi.get(jobId);
+
+      // Mapear da API para o formato do formulário
+      const formData: JobQueueFormData = {
+        id: job.id,
+        name: job.name,
+        description: job.description || '',
+        scriptType: job.scriptType,
+        scriptContent: '',
+        scriptPath: job.scriptPath || '',
+        shellCommand: job.scriptType === 'shell' ? job.scriptPath : '',
+        internalInstruction: job.scriptType === 'internal' ? job.scriptPath : '',
+        cronExpression: job.cronExpression || '0 0 * * *',
+        isActive: job.isActive,
+        priority: job.priority === 'low' ? 1 : job.priority === 'normal' ? 3 : job.priority === 'high' ? 7 : 10,
+        timeout: job.timeoutSeconds || 3600,
+        retryAttempts: job.maxRetries || 3,
+        retryDelay: 60,
+        environment: job.environment || 'production',
+        notifications: {
+          onSuccess: false,
+          onFailure: true,
+          email: 'admin@netpilot.local'
+        }
+      };
+
+      return formData;
     },
     enabled: !!jobId
   });
@@ -116,16 +92,23 @@ export default function EditJobQueuePage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: JobQueueFormData) => {
-      // Simulate API call
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (data.name.length < 3) {
-            reject(new Error('Nome deve ter pelo menos 3 caracteres'));
-            return;
-          }
-          resolve(data);
-        }, 1000);
-      });
+      // Mapear os dados do formulário para o formato da API
+      const apiData = {
+        name: data.name,
+        description: data.description,
+        scriptType: data.scriptType as 'internal' | 'shell' | 'node' | 'python',
+        scriptPath: data.shellCommand || data.scriptContent || data.scriptPath || data.internalInstruction || '', // Usar comando/conteúdo como path
+        cronExpression: data.cronExpression,
+        isActive: data.isActive,
+        priority: data.priority === 1 ? 'low' : data.priority <= 3 ? 'normal' : data.priority <= 7 ? 'high' : 'critical' as 'low' | 'normal' | 'high' | 'critical',
+        timeoutSeconds: data.timeout,
+        maxRetries: data.retryAttempts,
+        environment: data.environment,
+        processor: 'default',
+        queueName: 'default'
+      };
+
+      return jobQueuesApi.update(data.id, apiData);
     },
     onSuccess: () => {
       toast({
@@ -152,7 +135,15 @@ export default function EditJobQueuePage() {
     if (!formData.description.trim()) newErrors.description = 'Descrição é obrigatória';
     if (!formData.cronExpression.trim()) newErrors.cronExpression = 'Expressão cron é obrigatória';
 
-    if (formData.scriptType === 'shell' || formData.scriptType === 'node' || formData.scriptType === 'python') {
+    if (formData.scriptType === 'shell') {
+      if (!formData.shellCommand && !formData.scriptContent && !formData.scriptPath) {
+        newErrors.script = 'Comando shell, conteúdo do script ou caminho é obrigatório';
+      }
+    } else if (formData.scriptType === 'internal') {
+      if (!formData.internalInstruction) {
+        newErrors.script = 'Instrução é obrigatória para jobs internos';
+      }
+    } else if (formData.scriptType === 'node' || formData.scriptType === 'python') {
       if (!formData.scriptContent && !formData.scriptPath) {
         newErrors.script = 'Conteúdo do script ou caminho é obrigatório';
       }
@@ -354,10 +345,24 @@ export default function EditJobQueuePage() {
                 </div>
               </div>
 
-              {(formData.scriptType === 'shell' || formData.scriptType === 'node' || formData.scriptType === 'python') && (
+              {formData.scriptType === 'shell' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="scriptPath">Caminho do Script</Label>
+                    <Label htmlFor="shellCommand">Comando Shell *</Label>
+                    <Input
+                      id="shellCommand"
+                      value={formData.shellCommand || ''}
+                      onChange={(e) => handleChange('shellCommand', e.target.value)}
+                      placeholder="ls -la /tmp"
+                      className={errors.script ? 'border-red-500' : ''}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Digite um comando shell simples ou deixe em branco para usar script/caminho abaixo
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scriptPath">Caminho do Script (opcional)</Label>
                     <Input
                       id="scriptPath"
                       value={formData.scriptPath || ''}
@@ -367,12 +372,57 @@ export default function EditJobQueuePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="scriptContent">Conteúdo do Script</Label>
+                    <Label htmlFor="scriptContent">Conteúdo do Script (opcional)</Label>
                     <Textarea
                       id="scriptContent"
                       value={formData.scriptContent || ''}
                       onChange={(e) => handleChange('scriptContent', e.target.value)}
                       placeholder="#!/bin/bash&#10;echo 'Hello World'"
+                      rows={6}
+                      className="font-mono"
+                    />
+                    {errors.script && <p className="text-sm text-red-500">{errors.script}</p>}
+                  </div>
+                </>
+              )}
+
+              {formData.scriptType === 'internal' && (
+                <div className="space-y-2">
+                  <Label htmlFor="internalInstruction">Instrução do Job Interno *</Label>
+                  <Textarea
+                    id="internalInstruction"
+                    value={formData.internalInstruction || ''}
+                    onChange={(e) => handleChange('internalInstruction', e.target.value)}
+                    placeholder="Ex: backup-database, send-notifications, cleanup-logs"
+                    rows={3}
+                    className={errors.script ? 'border-red-500' : ''}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Especifique qual função interna deve ser executada
+                  </p>
+                  {errors.script && <p className="text-sm text-red-500">{errors.script}</p>}
+                </div>
+              )}
+
+              {(formData.scriptType === 'node' || formData.scriptType === 'python') && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="scriptPath">Caminho do Script</Label>
+                    <Input
+                      id="scriptPath"
+                      value={formData.scriptPath || ''}
+                      onChange={(e) => handleChange('scriptPath', e.target.value)}
+                      placeholder={formData.scriptType === 'node' ? "/path/to/script.js" : "/path/to/script.py"}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scriptContent">Conteúdo do Script</Label>
+                    <Textarea
+                      id="scriptContent"
+                      value={formData.scriptContent || ''}
+                      onChange={(e) => handleChange('scriptContent', e.target.value)}
+                      placeholder={formData.scriptType === 'node' ? "console.log('Hello World');" : "print('Hello World')"}
                       rows={6}
                       className="font-mono"
                     />

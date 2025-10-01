@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
+import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ConsoleService } from './console.service';
 import { ConsoleController } from './console.controller';
@@ -11,6 +12,7 @@ import { ConsoleLog } from '../../entities/console-log.entity';
 @Module({
     imports: [
         TypeOrmModule.forFeature([SshSession, ConsoleLog]),
+        HttpModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => ({

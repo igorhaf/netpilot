@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SslCertificatesModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const axios_1 = require("@nestjs/axios");
+const config_1 = require("@nestjs/config");
 const ssl_certificates_controller_1 = require("./ssl-certificates.controller");
 const ssl_certificates_service_1 = require("./ssl-certificates.service");
 const ssl_certificate_entity_1 = require("../../entities/ssl-certificate.entity");
@@ -18,7 +20,11 @@ let SslCertificatesModule = class SslCertificatesModule {
 exports.SslCertificatesModule = SslCertificatesModule;
 exports.SslCertificatesModule = SslCertificatesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([ssl_certificate_entity_1.SslCertificate, domain_entity_1.Domain])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([ssl_certificate_entity_1.SslCertificate, domain_entity_1.Domain]),
+            axios_1.HttpModule,
+            config_1.ConfigModule,
+        ],
         controllers: [ssl_certificates_controller_1.SslCertificatesController],
         providers: [ssl_certificates_service_1.SslCertificatesService],
     })

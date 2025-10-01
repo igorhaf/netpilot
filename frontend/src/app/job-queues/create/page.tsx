@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
+import { jobQueuesApi } from '@/lib/api/job-queues';
 
 interface JobQueueFormData {
   name: string;
@@ -21,6 +22,8 @@ interface JobQueueFormData {
   scriptType: string;
   scriptContent?: string;
   scriptPath?: string;
+  shellCommand?: string; // Para comandos shell simples
+  internalInstruction?: string; // Para tipo internal
   cronExpression: string;
   isActive: boolean;
   priority: number;
@@ -40,9 +43,11 @@ export default function CreateJobQueuePage() {
   const [formData, setFormData] = useState<JobQueueFormData>({
     name: '',
     description: '',
-    scriptType: 'internal',
+    scriptType: 'shell',
     scriptContent: '',
     scriptPath: '',
+    shellCommand: '',
+    internalInstruction: '',
     cronExpression: '0 0 * * *',
     isActive: true,
     priority: 1,
@@ -61,16 +66,23 @@ export default function CreateJobQueuePage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: JobQueueFormData) => {
-      // Simulate API call
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (data.name.length < 3) {
-            reject(new Error('Nome deve ter pelo menos 3 caracteres'));
-            return;
-          }
-          resolve(data);
-        }, 1000);
-      });
+      // Mapear os dados do formulário para o formato da API
+      const apiData = {
+        name: data.name,
+        description: data.description,
+        scriptType: data.scriptType as 'internal' | 'shell' | 'node' | 'python',
+        scriptPath: data.shellCommand || data.scriptContent || data.scriptPath || data.internalInstruction || '', // Usar comando/conteúdo como path
+        cronExpression: data.cronExpression,
+        isActive: data.isActive,
+        priority: data.priority === 1 ? 'low' : data.priority <= 3 ? 'normal' : data.priority <= 7 ? 'high' : 'critical' as 'low' | 'normal' | 'high' | 'critical',
+        timeoutSeconds: data.timeout,
+        maxRetries: data.retryAttempts,
+        environment: data.environment,
+        processor: 'default',
+        queueName: 'default'
+      };
+
+      return jobQueuesApi.create(apiData);
     },
     onSuccess: () => {
       toast({
@@ -95,7 +107,15 @@ export default function CreateJobQueuePage() {
     if (!formData.description.trim()) newErrors.description = 'Descrição é obrigatória';
     if (!formData.cronExpression.trim()) newErrors.cronExpression = 'Expressão cron é obrigatória';
 
-    if (formData.scriptType === 'shell' || formData.scriptType === 'node' || formData.scriptType === 'python') {
+    if (formData.scriptType === 'shell') {
+      if (!formData.shellCommand && !formData.scriptContent && !formData.scriptPath) {
+        newErrors.script = 'Comando shell, conteúdo do script ou caminho é obrigatório';
+      }
+    } else if (formData.scriptType === 'internal') {
+      if (!formData.internalInstruction) {
+        newErrors.script = 'Instrução é obrigatória para jobs internos';
+      }
+    } else if (formData.scriptType === 'node' || formData.scriptType === 'python') {
       if (!formData.scriptContent && !formData.scriptPath) {
         newErrors.script = 'Conteúdo do script ou caminho é obrigatório';
       }
@@ -270,10 +290,24 @@ export default function CreateJobQueuePage() {
                 </div>
               </div>
 
-              {(formData.scriptType === 'shell' || formData.scriptType === 'node' || formData.scriptType === 'python') && (
+              {formData.scriptType === 'shell' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="scriptPath">Caminho do Script</Label>
+                    <Label htmlFor="shellCommand">Comando Shell *</Label>
+                    <Input
+                      id="shellCommand"
+                      value={formData.shellCommand}
+                      onChange={(e) => handleChange('shellCommand', e.target.value)}
+                      placeholder="ls -la /tmp"
+                      className={errors.script ? 'border-red-500' : ''}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Digite um comando shell simples ou deixe em branco para usar script/caminho abaixo
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scriptPath">Caminho do Script (opcional)</Label>
                     <Input
                       id="scriptPath"
                       value={formData.scriptPath}
@@ -283,12 +317,57 @@ export default function CreateJobQueuePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="scriptContent">Conteúdo do Script</Label>
+                    <Label htmlFor="scriptContent">Conteúdo do Script (opcional)</Label>
                     <Textarea
                       id="scriptContent"
                       value={formData.scriptContent}
                       onChange={(e) => handleChange('scriptContent', e.target.value)}
                       placeholder="#!/bin/bash&#10;echo 'Hello World'"
+                      rows={6}
+                      className="font-mono"
+                    />
+                    {errors.script && <p className="text-sm text-red-500">{errors.script}</p>}
+                  </div>
+                </>
+              )}
+
+              {formData.scriptType === 'internal' && (
+                <div className="space-y-2">
+                  <Label htmlFor="internalInstruction">Instrução do Job Interno *</Label>
+                  <Textarea
+                    id="internalInstruction"
+                    value={formData.internalInstruction}
+                    onChange={(e) => handleChange('internalInstruction', e.target.value)}
+                    placeholder="Ex: backup-database, send-notifications, cleanup-logs"
+                    rows={3}
+                    className={errors.script ? 'border-red-500' : ''}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Especifique qual função interna deve ser executada
+                  </p>
+                  {errors.script && <p className="text-sm text-red-500">{errors.script}</p>}
+                </div>
+              )}
+
+              {(formData.scriptType === 'node' || formData.scriptType === 'python') && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="scriptPath">Caminho do Script</Label>
+                    <Input
+                      id="scriptPath"
+                      value={formData.scriptPath}
+                      onChange={(e) => handleChange('scriptPath', e.target.value)}
+                      placeholder={formData.scriptType === 'node' ? "/path/to/script.js" : "/path/to/script.py"}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scriptContent">Conteúdo do Script</Label>
+                    <Textarea
+                      id="scriptContent"
+                      value={formData.scriptContent}
+                      onChange={(e) => handleChange('scriptContent', e.target.value)}
+                      placeholder={formData.scriptType === 'node' ? "console.log('Hello World');" : "print('Hello World')"}
                       rows={6}
                       className="font-mono"
                     />

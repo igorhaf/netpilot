@@ -1,4 +1,4 @@
-import { createContext, forwardRef, useContext, useState } from 'react'
+import { createContext, forwardRef, useContext, useState, useId } from 'react'
 import { cn } from '@/lib/utils'
 
 interface SelectContextType {
@@ -6,6 +6,7 @@ interface SelectContextType {
     onValueChange: (value: any) => void
     open: boolean
     setOpen: (open: boolean) => void
+    contentId: string
 }
 
 const SelectContext = createContext<SelectContextType | undefined>(undefined)
@@ -26,9 +27,10 @@ interface SelectProps {
 
 const Select = ({ value, onValueChange, children }: SelectProps) => {
     const [open, setOpen] = useState(false)
+    const contentId = useId()
 
     return (
-        <SelectContext.Provider value={{ value, onValueChange, open, setOpen }}>
+        <SelectContext.Provider value={{ value, onValueChange, open, setOpen, contentId }}>
             <div className="relative">{children}</div>
         </SelectContext.Provider>
     )
@@ -40,13 +42,14 @@ interface SelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
     ({ className, children, ...props }, ref) => {
-        const { open, setOpen } = useSelect()
+        const { open, setOpen, contentId } = useSelect()
 
         return (
             <button
                 type="button"
                 role="combobox"
                 aria-expanded={open}
+                aria-controls={contentId}
                 className={cn(
                     'flex h-10 w-full items-center justify-between rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
                     className
@@ -84,12 +87,16 @@ interface SelectContentProps {
 }
 
 const SelectContent = ({ children }: SelectContentProps) => {
-    const { open } = useSelect()
+    const { open, contentId } = useSelect()
 
     if (!open) return null
 
     return (
-        <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg">
+        <div
+            id={contentId}
+            role="listbox"
+            className="absolute z-50 mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg"
+        >
             <div className="max-h-60 overflow-auto p-1">
                 {children}
             </div>

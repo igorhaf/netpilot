@@ -1,38 +1,10 @@
 
-  http: 
-    routers: 
-      deit-meadadigital-com-redirect: 
-        rule: Host(`deit.meadadigital.com`)
-        middlewares: [
-          deit-meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
-      netpilot-meadadigital-com-socketio-redirect:
-        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/socket.io`)
-        service: netpilot-meadadigital-com-api-service
-        priority: 15
-        entryPoints: [
-          web
-        ]
-
-      api-netpilot-com-redirect:
-        rule: Host(`api.netpilot.com`)
-        middlewares: [
-          api-netpilot-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
+  http:
+    routers:
       netpilot-meadadigital-com-socketio:
         rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/socket.io`)
         service: netpilot-meadadigital-com-api-service
-        middlewares: [
-          websocket-headers
-        ]
+        middlewares: []
         priority: 15
         entryPoints: [
           websecure
@@ -40,12 +12,11 @@
         tls:
           certResolver: letsencrypt
 
+
       netpilot-meadadigital-com-api:
         rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)
         service: netpilot-meadadigital-com-api-service
-        middlewares: [
-          websocket-headers
-        ]
+        middlewares: []
         priority: 10
         entryPoints: [
           websecure
@@ -75,49 +46,63 @@
           web
         ]
       
+      api-netpilot-com-redirect: 
+        rule: Host(`api.netpilot.com`)
+        middlewares: [
+          api-netpilot-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
+      deit-meadadigital-com-redirect: 
+        rule: Host(`deit.meadadigital.com`)
+        middlewares: [
+          deit-meadadigital-com-redirect-https
+        ]
+        entryPoints: [
+          web
+        ]
+      
     
     services: 
-      netpilot-meadadigital-com-api-service: 
-        loadBalancer: 
+      netpilot-meadadigital-com-api-service:
+        loadBalancer:
           servers: [
-            
-              url: http://backend:3001
-            
+
+              url: http://netpilot-backend:3001
+
           ]
         
       
-      netpilot-meadadigital-com-service: 
-        loadBalancer: 
+      netpilot-meadadigital-com-service:
+        loadBalancer:
           servers: [
-            
-              url: http://frontend:3000
-            
+
+              url: http://netpilot-frontend:3000
+
           ]
         
       
     
-    middlewares:
-      websocket-headers:
-        headers:
-          customResponseHeaders:
-            Access-Control-Allow-Origin: "*"
-            Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
-            Access-Control-Allow-Headers: "Content-Type,Authorization,X-Requested-With,Connection,Upgrade"
-            Access-Control-Allow-Credentials: "true"
-
-      deit-meadadigital-com-redirect-https:
-        redirectScheme:
+    middlewares: 
+      netpilot-meadadigital-com-redirect-https: 
+        redirectScheme: 
           scheme: https
           permanent: true
-
-      api-netpilot-com-redirect-https:
-        redirectScheme:
+        
+      
+      api-netpilot-com-redirect-https: 
+        redirectScheme: 
           scheme: https
           permanent: true
-
-      netpilot-meadadigital-com-redirect-https:
-        redirectScheme:
+        
+      
+      deit-meadadigital-com-redirect-https: 
+        redirectScheme: 
           scheme: https
           permanent: true
+        
+      
     
   

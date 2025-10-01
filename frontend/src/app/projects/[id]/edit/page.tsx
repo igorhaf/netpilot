@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { useRequireAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { Project } from '@/types'
+import { StackSelector } from '@/components/projects/StackSelector'
 
 interface UpdateProjectDto {
   name: string
@@ -294,42 +295,15 @@ export default function EditProjectPage() {
                   />
                 </div>
 
-                {/* Technologies */}
-                <div className="space-y-2">
-                  <Label>Tecnologias</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      value={newTechnology}
-                      onChange={(e) => setNewTechnology(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Ex: React, Node.js, Docker..."
-                      className="flex-1"
-                    />
-                    <Button type="button" onClick={addTechnology} size="sm">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {formData.technologies && formData.technologies.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.technologies.map((tech) => (
-                        <Badge key={tech} variant="secondary" className="flex items-center gap-1">
-                          {tech}
-                          <button
-                            type="button"
-                            onClick={() => removeTechnology(tech)}
-                            className="ml-1 hover:bg-red-200 rounded"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Stack Selection */}
+          <StackSelector
+            selectedTechnologies={formData.technologies || []}
+            onTechnologiesChange={(technologies) => setFormData(prev => ({ ...prev, technologies }))}
+          />
 
           {/* Actions */}
           <div className="flex justify-end space-x-4">

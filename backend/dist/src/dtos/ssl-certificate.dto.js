@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RenewCertificateDto = exports.UpdateSslCertificateDto = exports.CreateSslCertificateDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const mapped_types_1 = require("@nestjs/mapped-types");
 class CreateSslCertificateDto {
 }
 exports.CreateSslCertificateDto = CreateSslCertificateDto;
@@ -44,7 +45,7 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], CreateSslCertificateDto.prototype, "domainId", void 0);
-class UpdateSslCertificateDto extends CreateSslCertificateDto {
+class UpdateSslCertificateDto extends (0, mapped_types_1.PartialType)(CreateSslCertificateDto) {
 }
 exports.UpdateSslCertificateDto = UpdateSslCertificateDto;
 class RenewCertificateDto {

@@ -5,8 +5,10 @@ export declare class CreateSslCertificateDto {
     renewBeforeDays?: number;
     domainId: string;
 }
-export declare class UpdateSslCertificateDto extends CreateSslCertificateDto {
+declare const UpdateSslCertificateDto_base: import("@nestjs/mapped-types").MappedType<Partial<CreateSslCertificateDto>>;
+export declare class UpdateSslCertificateDto extends UpdateSslCertificateDto_base {
 }
 export declare class RenewCertificateDto {
     certificateId: string;
 }
+export {};
