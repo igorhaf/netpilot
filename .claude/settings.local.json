@@ -72,7 +72,10 @@
       "Bash(netpilot_frontend:latest)",
       "Bash(git rev-list:*)",
       "Bash(git rm:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
