@@ -188,7 +188,9 @@ export default function EditProjectPage() {
               Voltar
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Editar Projeto</h1>
+              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                Editar Projeto
+              </h1>
               <p className="text-muted-foreground">
                 Editando: {project.name}
               </p>
@@ -217,11 +219,11 @@ export default function EditProjectPage() {
             {/* Informações Básicas */}
             <Card>
               <CardHeader>
-                <CardTitle>Informações Básicas</CardTitle>
+                <CardTitle className="text-lg">Informações Básicas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome do Projeto *</Label>
+                  <Label htmlFor="name" className="text-sm font-medium">Nome do Projeto *</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -232,7 +234,7 @@ export default function EditProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
+                  <Label htmlFor="description" className="text-sm font-medium">Descrição</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
@@ -243,7 +245,7 @@ export default function EditProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mainDomain">Domínio Principal</Label>
+                  <Label htmlFor="mainDomain" className="text-sm font-medium">Domínio Principal</Label>
                   <Input
                     id="mainDomain"
                     value={formData.mainDomain}
@@ -260,7 +262,7 @@ export default function EditProjectPage() {
                       setFormData(prev => ({ ...prev, isActive: checked as boolean }))
                     }
                   />
-                  <Label htmlFor="isActive">Projeto ativo</Label>
+                  <Label htmlFor="isActive" className="text-sm font-medium">Projeto ativo</Label>
                 </div>
               </CardContent>
             </Card>
@@ -268,11 +270,11 @@ export default function EditProjectPage() {
             {/* Informações Técnicas */}
             <Card>
               <CardHeader>
-                <CardTitle>Informações Técnicas</CardTitle>
+                <CardTitle className="text-lg">Informações Técnicas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="repository">Repositório *</Label>
+                  <Label htmlFor="repository" className="text-sm font-medium">Repositório *</Label>
                   <Input
                     id="repository"
                     value={formData.repository}
@@ -286,7 +288,7 @@ export default function EditProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="documentation">Documentação</Label>
+                  <Label htmlFor="documentation" className="text-sm font-medium">Documentação</Label>
                   <Input
                     id="documentation"
                     value={formData.documentation}

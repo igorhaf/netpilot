@@ -78,8 +78,14 @@ export default function ContainerLogsPage() {
 
   const containerName = container?.names?.[0]?.replace('/', '') || containerId.substring(0, 12);
 
+  const breadcrumbs = [
+    { label: 'Docker', href: '/docker' },
+    { label: 'Containers', href: '/docker/containers' },
+    { label: 'Logs', current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

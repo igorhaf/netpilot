@@ -182,7 +182,10 @@ export default function ProxyRulesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Proxy Reverso</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <ArrowRight className="h-8 w-8 text-blue-500" />
+              Proxy Reverso
+            </h1>
             <p className="text-muted-foreground">
               {domainFilter
                 ? 'Regras de proxy para o domínio selecionado'
@@ -235,11 +238,11 @@ export default function ProxyRulesPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Origem</th>
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Destino</th>
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio</th>
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Prioridade</th>
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Origem</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Destino</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Domínio</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Prioridade</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Ações</th>
                     </tr>
                   </thead>
                   <tbody>

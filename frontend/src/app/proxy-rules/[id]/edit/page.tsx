@@ -153,7 +153,8 @@ export default function EditProxyRulePage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                <Route className="h-8 w-8 text-blue-500" />
                 Editar Regra de Proxy
                 {proxyRule.isLocked && (
                   <span className="text-red-500 text-sm flex items-center gap-1">
@@ -176,7 +177,7 @@ export default function EditProxyRulePage() {
           {/* Configurações de Travamento */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Lock className="h-5 w-5 text-red-500" />
                 <span>Controle de Travamento</span>
               </CardTitle>
@@ -206,7 +207,7 @@ export default function EditProxyRulePage() {
           {/* Configurações Básicas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Server className="h-5 w-5 text-blue-500" />
                 <span>Configurações Básicas</span>
               </CardTitle>
@@ -214,7 +215,7 @@ export default function EditProxyRulePage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="domainId">
+                  <Label htmlFor="domainId" className="text-sm font-medium">
                     Domínio <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -238,7 +239,7 @@ export default function EditProxyRulePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="priority">
+                  <Label htmlFor="priority" className="text-sm font-medium">
                     Prioridade <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -259,7 +260,7 @@ export default function EditProxyRulePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+                <Label htmlFor="description" className="text-sm font-medium">Descrição</Label>
                 <Textarea
                   id="description"
                   value={formData.description || ''}
@@ -278,14 +279,14 @@ export default function EditProxyRulePage() {
           {/* Configurações de Roteamento */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Route className="h-5 w-5 text-green-500" />
                 <span>Configurações de Roteamento</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="sourcePath">
+                <Label htmlFor="sourcePath" className="text-sm font-medium">
                   Caminho de Origem <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -303,7 +304,7 @@ export default function EditProxyRulePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="targetUrl">
+                <Label htmlFor="targetUrl" className="text-sm font-medium">
                   URL de Destino <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -325,7 +326,7 @@ export default function EditProxyRulePage() {
           {/* Configurações Avançadas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Hash className="h-5 w-5 text-purple-500" />
                 <span>Configurações Avançadas</span>
               </CardTitle>

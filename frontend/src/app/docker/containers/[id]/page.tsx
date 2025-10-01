@@ -125,7 +125,7 @@ export default function ContainerDetailsPage() {
 
   if (error || !container) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={[{ label: 'Docker', href: '/docker' }, { label: 'Containers', href: '/docker/containers' }, { label: 'Detalhes', current: true }]}>
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
           <AlertTriangle className="h-16 w-16 text-red-500" />
           <h2 className="text-2xl font-bold">Container não encontrado</h2>
@@ -141,8 +141,14 @@ export default function ContainerDetailsPage() {
     );
   }
 
+  const breadcrumbs = [
+    { label: 'Docker', href: '/docker' },
+    { label: 'Containers', href: '/docker/containers' },
+    { label: container.names[0].replace('/', ''), current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

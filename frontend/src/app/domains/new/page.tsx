@@ -101,7 +101,10 @@ export default function NewDomainPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Novo Domínio</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Globe className="h-8 w-8 text-blue-500" />
+              Novo Domínio
+            </h1>
             <p className="text-muted-foreground">
               Adicione um domínio para gerenciar redirects e certificados SSL automáticos
             </p>
@@ -115,7 +118,7 @@ export default function NewDomainPage() {
           {/* Informações Básicas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Server className="h-5 w-5 text-blue-500" />
                 <span>Informações Básicas</span>
               </CardTitle>
@@ -124,7 +127,7 @@ export default function NewDomainPage() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">
+                  <Label htmlFor="name" className="text-sm font-medium">
                     Nome do Domínio <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -141,7 +144,7 @@ export default function NewDomainPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">
+                  <Label htmlFor="description" className="text-sm font-medium">
                     Descrição
                   </Label>
                   <Textarea
@@ -157,7 +160,7 @@ export default function NewDomainPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="projectId">
+                  <Label htmlFor="projectId" className="text-sm font-medium">
                     Projeto <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -186,7 +189,7 @@ export default function NewDomainPage() {
           {/* Configurações de Ativação */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Globe className="h-5 w-5 text-green-500" />
                 <span>Configurações de Ativação</span>
               </CardTitle>
@@ -232,7 +235,7 @@ export default function NewDomainPage() {
           {/* Configurações de Segurança */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-red-500" />
                 <span>Configurações de Segurança</span>
               </CardTitle>
@@ -278,7 +281,7 @@ export default function NewDomainPage() {
           {/* Redirecionamento WWW */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Lock className="h-5 w-5 text-purple-500" />
                 <span>Redirecionamento WWW</span>
               </CardTitle>

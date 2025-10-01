@@ -128,8 +128,12 @@ export default function ConsolePage() {
         }
     ]
 
+    const breadcrumbs = [
+        { label: "Console SSH", current: true }
+    ]
+
     return (
-        <MainLayout>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

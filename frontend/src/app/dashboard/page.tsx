@@ -17,6 +17,7 @@ import { PageLoading } from '@/components/ui/loading'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { JobsDashboard } from '@/components/jobs/JobsDashboard'
 import { getStatusColor, formatRelativeTime } from '@/lib/utils'
 import api from '@/lib/api'
@@ -64,10 +65,13 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
+        {/* Breadcrumb */}
+        <Breadcrumb items={[{ label: 'Dashboard', current: true }]} />
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">
               Visão geral do sistema NetPilot
             </p>
@@ -77,66 +81,58 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-green-600">
-                    {stats?.domains.active || 0}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Domínios Ativos</p>
+                  <p className="text-sm font-medium text-muted-foreground">Domínios Ativos</p>
+                  <p className="text-2xl font-bold">{stats?.domains.active || 0}</p>
                   <p className="text-xs text-muted-foreground">
                     {stats?.domains.total || 0} total
                   </p>
                 </div>
-                <Globe className="h-8 w-8 text-green-400" />
+                <Globe className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {stats?.proxyRules.active || 0}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Regras de Proxy</p>
+                  <p className="text-sm font-medium text-muted-foreground">Regras de Proxy</p>
+                  <p className="text-2xl font-bold">{stats?.proxyRules.active || 0}</p>
                   <p className="text-xs text-muted-foreground">
                     {stats?.proxyRules.total || 0} total
                   </p>
                 </div>
-                <ArrowRight className="h-8 w-8 text-blue-400" />
+                <ArrowRight className="h-8 w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-green-600">
-                    {stats?.sslCertificates.valid || 0}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Certificados Válidos</p>
+                  <p className="text-sm font-medium text-muted-foreground">Certificados Válidos</p>
+                  <p className="text-2xl font-bold">{stats?.sslCertificates.valid || 0}</p>
                   <p className="text-xs text-muted-foreground">
                     {stats?.sslCertificates.expiring || 0} expirando
                   </p>
                 </div>
-                <Shield className="h-8 w-8 text-green-400" />
+                <Shield className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-gray-600">
-                    {stats?.logs.success || 0}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Logs Sucesso</p>
+                  <p className="text-sm font-medium text-muted-foreground">Logs Sucesso</p>
+                  <p className="text-2xl font-bold">{stats?.logs.success || 0}</p>
                   <p className="text-xs text-muted-foreground">
                     {stats?.logs.failed || 0} falhas
                   </p>
                 </div>
-                <FileText className="h-8 w-8 text-gray-400" />
+                <FileText className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
@@ -144,7 +140,7 @@ export default function DashboardPage() {
 
         {/* Jobs Statistics */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Jobs</h2>
+          <h2 className="text-lg font-semibold">Jobs</h2>
           <JobsDashboard compact />
         </div>
 
@@ -152,8 +148,8 @@ export default function DashboardPage() {
           {/* System Status */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-green-400" />
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Activity className="h-5 w-5 text-green-500" />
                 Status do Sistema
               </CardTitle>
             </CardHeader>
@@ -179,8 +175,8 @@ export default function DashboardPage() {
           {/* Recent Logs */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-400" />
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-500" />
                 Logs Recentes
               </CardTitle>
             </CardHeader>
@@ -226,8 +222,8 @@ export default function DashboardPage() {
         {/* Expiring Certificates */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-400" />
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
               Certificados Expirando
             </CardTitle>
           </CardHeader>
@@ -253,9 +249,9 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-400" />
-                <p>Todos os certificados estão válidos</p>
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
+                <p className="text-muted-foreground">Todos os certificados estão válidos</p>
               </div>
             )}
           </CardContent>

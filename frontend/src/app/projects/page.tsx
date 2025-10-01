@@ -88,12 +88,15 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Projetos</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <FolderOpen className="h-8 w-8 text-blue-500" />
+              Projetos
+            </h1>
             <p className="text-muted-foreground">
               Gerencie seus projetos e seus domínios associados
             </p>
           </div>
-          <Button onClick={handleCreateProject}>
+          <Button onClick={handleCreateProject} className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="h-4 w-4 mr-2" />
             Novo Projeto
           </Button>
@@ -107,7 +110,7 @@ export default function ProjectsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total</p>
-                    <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                    <p className="text-2xl font-bold">{stats.total}</p>
                   </div>
                   <FolderOpen className="h-8 w-8 text-blue-500" />
                 </div>
@@ -118,7 +121,7 @@ export default function ProjectsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Ativos</p>
-                    <p className="text-2xl font-bold text-green-500">{stats.active}</p>
+                    <p className="text-2xl font-bold">{stats.active}</p>
                   </div>
                   <FolderOpen className="h-8 w-8 text-green-500" />
                 </div>
@@ -129,7 +132,7 @@ export default function ProjectsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Domínios</p>
-                    <p className="text-2xl font-bold text-blue-500">{stats.totalDomains}</p>
+                    <p className="text-2xl font-bold">{stats.totalDomains}</p>
                   </div>
                   <Globe className="h-8 w-8 text-blue-500" />
                 </div>
@@ -140,7 +143,7 @@ export default function ProjectsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Média Domínios</p>
-                    <p className="text-2xl font-bold text-purple-500">{stats.avgDomainsPerProject}</p>
+                    <p className="text-2xl font-bold">{stats.avgDomainsPerProject}</p>
                   </div>
                   <Settings className="h-8 w-8 text-purple-500" />
                 </div>
@@ -169,14 +172,14 @@ export default function ProjectsPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredProjects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
+              <Card key={project.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2">
                       <div className={`w-3 h-3 rounded-full ${
                         project.isActive ? 'bg-green-500' : 'bg-gray-400'
                       }`} />
-                      <CardTitle className="text-lg">{project.name}</CardTitle>
+                      <CardTitle className="text-lg line-clamp-1">{project.name}</CardTitle>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Link href={`/projects/${project.id}`}>
@@ -226,11 +229,12 @@ export default function ProjectsPage() {
                     )}
 
                     {/* Domains Count */}
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>
-                        {project.domains?.length || 0} domínio(s)
-                      </span>
-                      <span>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Globe className="h-4 w-4" />
+                        <span>{project.domains?.length || 0} domínio(s)</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
                         {formatDate(project.createdAt)}
                       </span>
                     </div>
@@ -251,16 +255,20 @@ export default function ProjectsPage() {
 
         {/* Empty State */}
         {!isLoading && filteredProjects.length === 0 && (
-          <div className="text-center py-12">
-            <FolderOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">Nenhum projeto encontrado</h3>
+          <div className="col-span-full text-center py-12">
+            <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum projeto encontrado</h3>
             <p className="text-muted-foreground mb-4">
-              Crie seu primeiro projeto para começar a organizar seus domínios.
+              {search
+                ? 'Tente ajustar seus filtros de busca'
+                : 'Crie seu primeiro projeto para começar a organizar seus domínios'}
             </p>
-            <Button onClick={handleCreateProject}>
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Projeto
-            </Button>
+            {!search && (
+              <Button onClick={handleCreateProject}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Projeto
+              </Button>
+            )}
           </div>
         )}
 

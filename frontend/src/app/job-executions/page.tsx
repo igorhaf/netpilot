@@ -187,7 +187,7 @@ export default function JobExecutionsPage() {
 
   if (error) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={[{ label: "Execuções de Jobs", current: true }]}>
         <div className="text-center text-red-500 p-8">
           Erro ao carregar execuções: {(error as Error).message}
         </div>
@@ -195,8 +195,12 @@ export default function JobExecutionsPage() {
     );
   }
 
+  const breadcrumbs = [
+    { label: "Execuções de Jobs", current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

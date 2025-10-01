@@ -182,7 +182,10 @@ export default function SslCertificatesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Certificados SSL</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Shield className="h-8 w-8 text-blue-500" />
+              Certificados SSL
+            </h1>
             <p className="text-muted-foreground">
               {domainFilter
                 ? 'Certificados SSL para o domínio selecionado'
@@ -207,7 +210,7 @@ export default function SslCertificatesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total</p>
-                    <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                    <p className="text-2xl font-bold">{stats.total}</p>
                   </div>
                   <Shield className="h-8 w-8 text-blue-500" />
                 </div>
@@ -218,7 +221,7 @@ export default function SslCertificatesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Válidos</p>
-                    <p className="text-2xl font-bold text-green-500">{stats.valid}</p>
+                    <p className="text-2xl font-bold">{stats.valid}</p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-green-500" />
                 </div>
@@ -229,7 +232,7 @@ export default function SslCertificatesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Expirando</p>
-                    <p className="text-2xl font-bold text-orange-500">{stats.expiring}</p>
+                    <p className="text-2xl font-bold">{stats.expiring}</p>
                   </div>
                   <AlertTriangle className="h-8 w-8 text-orange-500" />
                 </div>
@@ -240,7 +243,7 @@ export default function SslCertificatesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Expirados</p>
-                    <p className="text-2xl font-bold text-red-500">{stats.expired}</p>
+                    <p className="text-2xl font-bold">{stats.expired}</p>
                   </div>
                   <XCircle className="h-8 w-8 text-red-500" />
                 </div>
@@ -268,10 +271,10 @@ export default function SslCertificatesPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Domínio Principal</th>
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Expira em</th>
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Auto Renovação</th>
-                      <th className="text-left py-3 px-6 font-medium text-muted-foreground">Ações</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Domínio Principal</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Expira em</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Auto Renovação</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-muted-foreground">Ações</th>
                     </tr>
                   </thead>
                   <tbody>

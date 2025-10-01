@@ -107,8 +107,12 @@ export default function TerminalPage() {
     return '·'
   }
 
+  const breadcrumbs = [
+    { label: "Terminal", current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

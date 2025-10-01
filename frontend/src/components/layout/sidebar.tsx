@@ -130,7 +130,7 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
-  const [hoveredSubmenu, setHoveredSubmenu] = useState<string | null>(null)
+  const [openedSubmenu, setOpenedSubmenu] = useState<string | null>(null)
 
   // Tanto mobile quanto desktop respondem ao estado isOpen
   const sidebarClasses = isMobile
@@ -190,16 +190,15 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
           // Item com submenu
           if (item.submenu) {
             const hasActiveItem = isSubmenuActive(item.submenu)
-            const isHovered = hoveredSubmenu === item.name
+            const isOpened = openedSubmenu === item.name
 
             return (
               <div
                 key={item.name}
                 className="relative"
-                onMouseEnter={() => setHoveredSubmenu(item.name)}
-                onMouseLeave={() => setHoveredSubmenu(null)}
               >
                 <div
+                  onClick={() => setOpenedSubmenu(isOpened ? null : item.name)}
                   className={cn(
                     'flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 group cursor-pointer',
                     hasActiveItem
@@ -218,7 +217,7 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
                   </div>
                   <ChevronRight className={cn(
                     'h-4 w-4 transition-transform duration-150',
-                    isHovered ? 'rotate-90' : 'rotate-0',
+                    isOpened ? 'rotate-90' : 'rotate-0',
                     hasActiveItem ? 'text-white' : 'text-gray-400'
                   )} />
                 </div>
@@ -226,11 +225,11 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
                 {/* Submenu com animação */}
                 <div className={cn(
                   'overflow-hidden transition-all duration-200 ease-out',
-                  isHovered ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                  isOpened ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                 )}>
                   <div className={cn(
                     'ml-4 mt-1 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-4 transform transition-transform duration-200 ease-out',
-                    isHovered ? 'translate-x-0' : '-translate-x-2'
+                    isOpened ? 'translate-x-0' : '-translate-x-2'
                   )}>
                     {item.submenu.map((subItem) => {
                       const isActive = pathname === subItem.href

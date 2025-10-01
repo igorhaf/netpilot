@@ -141,7 +141,7 @@ export default function NetworksPage() {
 
   if (error) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={[{ label: 'Docker', href: '/docker' }, { label: 'Redes', current: true }]}>
         <div className="text-center text-red-500 p-8">
           Erro ao carregar redes: {(error as Error).message}
         </div>
@@ -149,8 +149,13 @@ export default function NetworksPage() {
     );
   }
 
+  const breadcrumbs = [
+    { label: 'Docker', href: '/docker' },
+    { label: 'Redes', current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

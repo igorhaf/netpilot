@@ -205,7 +205,10 @@ export default function LogsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Logs do Sistema</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <FileText className="h-8 w-8 text-blue-500" />
+              Logs do Sistema
+            </h1>
             <p className="text-muted-foreground">
               Visualize e gerencie os logs de atividades do NetPilot
             </p>
@@ -291,48 +294,52 @@ export default function LogsPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">{filteredLogs.length}</p>
-                  <p className="text-xs text-muted-foreground">Total de Logs</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total de Logs</p>
+                  <p className="text-2xl font-bold">{filteredLogs.length}</p>
                 </div>
+                <FileText className="h-8 w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-sm font-medium text-muted-foreground">Sucessos</p>
+                  <p className="text-2xl font-bold">
                     {filteredLogs.filter(log => log.status === 'success').length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Sucessos</p>
                 </div>
+                <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-sm font-medium text-muted-foreground">Falhas</p>
+                  <p className="text-2xl font-bold">
                     {filteredLogs.filter(log => log.status === 'failed').length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Falhas</p>
                 </div>
+                <XCircle className="h-8 w-8 text-red-500" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-sm font-medium text-muted-foreground">Executando</p>
+                  <p className="text-2xl font-bold">
                     {filteredLogs.filter(log => log.status === 'running').length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Executando</p>
                 </div>
+                <Activity className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
@@ -341,13 +348,13 @@ export default function LogsPage() {
         {/* Logs List */}
         <Card>
           <CardHeader>
-            <CardTitle>Registros de Atividade</CardTitle>
+            <CardTitle className="text-lg">Registros de Atividade</CardTitle>
           </CardHeader>
           <CardContent>
             {filteredLogs.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Nenhum log encontrado</h3>
+                <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2">Nenhum log encontrado</h3>
                 <p className="text-muted-foreground">
                   {search || statusFilter !== 'all' || typeFilter !== 'all'
                     ? 'Tente ajustar os filtros para ver mais resultados.'

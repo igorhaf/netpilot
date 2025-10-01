@@ -96,7 +96,10 @@ export default function RedirectsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Redirecionamentos</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <RotateCcw className="h-8 w-8 text-blue-500" />
+              Redirecionamentos
+            </h1>
             <p className="text-muted-foreground">
               {domainFilter
                 ? 'Redirecionamentos para o domínio selecionado'
@@ -137,8 +140,8 @@ export default function RedirectsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total de Redirecionamentos</p>
                   <p className="text-2xl font-bold">{filteredRedirects.length}</p>
-                  <p className="text-xs text-muted-foreground">Total de Redirecionamentos</p>
                 </div>
               </div>
             </CardContent>
@@ -147,10 +150,10 @@ export default function RedirectsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <div>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-sm font-medium text-muted-foreground">Ativos</p>
+                  <p className="text-2xl font-bold">
                     {filteredRedirects.filter(r => r.isActive).length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Ativos</p>
                 </div>
               </div>
             </CardContent>
@@ -159,10 +162,10 @@ export default function RedirectsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-sm font-medium text-muted-foreground">Permanentes (301)</p>
+                  <p className="text-2xl font-bold">
                     {filteredRedirects.filter(r => r.type === 'permanent').length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Permanentes (301)</p>
                 </div>
               </div>
             </CardContent>
@@ -171,10 +174,10 @@ export default function RedirectsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <div>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-sm font-medium text-muted-foreground">Temporários (302)</p>
+                  <p className="text-2xl font-bold">
                     {filteredRedirects.filter(r => r.type === 'temporary').length}
                   </p>
-                  <p className="text-xs text-muted-foreground">Temporários (302)</p>
                 </div>
               </div>
             </CardContent>
@@ -184,13 +187,13 @@ export default function RedirectsPage() {
         {/* Redirects List */}
         <Card>
           <CardHeader>
-            <CardTitle>Redirecionamentos Configurados</CardTitle>
+            <CardTitle className="text-lg">Redirecionamentos Configurados</CardTitle>
           </CardHeader>
           <CardContent>
             {filteredRedirects.length === 0 ? (
               <div className="text-center py-12">
                 <RotateCcw className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Nenhum redirecionamento encontrado</h3>
+                <h3 className="text-lg font-semibold mb-2">Nenhum redirecionamento encontrado</h3>
                 <p className="text-muted-foreground mb-4">
                   Crie seu primeiro redirecionamento para começar a gerenciar.
                 </p>

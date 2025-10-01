@@ -92,7 +92,10 @@ export default function IntegrationsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Integrações</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Zap className="h-8 w-8 text-blue-500" />
+              Integrações
+            </h1>
             <p className="text-muted-foreground">
               Configure integrações com serviços externos e modelos de IA
             </p>
@@ -102,7 +105,7 @@ export default function IntegrationsPage() {
         {/* IA Configuration */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2">
               <Bot className="h-5 w-5 text-blue-500" />
               Configuração de Modelos de IA
             </CardTitle>
@@ -290,7 +293,7 @@ export default function IntegrationsPage() {
         {/* Terminal Configuration */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2">
               <Settings className="h-5 w-5 text-purple-500" />
               Configurações do Terminal
             </CardTitle>
@@ -447,7 +450,7 @@ export default function IntegrationsPage() {
         {/* Status das Integrações */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="text-lg flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-500" />
               Status das Integrações
             </CardTitle>

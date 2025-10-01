@@ -128,7 +128,7 @@ export default function VolumesPage() {
 
   if (error) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={[{ label: 'Docker', href: '/docker' }, { label: 'Volumes', current: true }]}>
         <div className="text-center text-red-500 p-8">
           Erro ao carregar volumes: {error.message}
         </div>
@@ -136,8 +136,13 @@ export default function VolumesPage() {
     );
   }
 
+  const breadcrumbs = [
+    { label: 'Docker', href: '/docker' },
+    { label: 'Volumes', current: true }
+  ]
+
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>

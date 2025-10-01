@@ -200,7 +200,8 @@ export default function EditDomainPage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
+              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                <Globe className="h-8 w-8 text-blue-500" />
                 Editar Domínio
               </h1>
               <p className="text-muted-foreground">
@@ -214,7 +215,7 @@ export default function EditDomainPage() {
           {/* Informações Básicas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Server className="h-5 w-5 text-blue-500" />
                 <span>Informações Básicas</span>
               </CardTitle>
@@ -280,7 +281,7 @@ export default function EditDomainPage() {
           {/* Configurações de Ativação */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Globe className="h-5 w-5 text-green-500" />
                 <span>Configurações de Ativação</span>
               </CardTitle>
@@ -329,7 +330,7 @@ export default function EditDomainPage() {
           {/* Configurações de Segurança */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-red-500" />
                 <span>Configurações de Segurança</span>
               </CardTitle>
@@ -378,7 +379,7 @@ export default function EditDomainPage() {
           {/* Redirecionamento WWW */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Lock className="h-5 w-5 text-purple-500" />
                 <span>Redirecionamento WWW</span>
               </CardTitle>
@@ -408,7 +409,7 @@ export default function EditDomainPage() {
           {/* Containers Atrelados */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Container className="h-5 w-5 text-blue-500" />
                 <span>Containers Atrelados ao Domínio</span>
               </CardTitle>
@@ -434,7 +435,7 @@ export default function EditDomainPage() {
                         {containersResponse?.data?.map((container: DockerContainer) => (
                           <TableRow key={container.id}>
                             <TableCell>
-                              <div className="flex items-center space-x-2">
+                              <div className="text-lg flex items-center gap-2">
                                 <div className={`w-2 h-2 rounded-full ${
                                   container.state === 'running'
                                     ? 'bg-green-500'
@@ -585,7 +586,7 @@ export default function EditDomainPage() {
                       <div key={container.id} className="border rounded-lg p-4 space-y-3">
                         {/* Container Header */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
+                          <div className="text-lg flex items-center gap-2">
                             <div className={`w-3 h-3 rounded-full ${
                               container.state === 'running'
                                 ? 'bg-green-500'

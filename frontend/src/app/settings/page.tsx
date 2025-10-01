@@ -891,8 +891,12 @@ export default function SettingsPage() {
         return acc
     }, {} as Record<string, typeof integrations>)
 
+    const breadcrumbs = [
+        { label: "Configurações", current: true }
+    ]
+
     return (
-        <MainLayout>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">

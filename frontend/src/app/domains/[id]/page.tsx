@@ -165,11 +165,14 @@ export default function DomainDetailPage() {
               Voltar
             </Button>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-3">
                 <div className={`w-3 h-3 rounded-full ${
                   domain.isActive ? 'bg-green-500' : 'bg-red-500'
                 }`}></div>
-                <h1 className="text-3xl font-bold">{domain.name}</h1>
+                <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                  <Globe className="h-8 w-8 text-blue-500" />
+                  {domain.name}
+                </h1>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -199,7 +202,7 @@ export default function DomainDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Globe className="h-5 w-5 text-blue-500" />
                 <span>Status do Domínio</span>
               </CardTitle>
@@ -234,7 +237,7 @@ export default function DomainDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-green-500" />
                 <span>Certificados SSL</span>
               </CardTitle>
@@ -260,7 +263,7 @@ export default function DomainDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Container className="h-5 w-5 text-purple-500" />
                 <span>Containers</span>
               </CardTitle>
@@ -288,7 +291,7 @@ export default function DomainDetailPage() {
         {/* Domain Containers */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className="text-lg flex items-center gap-2">
               <Container className="h-5 w-5" />
               <span>Containers Relacionados ao Domínio</span>
             </CardTitle>
@@ -314,7 +317,7 @@ export default function DomainDetailPage() {
                     {containersResponse?.data?.map((container: any) => (
                       <TableRow key={container.id}>
                         <TableCell>
-                          <div className="flex items-center space-x-2">
+                          <div className="text-lg flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${
                               container.state === 'running' ? 'bg-green-500' : 'bg-red-500'
                             }`}></div>

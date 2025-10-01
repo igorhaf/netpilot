@@ -191,7 +191,8 @@ export default function NewProxyRulePage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
+              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                <Route className="h-8 w-8 text-blue-500" />
                 Nova Regra de Proxy
               </h1>
               <p className="text-muted-foreground">
@@ -205,7 +206,7 @@ export default function NewProxyRulePage() {
           {/* Configurações Básicas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Server className="h-5 w-5 text-blue-500" />
                 <span>Configurações Básicas</span>
               </CardTitle>
@@ -213,7 +214,7 @@ export default function NewProxyRulePage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="domainId">
+                  <Label htmlFor="domainId" className="text-sm font-medium">
                     Domínio <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -237,7 +238,7 @@ export default function NewProxyRulePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="priority">
+                  <Label htmlFor="priority" className="text-sm font-medium">
                     Prioridade <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -257,7 +258,7 @@ export default function NewProxyRulePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+                <Label htmlFor="description" className="text-sm font-medium">Descrição</Label>
                 <Textarea
                   id="description"
                   value={formData.description || ''}
@@ -275,14 +276,14 @@ export default function NewProxyRulePage() {
           {/* Configurações de Roteamento */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Container className="h-5 w-5 text-green-500" />
                 <span>Configurações de Roteamento</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="sourcePath">
+                <Label htmlFor="sourcePath" className="text-sm font-medium">
                   Caminho de Origem <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -300,7 +301,7 @@ export default function NewProxyRulePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="selectedContainer">
+                  <Label htmlFor="selectedContainer" className="text-sm font-medium">
                     Container Docker <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -324,7 +325,7 @@ export default function NewProxyRulePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="selectedPort">
+                  <Label htmlFor="selectedPort" className="text-sm font-medium">
                     Porta <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -355,7 +356,7 @@ export default function NewProxyRulePage() {
               {/* Configuração gerada automaticamente */}
               {formData.targetUrl && selectedContainerName && selectedPort && (
                 <div className="space-y-2">
-                  <Label>Resolução de Rede Interna Docker</Label>
+                  <Label className="text-sm font-medium">Resolução de Rede Interna Docker</Label>
                   <div className="space-y-3 p-4 bg-muted rounded-lg">
                     <div className="flex items-center space-x-2">
                       <Container className="h-4 w-4 text-blue-500" />
@@ -404,7 +405,7 @@ export default function NewProxyRulePage() {
           {/* Configurações Avançadas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Hash className="h-5 w-5 text-purple-500" />
                 <span>Configurações Avançadas</span>
               </CardTitle>

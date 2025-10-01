@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, RotateCcw, Globe, Target, Hash } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
+import { PageLoading } from '@/components/ui/loading'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,9 +16,9 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
 import { useRequireAuth } from '@/hooks/useAuth'
-import { Domain } from '@/types'
+import { Domain, Redirect } from '@/types'
 
-interface CreateRedirectData {
+interface UpdateRedirectData {
   sourcePattern: string
   targetUrl: string
   type: 'permanent' | 'temporary'
@@ -27,12 +28,14 @@ interface CreateRedirectData {
   domainId: string
 }
 
-export default function NewRedirectPage() {
+export default function EditRedirectPage() {
   useRequireAuth()
   const router = useRouter()
+  const params = useParams()
+  const redirectId = params.id as string
   const queryClient = useQueryClient()
 
-  const [formData, setFormData] = useState<CreateRedirectData>({
+  const [formData, setFormData] = useState<UpdateRedirectData>({
     sourcePattern: '',
     targetUrl: '',
     type: 'permanent',
@@ -42,20 +45,43 @@ export default function NewRedirectPage() {
     domainId: '',
   })
 
+  // Buscar redirecionamento existente
+  const { data: redirect, isLoading: redirectLoading } = useQuery<Redirect>({
+    queryKey: ['redirect', redirectId],
+    queryFn: () => api.get(`/redirects/${redirectId}`).then(res => res.data),
+    enabled: !!redirectId,
+  })
+
   const { data: domains, isLoading: domainsLoading } = useQuery<Domain[]>({
     queryKey: ['domains'],
     queryFn: () => api.get('/domains').then(res => res.data),
   })
 
-  const createRedirectMutation = useMutation({
-    mutationFn: (data: CreateRedirectData) => api.post('/redirects', data),
+  // Preencher formulário quando redirecionamento for carregado
+  useEffect(() => {
+    if (redirect) {
+      setFormData({
+        sourcePattern: redirect.sourcePattern,
+        targetUrl: redirect.targetUrl,
+        type: redirect.type,
+        isActive: redirect.isActive,
+        priority: redirect.priority,
+        description: redirect.description || '',
+        domainId: redirect.domainId,
+      })
+    }
+  }, [redirect])
+
+  const updateRedirectMutation = useMutation({
+    mutationFn: (data: UpdateRedirectData) => api.patch(`/redirects/${redirectId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['redirects'] })
-      toast.success('Redirecionamento criado com sucesso!')
+      queryClient.invalidateQueries({ queryKey: ['redirect', redirectId] })
+      toast.success('Redirecionamento atualizado com sucesso!')
       router.push('/redirects')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao criar redirecionamento')
+      toast.error(error.response?.data?.message || 'Erro ao atualizar redirecionamento')
     },
   })
 
@@ -80,7 +106,7 @@ export default function NewRedirectPage() {
       return
     }
 
-    createRedirectMutation.mutate(formData)
+    updateRedirectMutation.mutate(formData)
   }
 
   const handleBack = () => {
@@ -89,8 +115,26 @@ export default function NewRedirectPage() {
 
   const breadcrumbs = [
     { label: 'Redirecionamentos', href: '/redirects' },
-    { label: 'Novo Redirecionamento', current: true }
+    { label: redirect?.sourcePattern || 'Carregando...', current: true }
   ]
+
+  if (redirectLoading || domainsLoading) {
+    return (
+      <MainLayout breadcrumbs={breadcrumbs}>
+        <PageLoading />
+      </MainLayout>
+    )
+  }
+
+  if (!redirect) {
+    return (
+      <MainLayout breadcrumbs={breadcrumbs}>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Redirecionamento não encontrado</p>
+        </div>
+      </MainLayout>
+    )
+  }
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
@@ -107,10 +151,10 @@ export default function NewRedirectPage() {
             <div>
               <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
                 <RotateCcw className="h-8 w-8 text-blue-500" />
-                Novo Redirecionamento
+                Editar Redirecionamento
               </h1>
               <p className="text-muted-foreground">
-                Configure um novo redirecionamento para direcionar tráfego entre URLs
+                Edite as configurações do redirecionamento
               </p>
             </div>
           </div>
@@ -276,7 +320,7 @@ export default function NewRedirectPage() {
                     Ativar Redirecionamento
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    O redirecionamento ficará ativo imediatamente após a criação
+                    O redirecionamento ficará ativo imediatamente após a atualização
                   </p>
                 </div>
               </div>
@@ -295,9 +339,9 @@ export default function NewRedirectPage() {
             </Button>
             <Button
               type="submit"
-              disabled={createRedirectMutation.isPending}
+              disabled={updateRedirectMutation.isPending}
             >
-              {createRedirectMutation.isPending ? 'Criando...' : 'Criar Redirecionamento'}
+              {updateRedirectMutation.isPending ? 'Atualizando...' : 'Atualizar Redirecionamento'}
             </Button>
           </div>
         </form>

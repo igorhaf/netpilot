@@ -201,7 +201,10 @@ export default function DomainsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Domínios</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Globe className="h-8 w-8 text-blue-500" />
+              Domínios
+            </h1>
             <p className="text-muted-foreground">
               Gerencie seus domínios e configurações
             </p>
@@ -232,10 +235,10 @@ export default function DomainsPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground">Domínio</th>
-                      <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden sm:table-cell">Auto TLS</th>
-                      <th className="text-left py-3 px-3 md:px-6 font-medium text-muted-foreground hidden md:table-cell">Rotas</th>
-                      <th className="text-right py-3 px-3 md:px-6 font-medium text-muted-foreground">Ações</th>
+                      <th className="text-left py-3 px-3 md:px-6 text-sm font-medium text-muted-foreground">Domínio</th>
+                      <th className="text-left py-3 px-3 md:px-6 text-sm font-medium text-muted-foreground hidden sm:table-cell">Auto TLS</th>
+                      <th className="text-left py-3 px-3 md:px-6 text-sm font-medium text-muted-foreground hidden md:table-cell">Rotas</th>
+                      <th className="text-right py-3 px-3 md:px-6 text-sm font-medium text-muted-foreground">Ações</th>
                     </tr>
                   </thead>
                   <tbody>

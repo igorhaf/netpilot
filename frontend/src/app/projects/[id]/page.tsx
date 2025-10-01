@@ -90,7 +90,7 @@ export default function ProjectDetailsPage() {
               Voltar
             </Button>
             <div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold text-foreground">{project.name}</h1>
                 <Badge variant={project.isActive ? "default" : "secondary"}>
                   {project.isActive ? 'Ativo' : 'Inativo'}
@@ -128,7 +128,7 @@ export default function ProjectDetailsPage() {
               {/* Informações Básicas */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Informações Básicas</CardTitle>
+                  <CardTitle className="text-lg">Informações Básicas</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {project.description && (
@@ -192,7 +192,7 @@ export default function ProjectDetailsPage() {
               {/* Informações Técnicas */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Informações Técnicas</CardTitle>
+                  <CardTitle className="text-lg">Informações Técnicas</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {project.technologies && project.technologies.length > 0 && (
@@ -234,7 +234,7 @@ export default function ProjectDetailsPage() {
             {project.domains && project.domains.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Domínios Associados ({project.domains.length})</CardTitle>
+                  <CardTitle className="text-lg">Domínios Associados ({project.domains.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -243,12 +243,12 @@ export default function ProjectDetailsPage() {
                         key={domain.id}
                         className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                       >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           <Globe className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <p className="font-medium">{domain.name}</p>
                             {domain.description && (
-                              <p className="text-sm text-muted-foreground">{domain.description}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{domain.description}</p>
                             )}
                           </div>
                         </div>
@@ -275,7 +275,7 @@ export default function ProjectDetailsPage() {
             {project.metadata && Object.keys(project.metadata).length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Metadados</CardTitle>
+                  <CardTitle className="text-lg">Metadados</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <pre className="bg-muted p-4 rounded-lg text-sm overflow-auto">
@@ -289,7 +289,7 @@ export default function ProjectDetailsPage() {
           <TabsContent value="terminal">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="text-lg flex items-center gap-2">
                   <Terminal className="h-5 w-5 text-green-500" />
                   Terminal do Projeto
                 </CardTitle>

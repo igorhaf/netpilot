@@ -75,7 +75,9 @@
       "Bash(git reset:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(for file in job-executions/page.tsx console/page.tsx terminal/page.tsx settings/page.tsx)",
+      "Bash(do echo \"=== $file ===\")"
     ],
     "deny": [],
     "ask": []
