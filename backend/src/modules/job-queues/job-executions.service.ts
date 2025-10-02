@@ -303,8 +303,25 @@ export class JobExecutionsService {
     const startTime = Date.now();
 
     try {
+      // Mapear nomes de scripts para caminhos
+      const scriptMap: Record<string, string> = {
+        'ai-prompt-handler': path.join(__dirname, 'scripts', 'ai-prompt-handler.script'),
+        'ai-analysis': path.join(__dirname, 'scripts', 'ai-analysis.script'),
+        'backup': path.join(__dirname, 'scripts', 'backup.script'),
+        'log-cleanup': path.join(__dirname, 'scripts', 'log-cleanup.script'),
+        'ssl-check': path.join(__dirname, 'scripts', 'ssl-check.script'),
+      };
+
+      // Resolver caminho do script
+      let scriptPath = scriptMap[jobQueue.scriptPath] || jobQueue.scriptPath;
+
+      // Se não for um caminho absoluto, resolver relativo ao diretório atual
+      if (!path.isAbsolute(scriptPath)) {
+        scriptPath = path.resolve(scriptPath);
+      }
+
       // Carregar e executar script interno
-      const scriptModule = await import(path.resolve(jobQueue.scriptPath));
+      const scriptModule = await import(scriptPath);
       let result;
 
       if (typeof scriptModule.default === 'function') {
@@ -367,6 +384,10 @@ export class JobExecutionsService {
 
     if (filters.search) {
       query.andWhere('jobQueue.name ILIKE :search', { search: `%${filters.search}%` });
+    }
+
+    if (filters.projectId) {
+      query.andWhere("execution.metadata->>'projectId' = :projectId", { projectId: filters.projectId });
     }
 
     // Contar total

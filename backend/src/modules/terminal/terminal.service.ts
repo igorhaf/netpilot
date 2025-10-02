@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
 
@@ -11,33 +11,58 @@ export interface CommandOutput {
   exitCode?: number;
 }
 
+export interface ExecuteCommandOptions {
+  workingDir?: string;
+  user?: string;
+}
+
 @Injectable()
 export class TerminalService extends EventEmitter {
+  private readonly logger = new Logger(TerminalService.name);
   private activeCommands = new Map<string, any>();
 
-  executeCommand(commandId: string, command: string): void {
+  executeCommand(commandId: string, command: string, options?: ExecuteCommandOptions): void {
     try {
-      // Parse do comando (split por espaços, considerando aspas)
-      const args = this.parseCommand(command);
-      const cmd = args.shift();
+      let fullCommand = command;
+      // Detectar se estamos em container Docker verificando se /host/home existe
+      const fs = require('fs');
+      const isDocker = fs.existsSync('/host/home');
 
-      if (!cmd) {
-        this.emit('output', {
-          id: commandId,
-          type: 'error',
-          data: 'Comando inválido',
-          timestamp: new Date(),
-          command,
-        } as CommandOutput);
-        return;
+      this.logger.log(`[TerminalService] isDocker: ${isDocker}, user: ${options?.user}, command: ${command}`);
+
+      // Se um usuário foi especificado, executar comando como esse usuário
+      if (options?.user) {
+        let workDir = options.workingDir || `/home/${options.user}`;
+        const escapedCommand = command.replace(/"/g, '\\"').replace(/'/g, "\\'");
+
+        if (isDocker) {
+          // Em ambiente Docker, o /home do host está montado em /host/home
+          workDir = workDir.replace('/home', '/host/home');
+          // Executar comando diretamente no workdir montado
+          fullCommand = `cd ${workDir} && ${command}`;
+          this.logger.log(`[TerminalService] Docker mode - executing: ${fullCommand}`);
+        } else {
+          // Fora do Docker, usar sudo normalmente
+          fullCommand = `sudo -u ${options.user} bash -c "cd ${workDir} && ${escapedCommand}"`;
+          this.logger.log(`[TerminalService] Host mode - executing with sudo`);
+        }
+      } else {
+        this.logger.log(`[TerminalService] No user specified, executing directly: ${command}`);
       }
 
       // Spawn do processo
-      const childProcess = spawn(cmd, args, {
+      const spawnOptions: any = {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
         env: { ...process.env, FORCE_COLOR: '1' }, // Preservar cores ANSI
-      });
+      };
+
+      // Se workingDir foi especificado e não estamos usando sudo, aplicar cwd
+      if (options?.workingDir && !options?.user) {
+        spawnOptions.cwd = options.workingDir;
+      }
+
+      const childProcess = spawn(fullCommand, [], spawnOptions);
 
       this.activeCommands.set(commandId, childProcess);
 
@@ -52,10 +77,12 @@ export class TerminalService extends EventEmitter {
 
       // Stdout handler
       childProcess.stdout?.on('data', (data: Buffer) => {
+        const dataStr = data.toString();
+        this.logger.log(`[TerminalService] STDOUT (${commandId}): ${dataStr}`);
         const output: CommandOutput = {
           id: commandId,
           type: 'stdout',
-          data: data.toString(),
+          data: dataStr,
           timestamp: new Date(),
         };
         this.emit('output', output);
@@ -63,10 +90,12 @@ export class TerminalService extends EventEmitter {
 
       // Stderr handler
       childProcess.stderr?.on('data', (data: Buffer) => {
+        const dataStr = data.toString();
+        this.logger.log(`[TerminalService] STDERR (${commandId}): ${dataStr}`);
         const output: CommandOutput = {
           id: commandId,
           type: 'stderr',
-          data: data.toString(),
+          data: dataStr,
           timestamp: new Date(),
         };
         this.emit('output', output);
@@ -75,6 +104,7 @@ export class TerminalService extends EventEmitter {
       // Exit handler
       childProcess.on('exit', (code, signal) => {
         this.activeCommands.delete(commandId);
+        this.logger.log(`[TerminalService] EXIT (${commandId}): code=${code}, signal=${signal}`);
 
         const output: CommandOutput = {
           id: commandId,

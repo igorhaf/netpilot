@@ -14,6 +14,7 @@ export declare class SslCertificate {
     expiresAt: Date;
     autoRenew: boolean;
     renewBeforeDays: number;
+    isLocked: boolean;
     certificatePath: string;
     privateKeyPath: string;
     issuer: string;

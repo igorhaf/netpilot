@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Search, FolderOpen, Globe, Settings, Trash2, Edit, Eye } from 'lucide-react'
+import { Plus, Search, FolderOpen, Globe, Settings, Trash2, Edit, Bot } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from '@/hooks/use-toast'
@@ -79,29 +79,12 @@ export default function ProjectsPage() {
   ) || []
 
   const breadcrumbs = [
-    { label: 'Projetos', current: true }
+    { label: 'Projetos', current: true, icon: FolderOpen }
   ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <FolderOpen className="h-8 w-8 text-blue-500" />
-              Projetos
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie seus projetos e seus domínios associados
-            </p>
-          </div>
-          <Button onClick={handleCreateProject} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Projeto
-          </Button>
-        </div>
-
         {/* Stats */}
         {stats && (
           <div className="grid gap-4 md:grid-cols-4">
@@ -153,7 +136,7 @@ export default function ProjectsPage() {
         )}
 
         {/* Search */}
-        <div className="relative max-w-md">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
@@ -183,8 +166,8 @@ export default function ProjectsPage() {
                     </div>
                     <div className="flex items-center space-x-1">
                       <Link href={`/projects/${project.id}`}>
-                        <Button size="sm" variant="outline" title="Ver detalhes">
-                          <Eye className="h-4 w-4" />
+                        <Button size="sm" variant="outline" title="Chat AI & Operações">
+                          <Bot className="h-4 w-4" />
                         </Button>
                       </Link>
                       <Link href={`/projects/${project.id}/edit`}>
@@ -288,6 +271,26 @@ export default function ProjectsPage() {
           confirmText="Excluir Projeto"
           isLoading={deleteMutation.isPending}
         />
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+          {/* Tooltip/Label */}
+          <button
+            onClick={handleCreateProject}
+            className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+          >
+            Adicionar Projeto
+          </button>
+
+          {/* FAB Button */}
+          <button
+            onClick={handleCreateProject}
+            className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center"
+            title="Adicionar Projeto"
+          >
+            <Plus className="h-6 w-6 transition-transform duration-200 ease-in-out group-hover:rotate-180" />
+          </button>
+        </div>
       </div>
     </MainLayout>
   )

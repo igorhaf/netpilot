@@ -171,34 +171,23 @@ export default function SslCertificatesPage() {
   const breadcrumbs = domainFilter
     ? [
         { label: 'Domínios', href: '/domains' },
-        { label: 'Certificados SSL', current: true }
+        { label: 'Certificados SSL', current: true, icon: Shield }
       ]
     : [
-        { label: 'Certificados SSL', current: true }
+        { label: 'Certificados SSL', current: true, icon: Shield }
       ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Shield className="h-8 w-8 text-blue-500" />
-              Certificados SSL
-            </h1>
-            <p className="text-muted-foreground">
-              {domainFilter
-                ? 'Certificados SSL para o domínio selecionado'
-                : 'Gerencie certificados SSL e renovações automáticas'
-              }
-            </p>
-          </div>
+        <div className="flex items-center justify-end">
           <Button
             onClick={handleRenewExpired}
             disabled={renewExpiredMutation.isPending}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className="h-14 w-14 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg p-0"
+            title="Renovar certificados expirados"
           >
-            {renewExpiredMutation.isPending ? 'Renovando...' : 'Renovar Expirados'}
+            <RefreshCw className={`h-6 w-6 ${renewExpiredMutation.isPending ? 'animate-spin' : ''}`} />
           </Button>
         </div>
 
@@ -320,20 +309,6 @@ export default function SslCertificatesPage() {
                         </td>
                         <td className="py-3 px-6">
                           <div className="flex items-center justify-end gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleToggleLock(cert)}
-                              disabled={toggleLockMutation.isPending}
-                              title={cert.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
-                            >
-                              {cert.isLocked ? (
-                                <Lock className="h-4 w-4" />
-                              ) : (
-                                <Unlock className="h-4 w-4" />
-                              )}
-                            </Button>
-
                             {!cert.isLocked && (
                               <>
                                 <Button
@@ -357,6 +332,20 @@ export default function SslCertificatesPage() {
                                 </Button>
                               </>
                             )}
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleToggleLock(cert)}
+                              disabled={toggleLockMutation.isPending}
+                              title={cert.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
+                            >
+                              {cert.isLocked ? (
+                                <Lock className="h-4 w-4" />
+                              ) : (
+                                <Unlock className="h-4 w-4" />
+                              )}
+                            </Button>
                           </div>
                         </td>
                       </tr>

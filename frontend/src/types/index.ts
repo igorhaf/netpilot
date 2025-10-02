@@ -68,6 +68,7 @@ export interface Redirect {
   targetUrl: string
   type: 'permanent' | 'temporary'
   isActive: boolean
+  isLocked?: boolean
   priority: number
   description?: string
   domain: Domain
@@ -188,6 +189,7 @@ export interface CreateRedirectDto {
   targetUrl: string
   type: 'permanent' | 'temporary'
   isActive?: boolean
+  isLocked?: boolean
   priority?: number
   description?: string
   domainId: string

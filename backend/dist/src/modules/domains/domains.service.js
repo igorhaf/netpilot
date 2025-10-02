@@ -18,23 +18,35 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const domain_entity_1 = require("../../entities/domain.entity");
 const config_generation_service_1 = require("../../services/config-generation.service");
+const logs_service_1 = require("../logs/logs.service");
+const log_entity_1 = require("../../entities/log.entity");
 let DomainsService = class DomainsService {
-    constructor(domainRepository, configGenerationService) {
+    constructor(domainRepository, configGenerationService, logsService) {
         this.domainRepository = domainRepository;
         this.configGenerationService = configGenerationService;
+        this.logsService = logsService;
     }
     async create(createDomainDto) {
-        const existingDomain = await this.domainRepository.findOne({
-            where: { name: createDomainDto.name },
-        });
-        if (existingDomain) {
-            throw new common_1.ConflictException('Domínio já existe');
+        const log = await this.logsService.createLog(log_entity_1.LogType.DOMAIN, 'Criar domínio', `Criando domínio ${createDomainDto.name}`);
+        try {
+            const existingDomain = await this.domainRepository.findOne({
+                where: { name: createDomainDto.name },
+            });
+            if (existingDomain) {
+                await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, `Domínio ${createDomainDto.name} já existe`);
+                throw new common_1.ConflictException('Domínio já existe');
+            }
+            const domain = this.domainRepository.create(createDomainDto);
+            const savedDomain = await this.domainRepository.save(domain);
+            await this.configGenerationService.generateNginxConfig();
+            await this.configGenerationService.generateTraefikConfig();
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Domínio ${savedDomain.name} criado com sucesso`, JSON.stringify({ id: savedDomain.id, name: savedDomain.name }));
+            return savedDomain;
         }
-        const domain = this.domainRepository.create(createDomainDto);
-        const savedDomain = await this.domainRepository.save(domain);
-        await this.configGenerationService.generateNginxConfig();
-        await this.configGenerationService.generateTraefikConfig();
-        return savedDomain;
+        catch (error) {
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, error.message || 'Erro ao criar domínio', error.stack);
+            throw error;
+        }
     }
     async findAll(search, status, autoTls) {
         const query = this.domainRepository.createQueryBuilder('domain')
@@ -68,26 +80,44 @@ let DomainsService = class DomainsService {
         return domain;
     }
     async update(id, updateDomainDto) {
-        const domain = await this.findOne(id);
-        if (updateDomainDto.name && updateDomainDto.name !== domain.name) {
-            const existingDomain = await this.domainRepository.findOne({
-                where: { name: updateDomainDto.name },
-            });
-            if (existingDomain) {
-                throw new common_1.ConflictException('Nome do domínio já está em uso');
+        const log = await this.logsService.createLog(log_entity_1.LogType.DOMAIN, 'Atualizar domínio', `Atualizando domínio ${id}`);
+        try {
+            const domain = await this.findOne(id);
+            if (updateDomainDto.name && updateDomainDto.name !== domain.name) {
+                const existingDomain = await this.domainRepository.findOne({
+                    where: { name: updateDomainDto.name },
+                });
+                if (existingDomain) {
+                    await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, 'Nome do domínio já está em uso');
+                    throw new common_1.ConflictException('Nome do domínio já está em uso');
+                }
             }
+            Object.assign(domain, updateDomainDto);
+            const updatedDomain = await this.domainRepository.save(domain);
+            await this.configGenerationService.generateNginxConfig();
+            await this.configGenerationService.generateTraefikConfig();
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Domínio ${updatedDomain.name} atualizado com sucesso`, JSON.stringify({ id: updatedDomain.id, changes: updateDomainDto }));
+            return updatedDomain;
         }
-        Object.assign(domain, updateDomainDto);
-        const updatedDomain = await this.domainRepository.save(domain);
-        await this.configGenerationService.generateNginxConfig();
-        await this.configGenerationService.generateTraefikConfig();
-        return updatedDomain;
+        catch (error) {
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, error.message || 'Erro ao atualizar domínio', error.stack);
+            throw error;
+        }
     }
     async remove(id) {
-        const domain = await this.findOne(id);
-        await this.domainRepository.remove(domain);
-        await this.configGenerationService.generateNginxConfig();
-        await this.configGenerationService.generateTraefikConfig();
+        const log = await this.logsService.createLog(log_entity_1.LogType.DOMAIN, 'Remover domínio', `Removendo domínio ${id}`);
+        try {
+            const domain = await this.findOne(id);
+            const domainName = domain.name;
+            await this.domainRepository.remove(domain);
+            await this.configGenerationService.generateNginxConfig();
+            await this.configGenerationService.generateTraefikConfig();
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Domínio ${domainName} removido com sucesso`);
+        }
+        catch (error) {
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, error.message || 'Erro ao remover domínio', error.stack);
+            throw error;
+        }
     }
     async toggleLock(id) {
         const domain = await this.findOne(id);
@@ -115,6 +145,7 @@ exports.DomainsService = DomainsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(domain_entity_1.Domain)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        config_generation_service_1.ConfigGenerationService])
+        config_generation_service_1.ConfigGenerationService,
+        logs_service_1.LogsService])
 ], DomainsService);
 //# sourceMappingURL=domains.service.js.map

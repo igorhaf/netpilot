@@ -5,35 +5,49 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var TerminalService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TerminalService = void 0;
 const common_1 = require("@nestjs/common");
 const child_process_1 = require("child_process");
 const events_1 = require("events");
-let TerminalService = class TerminalService extends events_1.EventEmitter {
+let TerminalService = TerminalService_1 = class TerminalService extends events_1.EventEmitter {
     constructor() {
         super(...arguments);
+        this.logger = new common_1.Logger(TerminalService_1.name);
         this.activeCommands = new Map();
     }
-    executeCommand(commandId, command) {
+    executeCommand(commandId, command, options) {
         try {
-            const args = this.parseCommand(command);
-            const cmd = args.shift();
-            if (!cmd) {
-                this.emit('output', {
-                    id: commandId,
-                    type: 'error',
-                    data: 'Comando inválido',
-                    timestamp: new Date(),
-                    command,
-                });
-                return;
+            let fullCommand = command;
+            const fs = require('fs');
+            const isDocker = fs.existsSync('/host/home');
+            this.logger.log(`[TerminalService] isDocker: ${isDocker}, user: ${options?.user}, command: ${command}`);
+            if (options?.user) {
+                let workDir = options.workingDir || `/home/${options.user}`;
+                const escapedCommand = command.replace(/"/g, '\\"').replace(/'/g, "\\'");
+                if (isDocker) {
+                    workDir = workDir.replace('/home', '/host/home');
+                    fullCommand = `cd ${workDir} && ${command}`;
+                    this.logger.log(`[TerminalService] Docker mode - executing: ${fullCommand}`);
+                }
+                else {
+                    fullCommand = `sudo -u ${options.user} bash -c "cd ${workDir} && ${escapedCommand}"`;
+                    this.logger.log(`[TerminalService] Host mode - executing with sudo`);
+                }
             }
-            const childProcess = (0, child_process_1.spawn)(cmd, args, {
+            else {
+                this.logger.log(`[TerminalService] No user specified, executing directly: ${command}`);
+            }
+            const spawnOptions = {
                 stdio: ['pipe', 'pipe', 'pipe'],
                 shell: true,
                 env: { ...process.env, FORCE_COLOR: '1' },
-            });
+            };
+            if (options?.workingDir && !options?.user) {
+                spawnOptions.cwd = options.workingDir;
+            }
+            const childProcess = (0, child_process_1.spawn)(fullCommand, [], spawnOptions);
             this.activeCommands.set(commandId, childProcess);
             this.emit('output', {
                 id: commandId,
@@ -43,25 +57,30 @@ let TerminalService = class TerminalService extends events_1.EventEmitter {
                 command,
             });
             childProcess.stdout?.on('data', (data) => {
+                const dataStr = data.toString();
+                this.logger.log(`[TerminalService] STDOUT (${commandId}): ${dataStr}`);
                 const output = {
                     id: commandId,
                     type: 'stdout',
-                    data: data.toString(),
+                    data: dataStr,
                     timestamp: new Date(),
                 };
                 this.emit('output', output);
             });
             childProcess.stderr?.on('data', (data) => {
+                const dataStr = data.toString();
+                this.logger.log(`[TerminalService] STDERR (${commandId}): ${dataStr}`);
                 const output = {
                     id: commandId,
                     type: 'stderr',
-                    data: data.toString(),
+                    data: dataStr,
                     timestamp: new Date(),
                 };
                 this.emit('output', output);
             });
             childProcess.on('exit', (code, signal) => {
                 this.activeCommands.delete(commandId);
+                this.logger.log(`[TerminalService] EXIT (${commandId}): code=${code}, signal=${signal}`);
                 const output = {
                     id: commandId,
                     type: 'exit',
@@ -139,7 +158,7 @@ let TerminalService = class TerminalService extends events_1.EventEmitter {
     }
 };
 exports.TerminalService = TerminalService;
-exports.TerminalService = TerminalService = __decorate([
+exports.TerminalService = TerminalService = TerminalService_1 = __decorate([
     (0, common_1.Injectable)()
 ], TerminalService);
 //# sourceMappingURL=terminal.service.js.map

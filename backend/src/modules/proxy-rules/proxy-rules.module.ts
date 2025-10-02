@@ -9,8 +9,10 @@ import { Domain } from '../../entities/domain.entity';
 import { ConfigGenerationService } from '../../services/config-generation.service';
 import { ConfigModule } from '../config/config.module';
 
+import { LogsModule } from '../logs/logs.module';
 @Module({
   imports: [
+    LogsModule,
     TypeOrmModule.forFeature([ProxyRule, Domain]),
     ConfigModule,
     HttpModule,

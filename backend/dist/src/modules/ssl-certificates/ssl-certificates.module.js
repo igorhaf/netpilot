@@ -15,12 +15,14 @@ const ssl_certificates_controller_1 = require("./ssl-certificates.controller");
 const ssl_certificates_service_1 = require("./ssl-certificates.service");
 const ssl_certificate_entity_1 = require("../../entities/ssl-certificate.entity");
 const domain_entity_1 = require("../../entities/domain.entity");
+const logs_module_1 = require("../logs/logs.module");
 let SslCertificatesModule = class SslCertificatesModule {
 };
 exports.SslCertificatesModule = SslCertificatesModule;
 exports.SslCertificatesModule = SslCertificatesModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            logs_module_1.LogsModule,
             typeorm_1.TypeOrmModule.forFeature([ssl_certificate_entity_1.SslCertificate, domain_entity_1.Domain]),
             axios_1.HttpModule,
             config_1.ConfigModule,

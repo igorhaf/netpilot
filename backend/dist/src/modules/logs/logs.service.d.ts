@@ -3,7 +3,10 @@ import { Log, LogType, LogStatus } from '../../entities/log.entity';
 export declare class LogsService {
     private logRepository;
     constructor(logRepository: Repository<Log>);
-    findAll(type?: LogType, status?: LogStatus): Promise<Log[]>;
+    findAll(type?: LogType, status?: LogStatus, search?: string, page?: number, limit?: number): Promise<{
+        logs: Log[];
+        total: number;
+    }>;
     getStats(): Promise<{
         total: number;
         success: number;
@@ -17,5 +20,6 @@ export declare class LogsService {
         message: string;
     }>;
     getRecentLogs(limit?: number): Promise<Log[]>;
+    findById(id: string): Promise<Log>;
     exportLogs(type?: LogType, status?: LogStatus): Promise<string>;
 }

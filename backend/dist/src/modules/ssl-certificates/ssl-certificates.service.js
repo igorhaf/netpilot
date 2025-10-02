@@ -124,6 +124,12 @@ let SslCertificatesService = SslCertificatesService_1 = class SslCertificatesSer
         await this.deleteCertificateFiles(certificate);
         await this.sslCertificateRepository.remove(certificate);
     }
+    async toggleLock(id) {
+        const certificate = await this.findOne(id);
+        certificate.isLocked = !certificate.isLocked;
+        await this.sslCertificateRepository.save(certificate);
+        return this.findOne(id);
+    }
     async getStats() {
         const now = new Date();
         const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));

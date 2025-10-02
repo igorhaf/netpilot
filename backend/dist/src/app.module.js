@@ -28,6 +28,8 @@ const job_queues_module_1 = require("./modules/job-queues/job-queues.module");
 const redis_module_1 = require("./modules/redis/redis.module");
 const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
+const settings_module_1 = require("./modules/settings/settings.module");
+const stacks_module_1 = require("./modules/stacks/stacks.module");
 const user_entity_1 = require("./entities/user.entity");
 const project_entity_1 = require("./entities/project.entity");
 const domain_entity_1 = require("./entities/domain.entity");
@@ -40,6 +42,8 @@ const console_log_entity_1 = require("./entities/console-log.entity");
 const job_queue_entity_1 = require("./entities/job-queue.entity");
 const job_execution_entity_1 = require("./entities/job-execution.entity");
 const job_schedule_entity_1 = require("./entities/job-schedule.entity");
+const settings_entity_1 = require("./modules/settings/settings.entity");
+const stack_entity_1 = require("./entities/stack.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -54,7 +58,7 @@ exports.AppModule = AppModule = __decorate([
                 useFactory: (configService) => ({
                     type: 'postgres',
                     url: configService.get('DATABASE_URL'),
-                    entities: [user_entity_1.User, project_entity_1.Project, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, job_queue_entity_1.JobQueue, job_execution_entity_1.JobExecution, job_schedule_entity_1.JobSchedule],
+                    entities: [user_entity_1.User, project_entity_1.Project, domain_entity_1.Domain, proxy_rule_entity_1.ProxyRule, redirect_entity_1.Redirect, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, job_queue_entity_1.JobQueue, job_execution_entity_1.JobExecution, job_schedule_entity_1.JobSchedule, settings_entity_1.Setting, stack_entity_1.Stack],
                     synchronize: true,
                     logging: process.env.NODE_ENV === 'development',
                 }),
@@ -96,6 +100,8 @@ exports.AppModule = AppModule = __decorate([
             job_queues_module_1.JobQueuesModule,
             redis_module_1.RedisModule,
             seed_module_1.SeedModule,
+            settings_module_1.SettingsModule,
+            stacks_module_1.StacksModule,
         ],
     })
 ], AppModule);

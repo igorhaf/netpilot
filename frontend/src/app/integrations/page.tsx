@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,10 +17,10 @@ import {
   Languages,
   Terminal,
   Settings,
-  Save,
-  CheckCircle
+  Save
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import api from '@/lib/api'
 
 const AI_MODELS = [
   { value: 'grok', label: 'Grok', description: 'Modelo avançado para raciocínio complexo' },
@@ -28,6 +29,7 @@ const AI_MODELS = [
 
 export default function IntegrationsPage() {
   const auth = useRequireAuth()
+  const queryClient = useQueryClient()
 
   // Estados para os diferentes casos de uso
   const [promptsModel, setPromptsModel] = useState('')
@@ -39,49 +41,76 @@ export default function IntegrationsPage() {
   // Estados para configurações do terminal
   const [defaultShell, setDefaultShell] = useState('/bin/bash')
   const [workingDirectory, setWorkingDirectory] = useState('/home/user')
-  const [terminalTheme, setTerminalTheme] = useState('dark')
-  const [fontSize, setFontSize] = useState('14')
-  const [fontFamily, setFontFamily] = useState('monospace')
-
-  const [isSaving, setIsSaving] = useState(false)
 
   const breadcrumbs = [
-    { label: 'Integrações', current: true }
+    { label: 'Integrações', current: true, icon: Zap }
   ]
 
-  const handleSave = async () => {
-    setIsSaving(true)
+  // Buscar configurações salvas
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ['integration-settings'],
+    queryFn: () => api.get('/settings/integrations').then(res => res.data),
+    enabled: !!auth,
+  })
 
-    // Simular salvamento das configurações
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      const config = {
-        ai: {
-          prompts: promptsModel,
-          commits: commitsModel,
-          promptImprovement: promptImprovementModel,
-          translation: translationModel,
-          commands: commandsModel
-        },
-        terminal: {
-          defaultShell,
-          workingDirectory,
-          terminalTheme,
-          fontSize: parseInt(fontSize),
-          fontFamily
-        }
+  // Carregar configurações quando disponíveis
+  useEffect(() => {
+    if (settings) {
+      if (settings.ai) {
+        setPromptsModel(settings.ai.prompts || '')
+        setCommitsModel(settings.ai.commits || '')
+        setPromptImprovementModel(settings.ai.promptImprovement || '')
+        setTranslationModel(settings.ai.translation || '')
+        setCommandsModel(settings.ai.commands || '')
       }
-
-      // Aqui seria feita a chamada à API para salvar as configurações
-      console.log('Configurações de IA salvas:', config)
-
-      toast.success('Configurações de IA salvas com sucesso!')
-    } catch (error) {
-      toast.error('Erro ao salvar configurações')
-    } finally {
-      setIsSaving(false)
+      if (settings.terminal) {
+        setDefaultShell(settings.terminal.defaultShell || '/bin/bash')
+        setWorkingDirectory(settings.terminal.workingDirectory || '/home/user')
+      }
     }
+  }, [settings])
+
+  // Mutation para salvar configurações de IA
+  const saveAiMutation = useMutation({
+    mutationFn: (data: any) => api.post('/settings/integrations/ai', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['integration-settings'] })
+      toast.success('Configurações de IA salvas com sucesso!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao salvar configurações de IA')
+    },
+  })
+
+  // Mutation para salvar configurações do terminal
+  const saveTerminalMutation = useMutation({
+    mutationFn: (data: any) => api.post('/settings/integrations/terminal', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['integration-settings'] })
+      toast.success('Configurações do terminal salvas com sucesso!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao salvar configurações do terminal')
+    },
+  })
+
+  const handleSaveAi = () => {
+    const config = {
+      prompts: promptsModel,
+      commits: commitsModel,
+      promptImprovement: promptImprovementModel,
+      translation: translationModel,
+      commands: commandsModel
+    }
+    saveAiMutation.mutate(config)
+  }
+
+  const handleSaveTerminal = () => {
+    const config = {
+      defaultShell,
+      workingDirectory
+    }
+    saveTerminalMutation.mutate(config)
   }
 
   if (!auth) return null
@@ -89,19 +118,6 @@ export default function IntegrationsPage() {
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Zap className="h-8 w-8 text-blue-500" />
-              Integrações
-            </h1>
-            <p className="text-muted-foreground">
-              Configure integrações com serviços externos e modelos de IA
-            </p>
-          </div>
-        </div>
-
         {/* IA Configuration */}
         <Card>
           <CardHeader>
@@ -270,11 +286,11 @@ export default function IntegrationsPage() {
             {/* Botão de Salvar */}
             <div className="flex justify-end pt-4 border-t border-border">
               <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={handleSaveAi}
+                disabled={saveAiMutation.isPending}
+                className="flex items-center gap-2"
               >
-                {isSaving ? (
+                {saveAiMutation.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     Salvando...
@@ -282,7 +298,7 @@ export default function IntegrationsPage() {
                 ) : (
                   <>
                     <Save className="h-4 w-4" />
-                    Salvar Configurações
+                    Salvar Configurações de IA
                   </>
                 )}
               </Button>
@@ -354,124 +370,27 @@ export default function IntegrationsPage() {
                   className="font-mono text-sm"
                 />
               </div>
-
-              {/* Tema do Terminal */}
-              <div className="space-y-3">
-                <Label htmlFor="terminal-theme" className="text-sm font-medium">
-                  Tema do Terminal
-                </Label>
-                <Select value={terminalTheme} onValueChange={setTerminalTheme}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tema" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dark">
-                      <div className="flex flex-col">
-                        <span className="font-medium">Escuro</span>
-                        <span className="text-xs text-muted-foreground">Tema escuro padrão</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="light">
-                      <div className="flex flex-col">
-                        <span className="font-medium">Claro</span>
-                        <span className="text-xs text-muted-foreground">Tema claro</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="monokai">
-                      <div className="flex flex-col">
-                        <span className="font-medium">Monokai</span>
-                        <span className="text-xs text-muted-foreground">Tema Monokai colorido</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Tamanho da Fonte */}
-              <div className="space-y-3">
-                <Label htmlFor="font-size" className="text-sm font-medium">
-                  Tamanho da Fonte
-                </Label>
-                <Select value={fontSize} onValueChange={setFontSize}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tamanho" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="12">12px</SelectItem>
-                    <SelectItem value="14">14px</SelectItem>
-                    <SelectItem value="16">16px</SelectItem>
-                    <SelectItem value="18">18px</SelectItem>
-                    <SelectItem value="20">20px</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Família da Fonte */}
-              <div className="space-y-3 md:col-span-2">
-                <Label htmlFor="font-family" className="text-sm font-medium">
-                  Família da Fonte
-                </Label>
-                <Select value={fontFamily} onValueChange={setFontFamily}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a fonte" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monospace">
-                      <div className="flex flex-col">
-                        <span className="font-medium">Monospace</span>
-                        <span className="text-xs text-muted-foreground">Fonte monoespaçada padrão</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="'Fira Code', monospace">
-                      <div className="flex flex-col">
-                        <span className="font-medium">Fira Code</span>
-                        <span className="text-xs text-muted-foreground">Fonte com ligatures</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="'JetBrains Mono', monospace">
-                      <div className="flex flex-col">
-                        <span className="font-medium">JetBrains Mono</span>
-                        <span className="text-xs text-muted-foreground">Fonte otimizada para código</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="'Source Code Pro', monospace">
-                      <div className="flex flex-col">
-                        <span className="font-medium">Source Code Pro</span>
-                        <span className="text-xs text-muted-foreground">Fonte Adobe</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Status das Integrações */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              Status das Integrações
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium">API de IA</span>
-                </div>
-                <span className="text-xs text-green-600 font-medium">Conectado</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm font-medium">Webhook Integration</span>
-                </div>
-                <span className="text-xs text-yellow-600 font-medium">Configurando</span>
-              </div>
+            {/* Botão de Salvar */}
+            <div className="flex justify-end pt-4 border-t border-border">
+              <Button
+                onClick={handleSaveTerminal}
+                disabled={saveTerminalMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                {saveTerminalMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Salvar Configurações do Terminal
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>

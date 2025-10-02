@@ -21,15 +21,23 @@ let LogsService = class LogsService {
     constructor(logRepository) {
         this.logRepository = logRepository;
     }
-    async findAll(type, status) {
+    async findAll(type, status, search, page = 1, limit = 30) {
         const query = this.logRepository.createQueryBuilder('log');
         if (type) {
-            query.where('log.type = :type', { type });
+            query.andWhere('log.type = :type', { type });
         }
         if (status) {
             query.andWhere('log.status = :status', { status });
         }
-        return query.orderBy('log.createdAt', 'DESC').getMany();
+        if (search) {
+            query.andWhere('(log.action ILIKE :search OR log.message ILIKE :search OR log.details ILIKE :search)', { search: `%${search}%` });
+        }
+        const [logs, total] = await query
+            .orderBy('log.createdAt', 'DESC')
+            .skip((page - 1) * limit)
+            .take(limit)
+            .getManyAndCount();
+        return { logs, total };
     }
     async getStats() {
         const [total, success, failed, running] = await Promise.all([
@@ -94,8 +102,17 @@ let LogsService = class LogsService {
             take: limit,
         });
     }
+    async findById(id) {
+        const log = await this.logRepository.findOne({
+            where: { id },
+        });
+        if (!log) {
+            throw new Error('Log não encontrado');
+        }
+        return log;
+    }
     async exportLogs(type, status) {
-        const logs = await this.findAll(type, status);
+        const { logs } = await this.findAll(type, status, undefined, 1, 10000);
         const header = [
             'ID',
             'Tipo',

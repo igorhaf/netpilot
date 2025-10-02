@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Search, RotateCcw, ArrowRight, Edit3, Trash2, ExternalLink, Filter } from 'lucide-react'
+import { Plus, Search, RotateCcw, ArrowRight, Edit3, Trash2, ExternalLink, Filter, Lock, Unlock } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
@@ -51,12 +51,39 @@ export default function RedirectsPage() {
     },
   })
 
+  const toggleLockMutation = useMutation({
+    mutationFn: async (redirect: Redirect) => {
+      const response = await api.patch(`/redirects/${redirect.id}`, {
+        sourcePattern: redirect.sourcePattern,
+        targetUrl: redirect.targetUrl,
+        type: redirect.type,
+        priority: redirect.priority,
+        isActive: redirect.isActive,
+        isLocked: !redirect.isLocked,
+        description: redirect.description,
+        domainId: redirect.domainId,
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['redirects'] })
+      toast.success('Status do travamento atualizado!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao atualizar travamento')
+    },
+  })
+
   const handleCreateRedirect = () => {
     router.push('/redirects/new')
   }
 
   const handleDelete = (redirect: Redirect) => {
     setRedirectToDelete(redirect)
+  }
+
+  const handleToggleLock = (redirect: Redirect) => {
+    toggleLockMutation.mutate(redirect)
   }
 
   const confirmDeleteRedirect = () => {
@@ -84,35 +111,15 @@ export default function RedirectsPage() {
   const breadcrumbs = domainFilter
     ? [
         { label: 'Domínios', href: '/domains' },
-        { label: 'Redirecionamentos', current: true }
+        { label: 'Redirecionamentos', current: true, icon: RotateCcw }
       ]
     : [
-        { label: 'Redirecionamentos', current: true }
+        { label: 'Redirecionamentos', current: true, icon: RotateCcw }
       ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <RotateCcw className="h-8 w-8 text-blue-500" />
-              Redirecionamentos
-            </h1>
-            <p className="text-muted-foreground">
-              {domainFilter
-                ? 'Redirecionamentos para o domínio selecionado'
-                : 'Configure redirecionamentos para seus domínios'
-              }
-            </p>
-          </div>
-          <Button onClick={handleCreateRedirect}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Redirecionamento
-          </Button>
-        </div>
-
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
@@ -205,7 +212,9 @@ export default function RedirectsPage() {
             ) : (
               <div className="space-y-4">
                 {filteredRedirects.map((redirect) => (
-                  <div key={redirect.id} className="border rounded-lg p-4 hover:bg-muted/25 transition-colors">
+                  <div key={redirect.id} className={`border rounded-lg p-4 hover:bg-muted/25 transition-colors ${
+                    redirect.isLocked ? 'bg-muted/30 opacity-70' : ''
+                  }`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-3 flex-wrap">
@@ -252,21 +261,39 @@ export default function RedirectsPage() {
                       </div>
 
                       <div className="flex items-center gap-2 ml-4">
+                        {!redirect.isLocked && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/redirects/${redirect.id}/edit`)}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(redirect)}
+                              disabled={deleteMutation.isPending}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => router.push(`/redirects/${redirect.id}/edit`)}
+                          onClick={() => handleToggleLock(redirect)}
+                          disabled={toggleLockMutation.isPending}
+                          title={redirect.isLocked ? 'Travado (clique para destravar)' : 'Destravado (clique para travar)'}
                         >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(redirect)}
-                          disabled={deleteMutation.isPending}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
+                          {redirect.isLocked ? (
+                            <Lock className="h-4 w-4" />
+                          ) : (
+                            <Unlock className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -293,6 +320,26 @@ export default function RedirectsPage() {
           confirmText="Excluir Redirecionamento"
           isLoading={deleteMutation.isPending}
         />
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+          {/* Tooltip/Label */}
+          <button
+            onClick={handleCreateRedirect}
+            className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+          >
+            Novo Redirecionamento
+          </button>
+
+          {/* FAB Button */}
+          <button
+            onClick={handleCreateRedirect}
+            className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center"
+            title="Novo Redirecionamento"
+          >
+            <Plus className="h-6 w-6 transition-transform duration-200 ease-in-out group-hover:rotate-180" />
+          </button>
+        </div>
       </div>
     </MainLayout>
   )

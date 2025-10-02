@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
 import {
   BarChart3,
   FolderOpen,
@@ -11,8 +11,6 @@ import {
   RotateCcw,
   Shield,
   FileText,
-  LogOut,
-  Settings,
   Terminal,
   Container,
   Clock,
@@ -23,9 +21,7 @@ import {
   ChevronRight,
   Server
 } from 'lucide-react'
-import { useAuthStore } from '@/store/auth'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 interface MenuItem {
@@ -128,8 +124,6 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
-  const { user, logout } = useAuthStore()
   const [openedSubmenu, setOpenedSubmenu] = useState<string | null>(null)
 
   // Tanto mobile quanto desktop respondem ao estado isOpen
@@ -147,27 +141,31 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
     }
   }
 
-  const handleLogout = () => {
-    logout()
-    router.push('/login')
-  }
-
   // Verifica se algum item do submenu está ativo
-  const isSubmenuActive = (submenu?: { href: string }[]) => {
+  const isSubmenuActive = useCallback((submenu?: { href: string }[]) => {
     if (!submenu) return false
     return submenu.some(item => pathname === item.href)
-  }
+  }, [pathname])
+
+  // Abre automaticamente o submenu se a rota atual está em um dos seus subitems
+  useEffect(() => {
+    navigationItems.forEach(item => {
+      if (item.submenu && isSubmenuActive(item.submenu)) {
+        setOpenedSubmenu(item.name)
+      }
+    })
+  }, [pathname, isSubmenuActive])
 
   return (
     <div className={sidebarClasses}>
       {/* Header com Logo e Botão Hambúrguer */}
-      <div className="flex h-20 items-center justify-between px-6 py-6 border-b border-gray-200 dark:border-[rgb(38_38_38/var(--tw-border-opacity,1))] bg-gray-50 dark:bg-gray-800/50">
+      <div className="flex h-14 items-center justify-between px-4 border-b border-gray-200 dark:border-[rgb(38_38_38/var(--tw-border-opacity,1))] bg-gray-50 dark:bg-gray-800/50">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground font-bold text-base">NP</span>
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shadow-sm">
+            <span className="text-primary-foreground font-bold text-xs">NP</span>
           </div>
-          <span className="text-xl font-bold text-foreground tracking-tight">NetPilot</span>
+          <span className="text-base font-semibold text-foreground">NetPilot</span>
         </div>
 
         {/* Botão Hambúrguer */}
@@ -175,7 +173,7 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
           variant="ghost"
           size="sm"
           onClick={onToggle}
-          className="h-9 w-9 p-0"
+          className="h-8 w-8 p-0"
           aria-label="Toggle menu"
         >
           <Menu className="h-4 w-4" />
@@ -200,10 +198,10 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
                 <div
                   onClick={() => setOpenedSubmenu(isOpened ? null : item.name)}
                   className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 group cursor-pointer',
+                    'flex items-center justify-between gap-3 rounded-lg px-4 py-2.5 text-sm font-normal transition-all duration-200 group cursor-pointer border border-transparent',
                     hasActiveItem
                       ? 'bg-primary text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white hover:border-gray-300/50 dark:hover:border-gray-600/50'
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -241,10 +239,10 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
                           href={subItem.href}
                           onClick={handleLinkClick}
                           className={cn(
-                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150 group',
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-normal transition-all duration-150 group border border-transparent',
                             isActive
                               ? 'bg-primary/10 text-primary dark:bg-primary/20'
-                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white'
+                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white hover:border-gray-300/50 dark:hover:border-gray-600/50'
                           )}
                         >
                           <SubIcon className={cn(
@@ -272,10 +270,10 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
               href={item.href!}
               onClick={handleLinkClick}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 group',
+                'flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-normal transition-all duration-200 group border border-transparent',
                 isActive
                   ? 'bg-primary text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white hover:border-gray-300/50 dark:hover:border-gray-600/50'
               )}
             >
               <Icon className={cn(
@@ -289,52 +287,6 @@ export function Sidebar({ isOpen, onClose, onToggle, isMobile }: SidebarProps) {
           )
         })}
       </nav>
-
-      {/* User section */}
-      <div className="border-t border-gray-200 dark:border-[rgb(38_38_38/var(--tw-border-opacity,1))] p-4 bg-gray-50 dark:bg-gray-800/30">
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg mb-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-semibold text-sm">
-              {user?.email?.[0]?.toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {user?.email}
-            </p>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {user?.role}
-              </Badge>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Link
-            href="/settings"
-            onClick={handleLinkClick}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 group',
-              pathname === '/settings'
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white'
-            )}
-          >
-            <Settings className="h-4 w-4" />
-            <span className="truncate">Configurações</span>
-          </Link>
-
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="w-full justify-start gap-3 px-4 py-3 h-auto text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[rgb(3_7_18/var(--tw-bg-opacity,1))] hover:text-gray-900 dark:hover:text-white"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="truncate">Sair</span>
-          </Button>
-        </div>
-      </div>
     </div>
   )
 }

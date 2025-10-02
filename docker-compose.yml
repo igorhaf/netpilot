@@ -136,6 +136,7 @@ services:
       - ./ssh:/app/ssh
       - ./data/docker-backups:/app/data/docker-backups
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home:/host/home:rw
     ports:
       - "3001:3001"
     networks:

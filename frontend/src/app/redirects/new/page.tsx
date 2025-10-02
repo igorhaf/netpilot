@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, RotateCcw, Globe, Target, Hash } from 'lucide-react'
+import { ArrowLeft, RotateCcw, Globe, Target, Hash, Lock, Unlock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +22,7 @@ interface CreateRedirectData {
   targetUrl: string
   type: 'permanent' | 'temporary'
   isActive: boolean
+  isLocked?: boolean
   priority: number
   description?: string
   domainId: string
@@ -37,6 +38,7 @@ export default function NewRedirectPage() {
     targetUrl: '',
     type: 'permanent',
     isActive: true,
+    isLocked: false,
     priority: 100,
     description: '',
     domainId: '',
@@ -277,6 +279,26 @@ export default function NewRedirectPage() {
                   </Label>
                   <p className="text-sm text-muted-foreground">
                     O redirecionamento ficará ativo imediatamente após a criação
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="isLocked"
+                  checked={formData.isLocked}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isLocked: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="isLocked"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                  >
+                    {formData.isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                    Travar Redirecionamento
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Quando travado, o redirecionamento não poderá ser editado ou excluído
                   </p>
                 </div>
               </div>

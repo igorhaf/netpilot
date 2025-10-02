@@ -17,31 +17,36 @@ import { PageLoading } from '@/components/ui/loading'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { JobsDashboard } from '@/components/jobs/JobsDashboard'
 import { getStatusColor, formatRelativeTime } from '@/lib/utils'
 import api from '@/lib/api'
-import { DashboardStats, Log, SslCertificate } from '@/types'
+import { DashboardStats, Log } from '@/types'
 
 export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
     queryFn: () => api.get('/dashboard/stats').then(res => res.data),
+    refetchInterval: 10000, // Auto-refresh a cada 10 segundos
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
-  const { data: recentLogs, isLoading: logsLoading } = useQuery<Log[]>({
+  const { data: recentLogs, isLoading: logsLoading, error: logsError } = useQuery<Log[]>({
     queryKey: ['dashboard-recent-logs'],
-    queryFn: () => api.get('/dashboard/recent-logs?limit=5').then(res => res.data),
+    queryFn: () => api.get('/dashboard/recent-logs?limit=4').then(res => res.data),
+    retry: 1,
+    refetchInterval: 5000, // Auto-refresh a cada 5 segundos
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
-  const { data: expiringCerts, isLoading: certsLoading } = useQuery<SslCertificate[]>({
-    queryKey: ['dashboard-expiring-certificates'],
-    queryFn: () => api.get('/dashboard/expiring-certificates').then(res => res.data),
-  })
+  const breadcrumbs = [
+    { label: 'Dashboard', current: true, icon: BarChart3 }
+  ]
 
   if (statsLoading) {
     return (
-      <MainLayout>
+      <MainLayout breadcrumbs={breadcrumbs}>
         <PageLoading />
       </MainLayout>
     )
@@ -63,21 +68,8 @@ export default function DashboardPage() {
   )
 
   return (
-    <MainLayout>
+    <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Breadcrumb */}
-        <Breadcrumb items={[{ label: 'Dashboard', current: true }]} />
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Visão geral do sistema NetPilot
-            </p>
-          </div>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
@@ -185,6 +177,10 @@ export default function DashboardPage() {
                 <div className="text-center py-8 text-muted-foreground">
                   Carregando logs...
                 </div>
+              ) : logsError ? (
+                <div className="text-center py-8 text-red-500">
+                  Erro ao carregar logs: {(logsError as Error).message}
+                </div>
               ) : recentLogs && recentLogs.length > 0 ? (
                 <div className="space-y-3">
                   {recentLogs.map((log) => {
@@ -218,44 +214,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Expiring Certificates */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              Certificados Expirando
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {certsLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Carregando certificados...
-              </div>
-            ) : expiringCerts && expiringCerts.length > 0 ? (
-              <div className="space-y-3">
-                {expiringCerts.map((cert) => (
-                  <div key={cert.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-yellow-900/20">
-                    <div>
-                      <p className="font-medium">{cert.primaryDomain}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Expira em {formatRelativeTime(cert.expiresAt!)}
-                      </p>
-                    </div>
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-                      Expirando
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
-                <p className="text-muted-foreground">Todos os certificados estão válidos</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </MainLayout>
   )

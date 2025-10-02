@@ -49,4 +49,24 @@ export class ProjectsController {
   remove(@Param('id') id: string) {
     return this.projectsService.remove(id);
   }
+
+  @Post(':id/clone')
+  cloneRepository(@Param('id') id: string) {
+    return this.projectsService.cloneRepository(id);
+  }
+
+  @Post(':id/ssh/generate')
+  generateSshKey(@Param('id') id: string) {
+    return this.projectsService.generateSshKey(id);
+  }
+
+  @Get(':id/ssh/public-key')
+  getSshPublicKey(@Param('id') id: string) {
+    return this.projectsService.getSshPublicKey(id);
+  }
+
+  @Delete(':id/ssh')
+  deleteSshKey(@Param('id') id: string) {
+    return this.projectsService.deleteSshKey(id);
+  }
 }

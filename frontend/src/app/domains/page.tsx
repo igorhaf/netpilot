@@ -192,31 +192,14 @@ export default function DomainsPage() {
   }
 
   const breadcrumbs = [
-    { label: 'Domínios', current: true }
+    { label: 'Domínios', current: true, icon: Globe }
   ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Globe className="h-8 w-8 text-blue-500" />
-              Domínios
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie seus domínios e configurações
-            </p>
-          </div>
-          <Button onClick={handleCreateDomain} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Domínio
-          </Button>
-        </div>
-
         {/* Search */}
-        <div className="relative max-w-md">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
@@ -393,6 +376,26 @@ export default function DomainsPage() {
           confirmText="Excluir Domínio"
           isLoading={deleteDomainMutation.isPending}
         />
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+          {/* Tooltip/Label */}
+          <button
+            onClick={handleCreateDomain}
+            className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+          >
+            Adicionar Domínio
+          </button>
+
+          {/* FAB Button */}
+          <button
+            onClick={handleCreateDomain}
+            className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center"
+            title="Adicionar Domínio"
+          >
+            <Plus className="h-6 w-6 transition-transform duration-200 ease-in-out group-hover:rotate-180" />
+          </button>
+        </div>
 
       </div>
     </MainLayout>

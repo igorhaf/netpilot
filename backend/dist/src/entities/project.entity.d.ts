@@ -8,6 +8,10 @@ export declare class Project {
     isActive: boolean;
     technologies: string[];
     repository: string;
+    cloned: boolean;
+    hasSshKey: boolean;
+    sshPublicKey: string;
+    sshKeyFingerprint: string;
     documentation: string;
     aiSessionData: string;
     mainDomain: string;

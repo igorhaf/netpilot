@@ -20,13 +20,13 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
   const [isConnected, setIsConnected] = useState(false)
   const [terminalOutput, setTerminalOutput] = useState<string[]>([
     `Conectando ao projeto ${projectAlias}...`,
-    `Mudando para diretório /var/www/${projectAlias}`,
+    `Mudando para diretório /home/${projectAlias}`,
     `Terminal do projeto ${projectAlias} pronto!`
   ])
   const [commandHistory, setCommandHistory] = useState<TerminalCommand[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [isExecuting, setIsExecuting] = useState(false)
-  const [currentPath, setCurrentPath] = useState(`/var/www/${projectAlias}`)
+  const [currentPath, setCurrentPath] = useState(`/home/${projectAlias}`)
 
   // Comandos pré-definidos para autocomplete
   const [suggestions, setSuggestions] = useState<string[]>([])
@@ -45,41 +45,69 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
 
   // Conectar ao WebSocket
   useEffect(() => {
-    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'https://netpilot.meadadigital.com', {
+    // Usar a URL da API sem o /api no final
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://netpilot.meadadigital.com'
+    const wsUrl = apiUrl.replace('/api', '')
+
+    console.log(`🔌 Conectando WebSocket Terminal em: ${wsUrl}/terminal`)
+
+    const newSocket = io(`${wsUrl}/terminal`, {
       path: '/socket.io',
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       query: {
         type: 'project-terminal',
         projectId,
         projectAlias
-      }
+      },
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
     })
 
     socketRef.current = newSocket
     setSocket(newSocket)
 
     newSocket.on('connect', () => {
+      console.log(`✅ WebSocket conectado! ID: ${newSocket.id}`)
       setIsConnected(true)
       setTerminalOutput(prev => [...prev, `Conectado ao terminal do projeto ${projectAlias}`])
     })
 
-    newSocket.on('disconnect', () => {
+    newSocket.on('disconnect', (reason) => {
+      console.log(`❌ WebSocket desconectado: ${reason}`)
       setIsConnected(false)
       setTerminalOutput(prev => [...prev, 'Conexão perdida com o terminal'])
     })
 
-    newSocket.on('terminal:output', (data: { output: string; exitCode?: number }) => {
-      setTerminalOutput(prev => [...prev, data.output])
-      setIsExecuting(false)
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ Erro de conexão WebSocket:', error)
+      setTerminalOutput(prev => [...prev, `Erro de conexão: ${error.message}`])
     })
 
-    newSocket.on('terminal:error', (data: { error: string }) => {
+    // Escutar eventos do gateway
+    newSocket.on('commandOutput', (data: { id: string; type: string; data: string; exitCode?: number }) => {
+      console.log('📨 [Frontend] Received commandOutput:', data.type, data.data.substring(0, 50))
+      if (data.type === 'stdout' || data.type === 'stderr') {
+        setTerminalOutput(prev => [...prev, data.data])
+      } else if (data.type === 'exit') {
+        // Só mostrar mensagem de exit se não for código 0 (sucesso)
+        if (data.exitCode !== 0) {
+          setTerminalOutput(prev => [...prev, data.data])
+        }
+        setIsExecuting(false)
+      } else if (data.type === 'error') {
+        setTerminalOutput(prev => [...prev, `Erro: ${data.data}`])
+        setIsExecuting(false)
+      }
+    })
+
+    newSocket.on('commandStarted', (data: { commandId: string; command: string }) => {
+      // Command started successfully
+    })
+
+    newSocket.on('commandError', (data: { commandId: string; error: string }) => {
       setTerminalOutput(prev => [...prev, `Erro: ${data.error}`])
       setIsExecuting(false)
-    })
-
-    newSocket.on('terminal:path-changed', (data: { path: string }) => {
-      setCurrentPath(data.path)
     })
 
     return () => {
@@ -89,7 +117,7 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
 
   // Obter prompt atual
   const getPrompt = useCallback(() => {
-    return `netpilot@${projectAlias}:${currentPath}$`
+    return `${projectAlias}@${projectAlias}:${currentPath}$`
   }, [projectAlias, currentPath])
 
   // Lidar com comandos locais (fallback)
@@ -100,8 +128,8 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
       output = currentPath
     } else if (command === 'ls' || command === 'ls -la') {
       output = command === 'ls -la'
-        ? 'drwxr-xr-x  3 netpilot netpilot 4096 Dec 15 10:30 .\ndrwxr-xr-x  5 netpilot netpilot 4096 Dec 15 09:15 ..\n-rw-r--r--  1 netpilot netpilot  220 Dec 15 09:15 .env\n-rw-r--r--  1 netpilot netpilot 1024 Dec 15 10:30 package.json\ndrwxr-xr-x  2 netpilot netpilot 4096 Dec 15 10:25 src'
-        : 'package.json  src  .env'
+        ? `drwxr-xr-x  3 ${projectAlias} projects 4096 Dec 15 10:30 .\ndrwxr-xr-x  5 ${projectAlias} projects 4096 Dec 15 09:15 ..\n-rw-r--r--  1 ${projectAlias} projects  220 Dec 15 09:15 .env\n-rw-r--r--  1 ${projectAlias} projects 1024 Dec 15 10:30 package.json\ndrwxr-xr-x  2 ${projectAlias} projects 4096 Dec 15 10:25 code`
+        : 'code'
     } else if (command.startsWith('cd ')) {
       const newPath = command.substring(3).trim()
       if (newPath === '..') {
@@ -115,7 +143,7 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
       }
       output = ''
     } else if (command === 'whoami') {
-      output = 'netpilot'
+      output = projectAlias
     } else if (command === 'date') {
       output = new Date().toString()
     } else if (command === 'clear') {
@@ -140,7 +168,7 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
       setTerminalOutput(prev => [...prev, output])
     }
     setIsExecuting(false)
-  }, [currentPath, commandHistory, setCurrentPath, setTerminalOutput, setIsExecuting])
+  }, [currentPath, commandHistory, projectAlias, setCurrentPath, setTerminalOutput, setIsExecuting])
 
   // Executar comando
   const executeCommand = useCallback(async (command: string) => {
@@ -170,13 +198,40 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
       return
     }
 
-    // Enviar comando via WebSocket
-    socket.emit('terminal:execute', {
+    // Detectar e processar comandos cd localmente
+    if (trimmedCommand.startsWith('cd ')) {
+      const newPath = trimmedCommand.substring(3).trim()
+      console.log('🚀 [cd] Processando cd localmente:', newPath, 'currentPath:', currentPath)
+
+      let newFullPath = currentPath
+
+      if (newPath === '..') {
+        const pathParts = currentPath.split('/').filter(p => p)
+        pathParts.pop()
+        newFullPath = '/' + pathParts.join('/') || '/'
+      } else if (newPath.startsWith('/')) {
+        newFullPath = newPath
+      } else if (newPath === '~' || newPath === '') {
+        newFullPath = `/home/${projectAlias}`
+      } else {
+        const cleanCurrent = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath
+        newFullPath = `${cleanCurrent}/${newPath}`
+      }
+
+      console.log('🚀 [cd] Novo path:', newFullPath)
+      setCurrentPath(newFullPath)
+      setIsExecuting(false)
+      return
+    }
+
+    // Enviar comando via WebSocket (usando 'executeCommand' que é o que o gateway espera)
+    socket.emit('executeCommand', {
       command: trimmedCommand,
       projectId,
+      projectAlias,
       workingDir: currentPath
     })
-  }, [socket, isConnected, projectId, currentPath, getPrompt, handleLocalCommand])
+  }, [socket, isConnected, projectId, projectAlias, currentPath, getPrompt, handleLocalCommand])
 
   // Navegar pelo histórico
   const navigateHistory = useCallback((direction: 'up' | 'down') => {

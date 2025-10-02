@@ -13,9 +13,13 @@ import {
   Clock,
   Activity,
   AlertTriangle,
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Eye
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 import { MainLayout } from '@/components/layout/main-layout'
 import { PageLoading } from '@/components/ui/loading'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
@@ -30,25 +34,35 @@ import { Log } from '@/types'
 
 export default function LogsPage() {
   const auth = useRequireAuth()
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
-  const [selectedLog, setSelectedLog] = useState<Log | null>(null)
+  const [page, setPage] = useState(1)
   const [showClearConfirmation, setShowClearConfirmation] = useState(false)
   const queryClient = useQueryClient()
+  const itemsPerPage = 30
 
-  const { data: logs, isLoading } = useQuery<Log[]>({
-    queryKey: ['logs', search, statusFilter, typeFilter],
+  const { data: logsData, isLoading } = useQuery<{logs: Log[], total: number}>({
+    queryKey: ['logs', search, statusFilter, typeFilter, page],
     queryFn: () => {
       const params = new URLSearchParams()
       if (search) params.append('search', search)
       if (statusFilter !== 'all') params.append('status', statusFilter)
       if (typeFilter !== 'all') params.append('type', typeFilter)
+      params.append('page', page.toString())
+      params.append('limit', itemsPerPage.toString())
       return api.get(`/logs?${params.toString()}`).then(res => res.data)
     },
     enabled: !!auth,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 5000, // Auto-refresh a cada 5 segundos
+    refetchOnMount: true, // Atualiza ao montar o componente
+    refetchOnWindowFocus: true, // Atualiza ao focar na janela
   })
+
+  const logs = logsData?.logs || []
+  const totalLogs = logsData?.total || 0
+  const totalPages = Math.ceil(totalLogs / itemsPerPage)
 
   const clearLogsMutation = useMutation({
     mutationFn: () => api.post('/logs/clear'),
@@ -176,9 +190,31 @@ export default function LogsPage() {
     const labels: Record<string, string> = {
       'deployment': 'Deploy',
       'ssl_renewal': 'SSL',
+      'ssl_generation': 'Geração SSL',
       'nginx_reload': 'Nginx',
       'traefik_reload': 'Traefik',
-      'system': 'Sistema'
+      'system': 'Sistema',
+      'project': 'Projeto',
+      'project_create': 'Criar Projeto',
+      'project_update': 'Atualizar Projeto',
+      'project_delete': 'Excluir Projeto',
+      'domain': 'Domínio',
+      'domain_create': 'Criar Domínio',
+      'domain_update': 'Atualizar Domínio',
+      'domain_delete': 'Excluir Domínio',
+      'proxy_rule': 'Proxy Rule',
+      'proxy_rule_create': 'Criar Proxy Rule',
+      'proxy_rule_update': 'Atualizar Proxy Rule',
+      'proxy_rule_delete': 'Excluir Proxy Rule',
+      'redirect': 'Redirect',
+      'redirect_create': 'Criar Redirect',
+      'redirect_update': 'Atualizar Redirect',
+      'redirect_delete': 'Excluir Redirect',
+      'queue': 'Fila',
+      'queue_job': 'Job de Fila',
+      'queue_execution': 'Execução de Fila',
+      'queue_success': 'Fila Sucesso',
+      'queue_failed': 'Fila Falha'
     }
     return labels[type] || type
   }
@@ -186,7 +222,7 @@ export default function LogsPage() {
   if (!auth) return null
 
   const breadcrumbs = [
-    { label: 'Logs', current: true }
+    { label: 'Logs', current: true, icon: FileText }
   ]
 
   if (isLoading) {
@@ -197,51 +233,9 @@ export default function LogsPage() {
     )
   }
 
-  const filteredLogs = logs || []
-
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <FileText className="h-8 w-8 text-blue-500" />
-              Logs do Sistema
-            </h1>
-            <p className="text-muted-foreground">
-              Visualize e gerencie os logs de atividades do NetPilot
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => exportLogsMutation.mutate()}
-              disabled={exportLogsMutation.isPending}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleClearLogs}
-              className="text-red-600 hover:text-red-700"
-              disabled={clearLogsMutation.isPending}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Limpar Logs
-            </Button>
-          </div>
-        </div>
-
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
@@ -274,18 +268,54 @@ export default function LogsPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="input pl-10"
+                  className="input pl-10 pr-4"
                 >
                   <option value="all">Todos os Tipos</option>
-                  <option value="deployment">Deploy</option>
-                  <option value="ssl_renewal">SSL</option>
-                  <option value="nginx_reload">Nginx</option>
-                  <option value="traefik_reload">Traefik</option>
-                  <option value="system">Sistema</option>
+                  <optgroup label="Sistema">
+                    <option value="deployment">Deploy</option>
+                    <option value="nginx_reload">Nginx</option>
+                    <option value="traefik_reload">Traefik</option>
+                    <option value="system">Sistema</option>
+                  </optgroup>
+                  <optgroup label="SSL">
+                    <option value="ssl_renewal">Renovação SSL</option>
+                    <option value="ssl_generation">Geração SSL</option>
+                  </optgroup>
+                  <optgroup label="Projetos">
+                    <option value="project">Projeto (Todos)</option>
+                    <option value="project_create">Criar Projeto</option>
+                    <option value="project_update">Atualizar Projeto</option>
+                    <option value="project_delete">Excluir Projeto</option>
+                  </optgroup>
+                  <optgroup label="Domínios">
+                    <option value="domain">Domínio (Todos)</option>
+                    <option value="domain_create">Criar Domínio</option>
+                    <option value="domain_update">Atualizar Domínio</option>
+                    <option value="domain_delete">Excluir Domínio</option>
+                  </optgroup>
+                  <optgroup label="Proxy Rules">
+                    <option value="proxy_rule">Proxy Rule (Todos)</option>
+                    <option value="proxy_rule_create">Criar Proxy Rule</option>
+                    <option value="proxy_rule_update">Atualizar Proxy Rule</option>
+                    <option value="proxy_rule_delete">Excluir Proxy Rule</option>
+                  </optgroup>
+                  <optgroup label="Redirects">
+                    <option value="redirect">Redirect (Todos)</option>
+                    <option value="redirect_create">Criar Redirect</option>
+                    <option value="redirect_update">Atualizar Redirect</option>
+                    <option value="redirect_delete">Excluir Redirect</option>
+                  </optgroup>
+                  <optgroup label="Filas">
+                    <option value="queue">Fila (Todos)</option>
+                    <option value="queue_job">Job de Fila</option>
+                    <option value="queue_execution">Execução de Fila</option>
+                    <option value="queue_success">Fila Sucesso</option>
+                    <option value="queue_failed">Fila Falha</option>
+                  </optgroup>
                 </select>
               </div>
               <div className="text-sm text-muted-foreground flex items-center">
-                {filteredLogs.length} logs
+                {totalLogs} logs
               </div>
             </div>
           </CardContent>
@@ -298,7 +328,7 @@ export default function LogsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total de Logs</p>
-                  <p className="text-2xl font-bold">{filteredLogs.length}</p>
+                  <p className="text-2xl font-bold">{totalLogs}</p>
                 </div>
                 <FileText className="h-8 w-8 text-blue-500" />
               </div>
@@ -310,7 +340,7 @@ export default function LogsPage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Sucessos</p>
                   <p className="text-2xl font-bold">
-                    {filteredLogs.filter(log => log.status === 'success').length}
+                    {logs.filter((log: Log) => log.status === 'success').length}
                   </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
@@ -323,7 +353,7 @@ export default function LogsPage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Falhas</p>
                   <p className="text-2xl font-bold">
-                    {filteredLogs.filter(log => log.status === 'failed').length}
+                    {logs.filter((log: Log) => log.status === 'failed').length}
                   </p>
                 </div>
                 <XCircle className="h-8 w-8 text-red-500" />
@@ -336,7 +366,7 @@ export default function LogsPage() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Executando</p>
                   <p className="text-2xl font-bold">
-                    {filteredLogs.filter(log => log.status === 'running').length}
+                    {logs.filter((log: Log) => log.status === 'running').length}
                   </p>
                 </div>
                 <Activity className="h-8 w-8 text-orange-500" />
@@ -348,10 +378,42 @@ export default function LogsPage() {
         {/* Logs List */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Registros de Atividade</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Registros de Atividade</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Atualizar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => exportLogsMutation.mutate()}
+                  disabled={exportLogsMutation.isPending}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleClearLogs}
+                  className="text-red-600 hover:text-red-700"
+                  disabled={clearLogsMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Limpar Logs
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {filteredLogs.length === 0 ? (
+            {logs.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-semibold mb-2">Nenhum log encontrado</h3>
@@ -362,16 +424,17 @@ export default function LogsPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {filteredLogs.map((log) => {
-                  const StatusIcon = getStatusIcon(log.status)
+              <>
+                <div className="space-y-4">
+                  {logs.map((log) => {
+                    const StatusIcon = getStatusIcon(log.status)
 
-                  return (
-                    <div
-                      key={log.id}
-                      className="border rounded-lg p-4 hover:bg-muted/25 transition-colors cursor-pointer"
-                      onClick={() => setSelectedLog(log)}
-                    >
+                    return (
+                      <div
+                        key={log.id}
+                        className="border rounded-lg p-4 hover:bg-muted/25 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/logs/${log.id}`)}
+                      >
                       <div className="flex items-start gap-4">
                         <div className="flex-shrink-0 mt-1">
                           <StatusIcon className={`h-5 w-5 ${getStatusColor(log.status)}`} />
@@ -442,107 +505,40 @@ export default function LogsPage() {
                     </div>
                   )
                 })}
-              </div>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
+                    <div className="text-sm text-muted-foreground">
+                      Página {page} de {totalPages} ({totalLogs} registros)
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Anterior
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                      >
+                        Próxima
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
-
-        {/* Log Detail Modal */}
-        {selectedLog && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card border border-border rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
-              <div className="p-6 border-b border-border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {(() => {
-                      const StatusIcon = getStatusIcon(selectedLog.status)
-                      return <StatusIcon className={`h-6 w-6 ${getStatusColor(selectedLog.status)}`} />
-                    })()}
-                    <h3 className="text-lg font-semibold text-foreground">{selectedLog.action || 'Detalhes do Log'}</h3>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedLog(null)}
-                  >
-                    Fechar
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-6 overflow-y-auto max-h-96">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          selectedLog.status === 'success' ? 'bg-green-100 text-green-800' :
-                          selectedLog.status === 'failed' ? 'bg-red-100 text-red-800' :
-                          selectedLog.status === 'running' ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {selectedLog.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Tipo</label>
-                      <p className="mt-1 text-sm text-foreground">{getTypeLabel(selectedLog.type)}</p>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Criado em</label>
-                      <p className="mt-1 text-sm text-foreground">{formatDate(selectedLog.createdAt)}</p>
-                    </div>
-
-                    {selectedLog.duration && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Duração</label>
-                        <p className="mt-1 text-sm text-foreground">{formatDuration(selectedLog.duration)}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {selectedLog.message && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Mensagem</label>
-                      <p className="mt-1 text-sm text-foreground">{selectedLog.message}</p>
-                    </div>
-                  )}
-
-                  {selectedLog.details && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Detalhes</label>
-                      <div className="mt-2 p-3 bg-muted rounded-md">
-                        <pre className="text-xs whitespace-pre-wrap font-mono text-foreground">
-                          {selectedLog.details}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {selectedLog.startedAt && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Iniciado em</label>
-                        <p className="mt-1 text-sm text-foreground">{formatDate(selectedLog.startedAt)}</p>
-                      </div>
-                    )}
-
-                    {selectedLog.completedAt && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Concluído em</label>
-                        <p className="mt-1 text-sm text-foreground">{formatDate(selectedLog.completedAt)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Clear Logs Confirmation Modal */}
         <ConfirmationModal

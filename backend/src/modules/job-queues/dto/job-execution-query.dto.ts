@@ -36,4 +36,8 @@ export class JobExecutionQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  projectId?: string;
 }

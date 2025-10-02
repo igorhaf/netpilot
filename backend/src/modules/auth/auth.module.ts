@@ -9,13 +9,16 @@ import { User } from '../../entities/user.entity';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigService as AppConfigService } from '../../services/config.service';
 
+import { LogsModule } from '../logs/logs.module';
 @Module({
   imports: [
+    LogsModule,
     ConfigModule,
     TypeOrmModule.forFeature([User]),
     PassportModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      imports: [
+    LogsModule,ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'netpilot_default_secret',
         signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '7d' },

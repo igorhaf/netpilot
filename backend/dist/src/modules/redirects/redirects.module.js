@@ -17,12 +17,14 @@ const redirect_entity_1 = require("../../entities/redirect.entity");
 const domain_entity_1 = require("../../entities/domain.entity");
 const config_generation_service_1 = require("../../services/config-generation.service");
 const config_module_1 = require("../config/config.module");
+const logs_module_1 = require("../logs/logs.module");
 let RedirectsModule = class RedirectsModule {
 };
 exports.RedirectsModule = RedirectsModule;
 exports.RedirectsModule = RedirectsModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            logs_module_1.LogsModule,
             typeorm_1.TypeOrmModule.forFeature([redirect_entity_1.Redirect, domain_entity_1.Domain]),
             config_module_1.ConfigModule,
             axios_1.HttpModule,

@@ -26,8 +26,12 @@ let TerminalGateway = TerminalGateway_1 = class TerminalGateway {
         this.terminalService = terminalService;
         this.logger = new common_1.Logger(TerminalGateway_1.name);
         this.clientCommands = new Map();
+    }
+    afterInit(server) {
+        this.logger.log('[Terminal] Gateway initialized');
         this.terminalService.on('output', (output) => {
-            this.server.emit('commandOutput', output);
+            this.logger.log(`[Terminal] Broadcasting: ${output.type} - ${output.data.substring(0, 50)}`);
+            this.server.sockets.emit('commandOutput', output);
         });
     }
     handleConnection(client) {
@@ -50,9 +54,13 @@ let TerminalGateway = TerminalGateway_1 = class TerminalGateway {
         const clientCommandIds = this.clientCommands.get(client.id) || new Set();
         clientCommandIds.add(commandId);
         this.clientCommands.set(client.id, clientCommandIds);
-        this.logger.log(`Executing command: ${data.command} (ID: ${commandId})`);
+        this.logger.log(`Executing command: ${data.command} (ID: ${commandId})${data.projectAlias ? ` for project: ${data.projectAlias}` : ''}`);
         try {
-            this.terminalService.executeCommand(commandId, data.command);
+            const options = data.projectAlias ? {
+                user: data.projectAlias,
+                workingDir: data.workingDir || `/home/${data.projectAlias}`
+            } : undefined;
+            this.terminalService.executeCommand(commandId, data.command, options);
             client.emit('commandStarted', {
                 commandId,
                 command: data.command,
@@ -128,6 +136,7 @@ __decorate([
 exports.TerminalGateway = TerminalGateway = TerminalGateway_1 = __decorate([
     (0, common_1.Injectable)(),
     (0, websockets_1.WebSocketGateway)({
+        namespace: '/terminal',
         cors: {
             origin: true,
             methods: ['GET', 'POST'],

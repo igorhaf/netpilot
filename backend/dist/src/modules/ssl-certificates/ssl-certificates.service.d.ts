@@ -17,6 +17,7 @@ export declare class SslCertificatesService {
     findOne(id: string): Promise<SslCertificate>;
     update(id: string, updateSslCertificateDto: UpdateSslCertificateDto): Promise<SslCertificate>;
     remove(id: string): Promise<void>;
+    toggleLock(id: string): Promise<SslCertificate>;
     getStats(): Promise<{
         total: number;
         valid: number;

@@ -17,12 +17,14 @@ const proxy_rule_entity_1 = require("../../entities/proxy-rule.entity");
 const domain_entity_1 = require("../../entities/domain.entity");
 const config_generation_service_1 = require("../../services/config-generation.service");
 const config_module_1 = require("../config/config.module");
+const logs_module_1 = require("../logs/logs.module");
 let ProxyRulesModule = class ProxyRulesModule {
 };
 exports.ProxyRulesModule = ProxyRulesModule;
 exports.ProxyRulesModule = ProxyRulesModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            logs_module_1.LogsModule,
             typeorm_1.TypeOrmModule.forFeature([proxy_rule_entity_1.ProxyRule, domain_entity_1.Domain]),
             config_module_1.ConfigModule,
             axios_1.HttpModule,

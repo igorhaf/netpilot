@@ -2,10 +2,12 @@ import { Repository } from 'typeorm';
 import { Domain } from '../../entities/domain.entity';
 import { CreateDomainDto, UpdateDomainDto } from '../../dtos/domain.dto';
 import { ConfigGenerationService } from '../../services/config-generation.service';
+import { LogsService } from '../logs/logs.service';
 export declare class DomainsService {
     private domainRepository;
     private configGenerationService;
-    constructor(domainRepository: Repository<Domain>, configGenerationService: ConfigGenerationService);
+    private logsService;
+    constructor(domainRepository: Repository<Domain>, configGenerationService: ConfigGenerationService, logsService: LogsService);
     create(createDomainDto: CreateDomainDto): Promise<Domain>;
     findAll(search?: string, status?: string, autoTls?: string): Promise<Domain[]>;
     findOne(id: string): Promise<Domain>;

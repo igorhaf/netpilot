@@ -8,6 +8,7 @@ export interface BreadcrumbItem {
   label: string
   href?: string
   current?: boolean
+  icon?: React.ComponentType<{ className?: string }>
 }
 
 interface BreadcrumbProps {
@@ -26,26 +27,32 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         <Home className="h-4 w-4" />
       </Link>
 
-      {items.map((item, index) => (
-        <div key={index} className="flex items-center space-x-1">
-          <ChevronRight className="h-4 w-4" />
+      {items.map((item, index) => {
+        const Icon = item.icon
+        return (
+          <div key={index} className="flex items-center space-x-1">
+            <ChevronRight className="h-4 w-4" />
 
-          {item.href && !item.current ? (
-            <Link
-              href={item.href}
-              className="hover:text-foreground transition-colors"
-            >
-              {item.label}
-            </Link>
-          ) : (
-            <span className={cn(
-              item.current && "text-foreground font-medium"
-            )}>
-              {item.label}
-            </span>
-          )}
-        </div>
-      ))}
+            {item.href && !item.current ? (
+              <Link
+                href={item.href}
+                className="flex items-center gap-2 hover:text-foreground transition-colors"
+              >
+                {Icon && <Icon className="h-4 w-4" />}
+                {item.label}
+              </Link>
+            ) : (
+              <span className={cn(
+                "flex items-center gap-2",
+                item.current && "text-foreground font-medium"
+              )}>
+                {Icon && <Icon className="h-4 w-4" />}
+                {item.label}
+              </span>
+            )}
+          </div>
+        )
+      })}
     </nav>
   )
 }

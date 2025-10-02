@@ -6,6 +6,7 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable, Logger, UseGuards } from '@nestjs/common';
@@ -19,6 +20,9 @@ function generateUUID(): string {
 
 export interface ExecuteCommandDto {
   command: string;
+  projectId?: string;
+  projectAlias?: string;
+  workingDir?: string;
 }
 
 export interface KillCommandDto {
@@ -27,6 +31,7 @@ export interface KillCommandDto {
 
 @Injectable()
 @WebSocketGateway({
+  namespace: '/terminal',
   cors: {
     origin: true, // Allow all origins for external server connections
     methods: ['GET', 'POST'],
@@ -36,17 +41,23 @@ export interface KillCommandDto {
   transports: ['websocket', 'polling'],
   allowEIO3: true,
 })
-export class TerminalGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class TerminalGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
   private readonly logger = new Logger(TerminalGateway.name);
   private clientCommands = new Map<string, Set<string>>(); // clientId -> Set<commandId>
 
-  constructor(private readonly terminalService: TerminalService) {
-    // Escutar saída de comandos e enviar para todos os clientes
+  constructor(private readonly terminalService: TerminalService) {}
+
+  afterInit(server: Server) {
+    this.logger.log('[Terminal] Gateway initialized');
+
+    // Escutar saída de comandos e enviar para todos os clientes do namespace /terminal
     this.terminalService.on('output', (output: CommandOutput) => {
-      this.server.emit('commandOutput', output);
+      this.logger.log(`[Terminal] Broadcasting: ${output.type} - ${output.data.substring(0, 50)}`);
+      // Emitir para todos os sockets do namespace
+      this.server.sockets.emit('commandOutput', output);
     });
   }
 
@@ -83,11 +94,16 @@ export class TerminalGateway implements OnGatewayConnection, OnGatewayDisconnect
     clientCommandIds.add(commandId);
     this.clientCommands.set(client.id, clientCommandIds);
 
-    this.logger.log(`Executing command: ${data.command} (ID: ${commandId})`);
+    this.logger.log(`Executing command: ${data.command} (ID: ${commandId})${data.projectAlias ? ` for project: ${data.projectAlias}` : ''}`);
 
     try {
-      // Executar comando
-      this.terminalService.executeCommand(commandId, data.command);
+      // Executar comando com opções do projeto
+      const options = data.projectAlias ? {
+        user: data.projectAlias,
+        workingDir: data.workingDir || `/home/${data.projectAlias}`
+      } : undefined;
+
+      this.terminalService.executeCommand(commandId, data.command, options);
 
       // Confirmar execução iniciada
       client.emit('commandStarted', {

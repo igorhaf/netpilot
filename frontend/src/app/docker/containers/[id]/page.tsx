@@ -384,34 +384,6 @@ export default function ContainerDetailsPage() {
           </Card>
         )}
 
-        {/* Labels */}
-        {container.labels && Object.keys(container.labels).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="h-5 w-5" />
-                <span>Labels</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(container.labels).slice(0, 10).map(([key, value]: [string, any]) => (
-                  <div key={key} className="p-3 bg-muted rounded-lg">
-                    <p className="font-medium text-sm break-all">{key}</p>
-                    <p className="text-xs text-muted-foreground break-all mt-1">{value}</p>
-                  </div>
-                ))}
-                {Object.keys(container.labels).length > 10 && (
-                  <div className="p-3 bg-muted rounded-lg flex items-center justify-center">
-                    <p className="text-sm text-muted-foreground">
-                      +{Object.keys(container.labels).length - 10} labels adicionais
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </MainLayout>
   );

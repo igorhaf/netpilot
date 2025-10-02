@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Server, Route, Target, Hash, Container } from 'lucide-react'
+import { ArrowLeft, Server, Route, Target, Hash, Container, Lock, Unlock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,6 +23,7 @@ interface CreateProxyRuleData {
   targetUrl: string
   priority: number
   isActive: boolean
+  isLocked?: boolean
   maintainQueryStrings: boolean
   description?: string
   domainId: string
@@ -38,6 +39,7 @@ export default function NewProxyRulePage() {
     targetUrl: '',
     priority: 100,
     isActive: true,
+    isLocked: false,
     maintainQueryStrings: true,
     description: '',
     domainId: '',
@@ -445,6 +447,26 @@ export default function NewProxyRulePage() {
                   </Label>
                   <p className="text-sm text-muted-foreground">
                     Preservar parâmetros da URL (?param=value) no redirecionamento
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="isLocked"
+                  checked={formData.isLocked}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isLocked: !!checked })}
+                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="isLocked"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                  >
+                    {formData.isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                    Travar Regra
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Quando travada, a regra não poderá ser editada ou excluída
                   </p>
                 </div>
               </div>

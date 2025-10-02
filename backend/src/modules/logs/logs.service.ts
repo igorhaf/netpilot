@@ -10,18 +10,37 @@ export class LogsService {
     private logRepository: Repository<Log>,
   ) {}
 
-  async findAll(type?: LogType, status?: LogStatus): Promise<Log[]> {
+  async findAll(
+    type?: LogType,
+    status?: LogStatus,
+    search?: string,
+    page: number = 1,
+    limit: number = 30,
+  ): Promise<{ logs: Log[], total: number }> {
     const query = this.logRepository.createQueryBuilder('log');
 
     if (type) {
-      query.where('log.type = :type', { type });
+      query.andWhere('log.type = :type', { type });
     }
 
     if (status) {
       query.andWhere('log.status = :status', { status });
     }
 
-    return query.orderBy('log.createdAt', 'DESC').getMany();
+    if (search) {
+      query.andWhere(
+        '(log.action ILIKE :search OR log.message ILIKE :search OR log.details ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    const [logs, total] = await query
+      .orderBy('log.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return { logs, total };
   }
 
   async getStats() {
@@ -103,8 +122,20 @@ export class LogsService {
     });
   }
 
+  async findById(id: string): Promise<Log> {
+    const log = await this.logRepository.findOne({
+      where: { id },
+    });
+
+    if (!log) {
+      throw new Error('Log não encontrado');
+    }
+
+    return log;
+  }
+
   async exportLogs(type?: LogType, status?: LogStatus): Promise<string> {
-    const logs = await this.findAll(type, status);
+    const { logs } = await this.findAll(type, status, undefined, 1, 10000);
 
     // CSV header
     const header = [

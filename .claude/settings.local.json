@@ -77,7 +77,11 @@
       "Bash(git push:*)",
       "Bash(git add:*)",
       "Bash(for file in job-executions/page.tsx console/page.tsx terminal/page.tsx settings/page.tsx)",
-      "Bash(do echo \"=== $file ===\")"
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(git log:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQG5ldHBpbG90LmxvY2FsIiwic3ViIjoiZTg1ZmYxOTEtNDIyMy00MmM2LTkxOWQtMWYyMzM3NjY3YmIzIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU5MzQzODIzLCJleHAiOjE3NTk5NDg2MjN9.ymyghj1EUx-T5VSsSQndjWpQ_xD8KhSEsCc4m1c97gs\")",
+      "Read(//home/**)",
+      "Read(///**)"
     ],
     "deny": [],
     "ask": []

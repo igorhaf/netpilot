@@ -8,4 +8,5 @@ export declare class JobExecutionQueryDto {
     page?: number;
     limit?: number;
     search?: string;
+    projectId?: string;
 }

@@ -7,6 +7,7 @@ import { DomainsService } from './domains.service';
 import { Domain } from '../../entities/domain.entity';
 import { ConfigGenerationService } from '../../services/config-generation.service';
 import { ConfigModule } from '../config/config.module';
+import { LogsModule } from '../logs/logs.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ConfigModule } from '../config/config.module';
     ConfigModule,
     HttpModule,
     NestConfigModule,
+    LogsModule,
   ],
   controllers: [DomainsController],
   providers: [DomainsService, ConfigGenerationService],

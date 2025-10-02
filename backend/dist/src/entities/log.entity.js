@@ -15,9 +15,16 @@ var LogType;
 (function (LogType) {
     LogType["DEPLOYMENT"] = "deployment";
     LogType["SSL_RENEWAL"] = "ssl_renewal";
+    LogType["SSL_GENERATION"] = "ssl_generation";
     LogType["NGINX_RELOAD"] = "nginx_reload";
     LogType["TRAEFIK_RELOAD"] = "traefik_reload";
     LogType["SYSTEM"] = "system";
+    LogType["PROJECT"] = "project";
+    LogType["DOMAIN"] = "domain";
+    LogType["PROXY_RULE"] = "proxy_rule";
+    LogType["REDIRECT"] = "redirect";
+    LogType["DOCKER"] = "docker";
+    LogType["QUEUE"] = "queue";
 })(LogType || (exports.LogType = LogType = {}));
 var LogStatus;
 (function (LogStatus) {

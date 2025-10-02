@@ -16,6 +16,7 @@ const domains_service_1 = require("./domains.service");
 const domain_entity_1 = require("../../entities/domain.entity");
 const config_generation_service_1 = require("../../services/config-generation.service");
 const config_module_1 = require("../config/config.module");
+const logs_module_1 = require("../logs/logs.module");
 let DomainsModule = class DomainsModule {
 };
 exports.DomainsModule = DomainsModule;
@@ -26,6 +27,7 @@ exports.DomainsModule = DomainsModule = __decorate([
             config_module_1.ConfigModule,
             axios_1.HttpModule,
             config_1.ConfigModule,
+            logs_module_1.LogsModule,
         ],
         controllers: [domains_controller_1.DomainsController],
         providers: [domains_service_1.DomainsService, config_generation_service_1.ConfigGenerationService],

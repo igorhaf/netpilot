@@ -22,5 +22,6 @@ export declare class SslCertificatesController {
     }>;
     findOne(id: string): Promise<import("../../entities/ssl-certificate.entity").SslCertificate>;
     update(id: string, updateSslCertificateDto: UpdateSslCertificateDto): Promise<import("../../entities/ssl-certificate.entity").SslCertificate>;
+    toggleLock(id: string): Promise<import("../../entities/ssl-certificate.entity").SslCertificate>;
     remove(id: string): Promise<void>;
 }

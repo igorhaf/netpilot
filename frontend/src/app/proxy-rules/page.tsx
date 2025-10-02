@@ -163,10 +163,10 @@ export default function ProxyRulesPage() {
   const breadcrumbs = domainFilter
     ? [
         { label: 'Domínios', href: '/domains' },
-        { label: 'Proxy Reverso', current: true }
+        { label: 'Proxy Reverso', current: true, icon: ArrowRight }
       ]
     : [
-        { label: 'Proxy Reverso', current: true }
+        { label: 'Proxy Reverso', current: true, icon: ArrowRight }
       ]
 
   if (isLoading) {
@@ -180,54 +180,32 @@ export default function ProxyRulesPage() {
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <ArrowRight className="h-8 w-8 text-blue-500" />
-              Proxy Reverso
-            </h1>
-            <p className="text-muted-foreground">
-              {domainFilter
-                ? 'Regras de proxy para o domínio selecionado'
-                : 'Configure regras de proxy reverso para seus domínios'
-              }
-            </p>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar regras..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
           </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={handleCreateProxyRule}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Regra
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleDiscardChanges}
-              disabled={discardChangesMutation.isPending}
-              className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
-            >
-              {discardChangesMutation.isPending ? 'Descartando...' : 'Descartar Modificações'}
-            </Button>
-            <Button
-              onClick={handleApplyConfiguration}
-              disabled={applyConfigurationMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {applyConfigurationMutation.isPending ? 'Aplicando...' : 'Aplicar Configuração'}
-            </Button>
-          </div>
-        </div>
-
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Buscar regras..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+          <Button
+            variant="outline"
+            onClick={handleDiscardChanges}
+            disabled={discardChangesMutation.isPending}
+            className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
+          >
+            {discardChangesMutation.isPending ? 'Descartando...' : 'Descartar'}
+          </Button>
+          <Button
+            onClick={handleApplyConfiguration}
+            disabled={applyConfigurationMutation.isPending}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {applyConfigurationMutation.isPending ? 'Aplicando...' : 'Aplicar'}
+          </Button>
         </div>
 
         {/* Proxy Rules Table or Empty State */}
@@ -268,52 +246,54 @@ export default function ProxyRulesPage() {
                           {rule.priority}
                         </td>
                         <td className="py-3 px-6">
-                          <div className="flex items-center gap-1">
-                            {!rule.isLocked && (
-                              <>
-                                {rule.isActive ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <div className="flex items-center gap-1">
+                              {!rule.isLocked && (
+                                <>
+                                  {rule.isActive ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleToggleProxyRule(rule)}
+                                      disabled={toggleProxyRuleMutation.isPending}
+                                      title="Desativar regra"
+                                    >
+                                      <Square className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleToggleProxyRule(rule)}
+                                      disabled={toggleProxyRuleMutation.isPending}
+                                      title="Ativar regra"
+                                    >
+                                      <Play className="h-4 w-4" />
+                                    </Button>
+                                  )}
+
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleToggleProxyRule(rule)}
-                                    disabled={toggleProxyRuleMutation.isPending}
-                                    title="Desativar regra"
+                                    onClick={() => handleEditRule(rule)}
+                                    title="Editar regra"
                                   >
-                                    <Square className="h-4 w-4" />
+                                    <Edit className="h-4 w-4" />
                                   </Button>
-                                ) : (
+
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleToggleProxyRule(rule)}
-                                    disabled={toggleProxyRuleMutation.isPending}
-                                    title="Ativar regra"
+                                    onClick={() => handleDeleteRule(rule)}
+                                    disabled={deleteRuleMutation.isPending}
+                                    className="text-red-600 hover:text-red-700"
+                                    title="Excluir regra"
                                   >
-                                    <Play className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
-                                )}
-
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEditRule(rule)}
-                                  title="Editar regra"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDeleteRule(rule)}
-                                  disabled={deleteRuleMutation.isPending}
-                                  className="text-red-600 hover:text-red-700"
-                                  title="Excluir regra"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
+                                </>
+                              )}
+                            </div>
 
                             <Button
                               size="sm"
@@ -363,6 +343,26 @@ export default function ProxyRulesPage() {
           confirmText="Excluir Regra"
           isLoading={deleteRuleMutation.isPending}
         />
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+          {/* Tooltip/Label */}
+          <button
+            onClick={handleCreateProxyRule}
+            className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+          >
+            Nova Regra
+          </button>
+
+          {/* FAB Button */}
+          <button
+            onClick={handleCreateProxyRule}
+            className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center"
+            title="Nova Regra"
+          >
+            <Plus className="h-6 w-6 transition-transform duration-200 ease-in-out group-hover:rotate-180" />
+          </button>
+        </div>
 
       </div>
     </MainLayout>

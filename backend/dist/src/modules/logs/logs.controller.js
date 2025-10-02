@@ -22,14 +22,19 @@ let LogsController = class LogsController {
     constructor(logsService) {
         this.logsService = logsService;
     }
-    findAll(type, status) {
-        return this.logsService.findAll(type, status);
+    findAll(type, status, search, page, limit) {
+        const pageNum = page ? parseInt(page) : 1;
+        const limitNum = limit ? parseInt(limit) : 30;
+        return this.logsService.findAll(type, status, search, pageNum, limitNum);
     }
     getStats() {
         return this.logsService.getStats();
     }
     getRecent(limit) {
         return this.logsService.getRecentLogs(limit ? parseInt(limit.toString()) : 10);
+    }
+    getLogById(id) {
+        return this.logsService.findById(id);
     }
     clearLogs() {
         return this.logsService.clearLogs();
@@ -44,10 +49,16 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Listar logs' }),
     (0, swagger_1.ApiQuery)({ name: 'type', required: false, enum: log_entity_1.LogType }),
     (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: log_entity_1.LogStatus }),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'page', required: false }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false }),
     __param(0, (0, common_1.Query)('type')),
     __param(1, (0, common_1.Query)('status')),
+    __param(2, (0, common_1.Query)('search')),
+    __param(3, (0, common_1.Query)('page')),
+    __param(4, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], LogsController.prototype, "findAll", null);
 __decorate([
@@ -66,6 +77,14 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], LogsController.prototype, "getRecent", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Obter detalhes de um log específico' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], LogsController.prototype, "getLogById", null);
 __decorate([
     (0, common_1.Post)('clear'),
     (0, swagger_1.ApiOperation)({ summary: 'Limpar todos os logs' }),

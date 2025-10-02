@@ -18,17 +18,28 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const proxy_rule_entity_1 = require("../../entities/proxy-rule.entity");
 const config_generation_service_1 = require("../../services/config-generation.service");
+const logs_service_1 = require("../logs/logs.service");
+const log_entity_1 = require("../../entities/log.entity");
 let ProxyRulesService = class ProxyRulesService {
-    constructor(proxyRuleRepository, configGenerationService) {
+    constructor(proxyRuleRepository, configGenerationService, logsService) {
         this.proxyRuleRepository = proxyRuleRepository;
         this.configGenerationService = configGenerationService;
+        this.logsService = logsService;
     }
     async create(createProxyRuleDto) {
-        const proxyRule = this.proxyRuleRepository.create(createProxyRuleDto);
-        const saved = await this.proxyRuleRepository.save(proxyRule);
-        await this.configGenerationService.generateNginxConfig();
-        await this.configGenerationService.generateTraefikConfig();
-        return this.findOne(saved.id);
+        const log = await this.logsService.createLog(log_entity_1.LogType.PROXY_RULE, 'Criar regra de proxy', `Criando regra de proxy para ${createProxyRuleDto.sourcePath}`);
+        try {
+            const proxyRule = this.proxyRuleRepository.create(createProxyRuleDto);
+            const saved = await this.proxyRuleRepository.save(proxyRule);
+            await this.configGenerationService.generateNginxConfig();
+            await this.configGenerationService.generateTraefikConfig();
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Regra de proxy criada: ${saved.sourcePath} → ${saved.targetUrl}`, JSON.stringify({ id: saved.id, sourcePath: saved.sourcePath }));
+            return this.findOne(saved.id);
+        }
+        catch (error) {
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, error.message || 'Erro ao criar regra de proxy', error.stack);
+            throw error;
+        }
     }
     async findAll(search, status) {
         const query = this.proxyRuleRepository.createQueryBuilder('proxyRule')
@@ -56,15 +67,24 @@ let ProxyRulesService = class ProxyRulesService {
         return proxyRule;
     }
     async update(id, updateProxyRuleDto) {
-        const proxyRule = await this.findOne(id);
-        if (proxyRule.isLocked && !updateProxyRuleDto.hasOwnProperty('isLocked')) {
-            throw new common_1.BadRequestException('Esta regra de proxy está travada e não pode ser editada. Destravar primeiro.');
+        const log = await this.logsService.createLog(log_entity_1.LogType.PROXY_RULE, 'Atualizar regra de proxy', `Atualizando regra de proxy ${id}`);
+        try {
+            const proxyRule = await this.findOne(id);
+            if (proxyRule.isLocked && !updateProxyRuleDto.hasOwnProperty('isLocked')) {
+                await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, 'Regra de proxy está travada');
+                throw new common_1.BadRequestException('Esta regra de proxy está travada e não pode ser editada. Destravar primeiro.');
+            }
+            Object.assign(proxyRule, updateProxyRuleDto);
+            await this.proxyRuleRepository.save(proxyRule);
+            await this.configGenerationService.generateNginxConfig();
+            await this.configGenerationService.generateTraefikConfig();
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Regra de proxy atualizada: ${proxyRule.sourcePath}`, JSON.stringify({ id: proxyRule.id, changes: updateProxyRuleDto }));
+            return this.findOne(id);
         }
-        Object.assign(proxyRule, updateProxyRuleDto);
-        await this.proxyRuleRepository.save(proxyRule);
-        await this.configGenerationService.generateNginxConfig();
-        await this.configGenerationService.generateTraefikConfig();
-        return this.findOne(id);
+        catch (error) {
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, error.message || 'Erro ao atualizar regra de proxy', error.stack);
+            throw error;
+        }
     }
     async toggleLock(id) {
         const proxyRule = await this.findOne(id);
@@ -73,13 +93,23 @@ let ProxyRulesService = class ProxyRulesService {
         return this.findOne(id);
     }
     async remove(id) {
-        const proxyRule = await this.findOne(id);
-        if (proxyRule.isLocked) {
-            throw new common_1.BadRequestException('Esta regra de proxy está travada e não pode ser excluída. Destravar primeiro.');
+        const log = await this.logsService.createLog(log_entity_1.LogType.PROXY_RULE, 'Remover regra de proxy', `Removendo regra de proxy ${id}`);
+        try {
+            const proxyRule = await this.findOne(id);
+            const sourcePath = proxyRule.sourcePath;
+            if (proxyRule.isLocked) {
+                await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, 'Regra de proxy está travada');
+                throw new common_1.BadRequestException('Esta regra de proxy está travada e não pode ser excluída. Destravar primeiro.');
+            }
+            await this.proxyRuleRepository.remove(proxyRule);
+            await this.configGenerationService.generateNginxConfig();
+            await this.configGenerationService.generateTraefikConfig();
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Regra de proxy removida: ${sourcePath}`);
         }
-        await this.proxyRuleRepository.remove(proxyRule);
-        await this.configGenerationService.generateNginxConfig();
-        await this.configGenerationService.generateTraefikConfig();
+        catch (error) {
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, error.message || 'Erro ao remover regra de proxy', error.stack);
+            throw error;
+        }
     }
     async applyConfiguration() {
         try {
@@ -103,6 +133,7 @@ exports.ProxyRulesService = ProxyRulesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(proxy_rule_entity_1.ProxyRule)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        config_generation_service_1.ConfigGenerationService])
+        config_generation_service_1.ConfigGenerationService,
+        logs_service_1.LogsService])
 ], ProxyRulesService);
 //# sourceMappingURL=proxy-rules.service.js.map

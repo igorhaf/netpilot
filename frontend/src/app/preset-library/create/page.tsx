@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import api from '@/lib/api'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -61,16 +62,15 @@ export default function CreateStackPage() {
 
   const createStackMutation = useMutation({
     mutationFn: async (data: typeof formData & { tags: string[] }) => {
-      // Simular criação da stack
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { id: 'new-stack-id', ...data }
+      const response = await api.post('/stacks', data)
+      return response.data
     },
     onSuccess: (result) => {
       toast.success('Stack criada com sucesso!')
-      router.push(`/preset-library/${result.id}`)
+      router.push('/preset-library')
     },
-    onError: () => {
-      toast.error('Erro ao criar stack')
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao criar stack')
     }
   })
 

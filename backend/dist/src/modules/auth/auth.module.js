@@ -17,17 +17,21 @@ const auth_service_1 = require("./auth.service");
 const user_entity_1 = require("../../entities/user.entity");
 const jwt_strategy_1 = require("./jwt.strategy");
 const config_service_1 = require("../../services/config.service");
+const logs_module_1 = require("../logs/logs.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            logs_module_1.LogsModule,
             config_1.ConfigModule,
             typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]),
             passport_1.PassportModule,
             jwt_1.JwtModule.registerAsync({
-                imports: [config_1.ConfigModule],
+                imports: [
+                    logs_module_1.LogsModule, config_1.ConfigModule
+                ],
                 useFactory: (configService) => ({
                     secret: configService.get('JWT_SECRET') || 'netpilot_default_secret',
                     signOptions: { expiresIn: configService.get('JWT_EXPIRES_IN') || '7d' },

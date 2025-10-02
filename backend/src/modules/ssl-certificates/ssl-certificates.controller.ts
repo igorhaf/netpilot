@@ -62,6 +62,12 @@ export class SslCertificatesController {
     return this.sslCertificatesService.update(id, updateSslCertificateDto);
   }
 
+  @Post(':id/toggle-lock')
+  @ApiOperation({ summary: 'Travar/Destravar certificado SSL' })
+  toggleLock(@Param('id') id: string) {
+    return this.sslCertificatesService.toggleLock(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Remover certificado SSL' })
   remove(@Param('id') id: string) {

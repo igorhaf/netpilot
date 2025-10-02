@@ -196,26 +196,18 @@ export default function JobExecutionsPage() {
   }
 
   const breadcrumbs = [
-    { label: "Execuções de Jobs", current: true }
+    { label: "Execuções de Jobs", current: true, icon: Clock }
   ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Histórico de Execuções</h1>
-            <p className="text-muted-foreground">
-              Acompanhe o histórico e status das execuções de jobs
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            <Link href="/job-queues">
-              <Button variant="outline">
-                Voltar para Jobs
-              </Button>
-            </Link>
-          </div>
+        <div className="flex justify-end">
+          <Link href="/job-queues">
+            <Button variant="outline">
+              Voltar para Jobs
+            </Button>
+          </Link>
         </div>
 
         {/* Filtros */}

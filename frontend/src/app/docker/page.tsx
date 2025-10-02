@@ -98,29 +98,12 @@ export default function DockerDashboard() {
   }
 
   const breadcrumbs = [
-    { label: 'Docker', current: true }
+    { label: 'Docker', current: true, icon: Container }
   ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Administração Docker</h1>
-          <p className="text-muted-foreground">
-            Gerencie containers, volumes, redes e imagens Docker
-          </p>
-        </div>
-        <div className="flex space-x-2">
-          <Link href="/docker/containers/create">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Container
-            </Button>
-          </Link>
-        </div>
-      </div>
-
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
@@ -506,6 +489,28 @@ export default function DockerDashboard() {
               </div>
             </CardContent>
           </Card>
+        </Link>
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+        {/* Tooltip/Label */}
+        <Link href="/docker/containers/create">
+          <button
+            className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+          >
+            Novo Container
+          </button>
+        </Link>
+
+        {/* FAB Button */}
+        <Link href="/docker/containers/create">
+          <button
+            className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center"
+            title="Novo Container"
+          >
+            <Plus className="h-6 w-6 transition-transform duration-200 ease-in-out group-hover:rotate-180" />
+          </button>
         </Link>
       </div>
       </div>

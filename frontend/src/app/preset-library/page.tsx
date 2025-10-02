@@ -14,7 +14,6 @@ import {
   Search,
   Filter,
   Download,
-  Upload,
   Package,
   FileCode,
   User,
@@ -23,78 +22,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Stack } from '@/types'
-
-// Mock data for demonstration
-const mockStacks: Stack[] = [
-  {
-    id: '1',
-    name: 'PHP Laravel Stack',
-    description: 'Conjunto completo de presets para desenvolvimento Laravel com Docker, Nginx e MySQL',
-    technology: 'PHP',
-    color: '#8B5CF6',
-    icon: 'php',
-    presets: [],
-    isActive: true,
-    version: '1.0.0',
-    author: 'NetPilot Team',
-    tags: ['php', 'laravel', 'docker', 'nginx', 'mysql'],
-    totalPresets: 12,
-    totalSize: 48576,
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z'
-  },
-  {
-    id: '2',
-    name: 'Node.js Express Stack',
-    description: 'Stack moderno para aplicações Node.js com Express, TypeScript e Docker',
-    technology: 'Node.js',
-    color: '#10B981',
-    icon: 'nodejs',
-    presets: [],
-    isActive: true,
-    version: '2.1.0',
-    author: 'Dev Community',
-    tags: ['nodejs', 'express', 'typescript', 'docker'],
-    totalPresets: 8,
-    totalSize: 32144,
-    createdAt: '2024-01-10T09:00:00Z',
-    updatedAt: '2024-01-25T11:45:00Z'
-  },
-  {
-    id: '3',
-    name: 'Python Django Stack',
-    description: 'Presets otimizados para projetos Django com PostgreSQL e Redis',
-    technology: 'Python',
-    color: '#EF4444',
-    icon: 'python',
-    presets: [],
-    isActive: true,
-    version: '1.5.2',
-    author: 'Python Guild',
-    tags: ['python', 'django', 'postgresql', 'redis'],
-    totalPresets: 15,
-    totalSize: 67891,
-    createdAt: '2024-01-05T14:20:00Z',
-    updatedAt: '2024-01-22T16:15:00Z'
-  },
-  {
-    id: '4',
-    name: 'React Next.js Stack',
-    description: 'Stack completo para aplicações React com Next.js, Tailwind e Vercel',
-    technology: 'React',
-    color: '#3B82F6',
-    icon: 'react',
-    presets: [],
-    isActive: false,
-    version: '0.8.0',
-    author: 'Frontend Team',
-    tags: ['react', 'nextjs', 'tailwind', 'typescript'],
-    totalPresets: 6,
-    totalSize: 24567,
-    createdAt: '2024-01-18T08:30:00Z',
-    updatedAt: '2024-01-24T10:00:00Z'
-  }
-]
+import api from '@/lib/api'
 
 export default function PresetLibraryPage() {
   const auth = useRequireAuth()
@@ -103,39 +31,29 @@ export default function PresetLibraryPage() {
   const [selectedTechnology, setSelectedTechnology] = useState('')
 
   const breadcrumbs = [
-    { label: 'Biblioteca de Presets', current: true }
+    { label: 'Biblioteca de Presets', current: true, icon: Library }
   ]
 
-  // Mock query
+  // Buscar stacks do banco de dados
   const { data: stacks, isLoading } = useQuery({
     queryKey: ['stacks', search, selectedTechnology],
     queryFn: () => {
-      return new Promise<Stack[]>((resolve) => {
-        setTimeout(() => {
-          let filteredStacks = [...mockStacks]
-
-          if (search) {
-            filteredStacks = filteredStacks.filter(stack =>
-              stack.name.toLowerCase().includes(search.toLowerCase()) ||
-              stack.description.toLowerCase().includes(search.toLowerCase()) ||
-              stack.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()))
-            )
-          }
-
-          if (selectedTechnology) {
-            filteredStacks = filteredStacks.filter(stack =>
-              stack.technology === selectedTechnology
-            )
-          }
-
-          resolve(filteredStacks)
-        }, 300)
-      })
+      const params = new URLSearchParams()
+      if (search) params.append('search', search)
+      if (selectedTechnology) params.append('technology', selectedTechnology)
+      return api.get(`/stacks?${params.toString()}`).then(res => res.data)
     },
     enabled: !!auth
   })
 
-  const technologies = Array.from(new Set(mockStacks.map(stack => stack.technology)))
+  // Buscar lista de tecnologias
+  const { data: technologiesData } = useQuery({
+    queryKey: ['technologies'],
+    queryFn: () => api.get('/stacks/technologies').then(res => res.data),
+    enabled: !!auth
+  })
+
+  const technologies = technologiesData || []
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B'
@@ -153,38 +71,11 @@ export default function PresetLibraryPage() {
     router.push(`/preset-library/${stackId}`)
   }
 
-  const handleImportStack = () => {
-    // Implementar modal de import
-    console.log('Import stack')
-  }
-
   if (!auth) return null
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Library className="h-8 w-8 text-blue-500" />
-              Biblioteca de Presets
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie coleções organizadas de presets por tecnologia
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleImportStack}>
-              <Upload className="h-4 w-4 mr-2" />
-              Importar Stack
-            </Button>
-            <Button onClick={handleCreateStack} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Stack
-            </Button>
-          </div>
-        </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
@@ -205,7 +96,7 @@ export default function PresetLibraryPage() {
               className="px-3 py-2 border border-border rounded-md bg-background text-sm"
             >
               <option value="">Todas as tecnologias</option>
-              {technologies.map(tech => (
+              {technologies.map((tech: string) => (
                 <option key={tech} value={tech}>{tech}</option>
               ))}
             </select>
@@ -219,7 +110,7 @@ export default function PresetLibraryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total de Stacks</p>
-                  <p className="text-2xl font-bold">{mockStacks.length}</p>
+                  <p className="text-2xl font-bold">{stacks?.length || 0}</p>
                 </div>
                 <Package className="h-8 w-8 text-blue-500" />
               </div>
@@ -230,7 +121,7 @@ export default function PresetLibraryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Ativas</p>
-                  <p className="text-2xl font-bold">{mockStacks.filter(s => s.isActive).length}</p>
+                  <p className="text-2xl font-bold">{stacks?.filter((s: any) => s.isActive).length || 0}</p>
                 </div>
                 <Library className="h-8 w-8 text-green-500" />
               </div>
@@ -252,7 +143,7 @@ export default function PresetLibraryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Presets</p>
-                  <p className="text-2xl font-bold">{mockStacks.reduce((acc, stack) => acc + stack.totalPresets, 0)}</p>
+                  <p className="text-2xl font-bold">{stacks?.reduce((acc: number, stack: any) => acc + stack.totalPresets, 0) || 0}</p>
                 </div>
                 <FileCode className="h-8 w-8 text-orange-500" />
               </div>
@@ -278,7 +169,7 @@ export default function PresetLibraryPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {stacks && stacks.length > 0 ? (
-              stacks.map((stack) => (
+              stacks.map((stack: any) => (
                 <Card
                   key={stack.id}
                   className="hover:shadow-lg transition-shadow cursor-pointer group"
@@ -335,7 +226,7 @@ export default function PresetLibraryPage() {
                       )}
 
                       <div className="flex flex-wrap gap-1">
-                        {stack.tags.slice(0, 3).map((tag) => (
+                        {stack.tags.slice(0, 3).map((tag: string) => (
                           <Badge key={tag} variant="secondary" className="text-xs">
                             {tag}
                           </Badge>
@@ -369,6 +260,26 @@ export default function PresetLibraryPage() {
             )}
           </div>
         )}
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+          {/* Tooltip/Label */}
+          <button
+            onClick={handleCreateStack}
+            className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+          >
+            Nova Stack
+          </button>
+
+          {/* FAB Button */}
+          <button
+            onClick={handleCreateStack}
+            className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center"
+            title="Nova Stack"
+          >
+            <Plus className="h-6 w-6 transition-transform duration-200 ease-in-out group-hover:rotate-180" />
+          </button>
+        </div>
       </div>
     </MainLayout>
   )

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useMutation } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Save, Plus, X } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { MainLayout } from '@/components/layout/main-layout'
@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useRequireAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { CreateProjectDto } from '@/types'
@@ -21,6 +22,7 @@ import { StackSelector } from '@/components/projects/StackSelector'
 export default function NewProjectPage() {
   const auth = useRequireAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [formData, setFormData] = useState<CreateProjectDto>({
     name: '',
@@ -35,6 +37,21 @@ export default function NewProjectPage() {
   })
 
   const [newTechnology, setNewTechnology] = useState('')
+
+  // Buscar domínios
+  const { data: domains } = useQuery({
+    queryKey: ['domains'],
+    queryFn: () => api.get('/domains').then(res => res.data),
+    enabled: !!auth
+  })
+
+  // Verificar se voltou da criação de domínio
+  useEffect(() => {
+    const newDomainName = searchParams.get('newDomain')
+    if (newDomainName) {
+      setFormData(prev => ({ ...prev, mainDomain: newDomainName }))
+    }
+  }, [searchParams])
 
   const createMutation = useMutation({
     mutationFn: (data: CreateProjectDto) => api.post('/projects', data),
@@ -214,12 +231,38 @@ export default function NewProjectPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="mainDomain">Domínio Principal</Label>
-                  <Input
-                    id="mainDomain"
-                    value={formData.mainDomain}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mainDomain: e.target.value }))}
-                    placeholder="exemplo.com"
-                  />
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.mainDomain || ""}
+                      onValueChange={(value) => {
+                        if (value === '_create_new') {
+                          router.push('/domains/new?returnTo=/projects/new')
+                        } else {
+                          setFormData(prev => ({ ...prev, mainDomain: value }))
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione um domínio" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_create_new">
+                          + Criar Novo Domínio
+                        </SelectItem>
+                        {domains && domains.length > 0 ? (
+                          domains.map((domain: any) => (
+                            <SelectItem key={domain.id} value={domain.name}>
+                              {domain.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="_no_domains">
+                            Nenhum domínio cadastrado
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">

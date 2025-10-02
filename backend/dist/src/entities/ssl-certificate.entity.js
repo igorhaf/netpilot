@@ -56,6 +56,10 @@ __decorate([
     __metadata("design:type", Number)
 ], SslCertificate.prototype, "renewBeforeDays", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], SslCertificate.prototype, "isLocked", void 0);
+__decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], SslCertificate.prototype, "certificatePath", void 0);

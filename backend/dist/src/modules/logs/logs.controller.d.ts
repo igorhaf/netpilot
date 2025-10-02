@@ -3,7 +3,10 @@ import { LogType, LogStatus } from '../../entities/log.entity';
 export declare class LogsController {
     private readonly logsService;
     constructor(logsService: LogsService);
-    findAll(type?: LogType, status?: LogStatus): Promise<import("../../entities/log.entity").Log[]>;
+    findAll(type?: LogType, status?: LogStatus, search?: string, page?: string, limit?: string): Promise<{
+        logs: import("../../entities/log.entity").Log[];
+        total: number;
+    }>;
     getStats(): Promise<{
         total: number;
         success: number;
@@ -11,6 +14,7 @@ export declare class LogsController {
         running: number;
     }>;
     getRecent(limit?: number): Promise<import("../../entities/log.entity").Log[]>;
+    getLogById(id: string): Promise<import("../../entities/log.entity").Log>;
     clearLogs(): Promise<{
         success: boolean;
         message: string;

@@ -7,9 +7,14 @@ export interface CommandOutput {
     command?: string;
     exitCode?: number;
 }
+export interface ExecuteCommandOptions {
+    workingDir?: string;
+    user?: string;
+}
 export declare class TerminalService extends EventEmitter {
+    private readonly logger;
     private activeCommands;
-    executeCommand(commandId: string, command: string): void;
+    executeCommand(commandId: string, command: string, options?: ExecuteCommandOptions): void;
     killCommand(commandId: string): boolean;
     private parseCommand;
     getActiveCommands(): string[];

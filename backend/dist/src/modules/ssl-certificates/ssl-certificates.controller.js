@@ -43,6 +43,9 @@ let SslCertificatesController = class SslCertificatesController {
     update(id, updateSslCertificateDto) {
         return this.sslCertificatesService.update(id, updateSslCertificateDto);
     }
+    toggleLock(id) {
+        return this.sslCertificatesService.toggleLock(id);
+    }
     remove(id) {
         return this.sslCertificatesService.remove(id);
     }
@@ -102,6 +105,14 @@ __decorate([
     __metadata("design:paramtypes", [String, ssl_certificate_dto_1.UpdateSslCertificateDto]),
     __metadata("design:returntype", void 0)
 ], SslCertificatesController.prototype, "update", null);
+__decorate([
+    (0, common_1.Post)(':id/toggle-lock'),
+    (0, swagger_1.ApiOperation)({ summary: 'Travar/Destravar certificado SSL' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SslCertificatesController.prototype, "toggleLock", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Remover certificado SSL' }),

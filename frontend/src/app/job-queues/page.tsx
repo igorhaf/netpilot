@@ -240,26 +240,12 @@ export default function JobQueuesPage() {
   }
 
   const breadcrumbs = [
-    { label: 'Filas de Processo', current: true }
+    { label: 'Filas de Processo', current: true, icon: Clock }
   ]
 
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Filas de Processo & Agendamento</h1>
-          </div>
-          <div className="flex space-x-2">
-            <Link href="/job-queues/create">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Job
-              </Button>
-            </Link>
-          </div>
-        </div>
-
         {/* Navegação por Abas */}
         <div className="flex space-x-1 border-b">
           {[
@@ -693,6 +679,28 @@ export default function JobQueuesPage() {
             </div>
           </div>
         )}
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+          {/* Tooltip/Label */}
+          <Link href="/job-queues/create">
+            <button
+              className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+            >
+              Novo Job
+            </button>
+          </Link>
+
+          {/* FAB Button */}
+          <Link href="/job-queues/create">
+            <button
+              className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center"
+              title="Novo Job"
+            >
+              <Plus className="h-6 w-6 transition-transform duration-200 ease-in-out group-hover:rotate-180" />
+            </button>
+          </Link>
+        </div>
 
       </div>
     </MainLayout>

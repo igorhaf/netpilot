@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Server, Shield, Globe, Lock } from 'lucide-react'
+import { ArrowLeft, Server, Shield, Globe, Lock, Unlock } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
 import { api } from '@/lib/api'
@@ -21,6 +21,7 @@ interface CreateDomainData {
   description?: string
   projectId: string
   isActive: boolean
+  isLocked?: boolean
   autoTls: boolean
   forceHttps: boolean
   blockExternalAccess: boolean
@@ -38,6 +39,7 @@ export default function NewDomainPage() {
     description: '',
     projectId: '',
     isActive: true,
+    isLocked: false,
     autoTls: true,
     forceHttps: true,
     blockExternalAccess: false,
@@ -282,7 +284,7 @@ export default function NewDomainPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Lock className="h-5 w-5 text-purple-500" />
+                <Globe className="h-5 w-5 text-purple-500" />
                 <span>Redirecionamento WWW</span>
               </CardTitle>
             </CardHeader>
@@ -301,6 +303,36 @@ export default function NewDomainPage() {
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       Redireciona entre www.dominio.com e dominio.com
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Proteção e Travamento */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Lock className="h-5 w-5 text-orange-500" />
+                <span>Proteção e Travamento</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <Switch
+                    id="isLocked"
+                    checked={formData.isLocked}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isLocked: checked })}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="isLocked" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2">
+                      {formData.isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                      Travar Domínio
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Quando travado, o domínio não poderá ser editado ou excluído
                     </p>
                   </div>
                 </div>

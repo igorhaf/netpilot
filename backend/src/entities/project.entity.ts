@@ -34,6 +34,18 @@ export class Project {
   @Column({ nullable: true })
   repository: string;
 
+  @Column({ default: false })
+  cloned: boolean; // Se o repositório já foi clonado
+
+  @Column({ default: false })
+  hasSshKey: boolean; // Se possui chaves SSH configuradas
+
+  @Column({ type: 'text', nullable: true })
+  sshPublicKey: string; // Chave pública SSH (armazenada também em /home/{alias}/.ssh/id_rsa.pub)
+
+  @Column({ nullable: true })
+  sshKeyFingerprint: string; // Fingerprint da chave SSH para identificação
+
   @Column({ nullable: true })
   documentation: string;
 

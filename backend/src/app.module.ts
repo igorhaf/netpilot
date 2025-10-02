@@ -19,6 +19,8 @@ import { JobQueuesModule } from './modules/job-queues/job-queues.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { StacksModule } from './modules/stacks/stacks.module';
 import { User } from './entities/user.entity';
 import { Project } from './entities/project.entity';
 import { Domain } from './entities/domain.entity';
@@ -31,6 +33,8 @@ import { ConsoleLog } from './entities/console-log.entity';
 import { JobQueue } from './entities/job-queue.entity';
 import { JobExecution } from './entities/job-execution.entity';
 import { JobSchedule } from './entities/job-schedule.entity';
+import { Setting } from './modules/settings/settings.entity';
+import { Stack } from './entities/stack.entity';
 // Docker entities temporarily removed
 
 @Module({
@@ -43,7 +47,7 @@ import { JobSchedule } from './entities/job-schedule.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User, Project, Domain, ProxyRule, Redirect, SslCertificate, Log, SshSession, ConsoleLog, JobQueue, JobExecution, JobSchedule],
+        entities: [User, Project, Domain, ProxyRule, Redirect, SslCertificate, Log, SshSession, ConsoleLog, JobQueue, JobExecution, JobSchedule, Setting, Stack],
         synchronize: true, // Temporarily enabled to recognize new isLocked column
         logging: process.env.NODE_ENV === 'development',
       }),
@@ -85,6 +89,8 @@ import { JobSchedule } from './entities/job-schedule.entity';
     JobQueuesModule,
     RedisModule,
     SeedModule,
+    SettingsModule,
+    StacksModule,
   ],
   // No custom controllers in AppModule
 })

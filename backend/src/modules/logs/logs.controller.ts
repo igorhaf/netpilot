@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Query,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -21,11 +22,19 @@ export class LogsController {
   @ApiOperation({ summary: 'Listar logs' })
   @ApiQuery({ name: 'type', required: false, enum: LogType })
   @ApiQuery({ name: 'status', required: false, enum: LogStatus })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   findAll(
     @Query('type') type?: LogType,
     @Query('status') status?: LogStatus,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.logsService.findAll(type, status);
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 30;
+    return this.logsService.findAll(type, status, search, pageNum, limitNum);
   }
 
   @Get('stats')
@@ -39,6 +48,12 @@ export class LogsController {
   @ApiQuery({ name: 'limit', required: false })
   getRecent(@Query('limit') limit?: number) {
     return this.logsService.getRecentLogs(limit ? parseInt(limit.toString()) : 10);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Obter detalhes de um log específico' })
+  getLogById(@Param('id') id: string) {
+    return this.logsService.findById(id);
   }
 
   @Post('clear')

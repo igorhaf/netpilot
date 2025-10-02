@@ -242,7 +242,18 @@ let JobExecutionsService = class JobExecutionsService {
         const { jobQueue } = context;
         const startTime = Date.now();
         try {
-            const scriptModule = await Promise.resolve(`${path.resolve(jobQueue.scriptPath)}`).then(s => require(s));
+            const scriptMap = {
+                'ai-prompt-handler': path.join(__dirname, 'scripts', 'ai-prompt-handler.script'),
+                'ai-analysis': path.join(__dirname, 'scripts', 'ai-analysis.script'),
+                'backup': path.join(__dirname, 'scripts', 'backup.script'),
+                'log-cleanup': path.join(__dirname, 'scripts', 'log-cleanup.script'),
+                'ssl-check': path.join(__dirname, 'scripts', 'ssl-check.script'),
+            };
+            let scriptPath = scriptMap[jobQueue.scriptPath] || jobQueue.scriptPath;
+            if (!path.isAbsolute(scriptPath)) {
+                scriptPath = path.resolve(scriptPath);
+            }
+            const scriptModule = await Promise.resolve(`${scriptPath}`).then(s => require(s));
             let result;
             if (typeof scriptModule.default === 'function') {
                 result = await scriptModule.default(context);
@@ -291,6 +302,9 @@ let JobExecutionsService = class JobExecutionsService {
         }
         if (filters.search) {
             query.andWhere('jobQueue.name ILIKE :search', { search: `%${filters.search}%` });
+        }
+        if (filters.projectId) {
+            query.andWhere("execution.metadata->>'projectId' = :projectId", { projectId: filters.projectId });
         }
         const total = await query.getCount();
         const data = await query

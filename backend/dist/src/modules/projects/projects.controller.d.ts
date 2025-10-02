@@ -10,4 +10,11 @@ export declare class ProjectsController {
     findOne(id: string): Promise<import("../../entities/project.entity").Project>;
     update(id: string, updateProjectDto: UpdateProjectDto): Promise<import("../../entities/project.entity").Project>;
     remove(id: string): Promise<void>;
+    cloneRepository(id: string): Promise<import("../../entities/project.entity").Project>;
+    generateSshKey(id: string): Promise<import("../../entities/project.entity").Project>;
+    getSshPublicKey(id: string): Promise<{
+        publicKey: string;
+        fingerprint: string;
+    }>;
+    deleteSshKey(id: string): Promise<import("../../entities/project.entity").Project>;
 }

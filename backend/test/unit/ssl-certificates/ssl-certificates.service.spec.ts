@@ -13,7 +13,7 @@ describe('SslCertificatesService', () => {
   let service: SslCertificatesService;
   let sslCertificateRepository: MockRepository<SslCertificate>;
 
-  const mockSslCertificate: SslCertificate = {
+  const mockSslCertificate: Partial<SslCertificate> = {
     id: 'cert-1',
     primaryDomain: 'example.com',
     sanDomains: ['www.example.com'],

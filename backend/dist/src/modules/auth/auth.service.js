@@ -19,10 +19,13 @@ const typeorm_2 = require("typeorm");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcryptjs");
 const user_entity_1 = require("../../entities/user.entity");
+const logs_service_1 = require("../logs/logs.service");
+const log_entity_1 = require("../../entities/log.entity");
 let AuthService = class AuthService {
-    constructor(userRepository, jwtService) {
+    constructor(userRepository, jwtService, logsService) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.logsService = logsService;
     }
     async register(registerDto) {
         const { email, password, role } = registerDto;
@@ -44,22 +47,34 @@ let AuthService = class AuthService {
     }
     async login(loginDto) {
         const { email, password } = loginDto;
-        const user = await this.userRepository.findOne({
-            where: { email, isActive: true },
-        });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            throw new common_1.UnauthorizedException('Credenciais inválidas');
+        const log = await this.logsService.createLog(log_entity_1.LogType.SYSTEM, 'Login', `Tentativa de login: ${email}`);
+        try {
+            const user = await this.userRepository.findOne({
+                where: { email, isActive: true },
+            });
+            if (!user || !(await bcrypt.compare(password, user.password))) {
+                await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, `Login falhou para ${email}`);
+                throw new common_1.UnauthorizedException('Credenciais inválidas');
+            }
+            const payload = { email: user.email, sub: user.id, role: user.role };
+            const token = this.jwtService.sign(payload);
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Login realizado com sucesso: ${email}`, JSON.stringify({ userId: user.id, role: user.role }));
+            return {
+                access_token: token,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                },
+            };
         }
-        const payload = { email: user.email, sub: user.id, role: user.role };
-        const token = this.jwtService.sign(payload);
-        return {
-            access_token: token,
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-            },
-        };
+        catch (error) {
+            if (error instanceof common_1.UnauthorizedException) {
+                throw error;
+            }
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, error.message || 'Erro ao fazer login', error.stack);
+            throw error;
+        }
     }
     async validateUser(userId) {
         return this.userRepository.findOne({
@@ -72,6 +87,7 @@ exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        logs_service_1.LogsService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

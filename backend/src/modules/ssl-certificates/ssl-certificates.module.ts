@@ -7,8 +7,10 @@ import { SslCertificatesService } from './ssl-certificates.service';
 import { SslCertificate } from '../../entities/ssl-certificate.entity';
 import { Domain } from '../../entities/domain.entity';
 
+import { LogsModule } from '../logs/logs.module';
 @Module({
   imports: [
+    LogsModule,
     TypeOrmModule.forFeature([SslCertificate, Domain]),
     HttpModule,
     ConfigModule,

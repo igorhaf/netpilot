@@ -5,6 +5,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../../entities/user.entity';
 import { LoginDto, RegisterDto } from '../../dtos/auth.dto';
+import { LogsService } from '../logs/logs.service';
+import { LogType, LogStatus } from '../../entities/log.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +14,7 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private logsService: LogsService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -41,26 +44,56 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
+    const log = await this.logsService.createLog(
+      LogType.SYSTEM,
+      'Login',
+      `Tentativa de login: ${email}`,
+    );
 
-    const user = await this.userRepository.findOne({
-      where: { email, isActive: true },
-    });
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email, isActive: true },
+      });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Credenciais inválidas');
+      if (!user || !(await bcrypt.compare(password, user.password))) {
+        await this.logsService.updateLogStatus(
+          log.id,
+          LogStatus.FAILED,
+          `Login falhou para ${email}`,
+        );
+        throw new UnauthorizedException('Credenciais inválidas');
+      }
+
+      const payload = { email: user.email, sub: user.id, role: user.role };
+      const token = this.jwtService.sign(payload);
+
+      await this.logsService.updateLogStatus(
+        log.id,
+        LogStatus.SUCCESS,
+        `Login realizado com sucesso: ${email}`,
+        JSON.stringify({ userId: user.id, role: user.role }),
+      );
+
+      return {
+        access_token: token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      await this.logsService.updateLogStatus(
+        log.id,
+        LogStatus.FAILED,
+        error.message || 'Erro ao fazer login',
+        error.stack,
+      );
+      throw error;
     }
-
-    const payload = { email: user.email, sub: user.id, role: user.role };
-    const token = this.jwtService.sign(payload);
-
-    return {
-      access_token: token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-    };
   }
 
   async validateUser(userId: string): Promise<User> {

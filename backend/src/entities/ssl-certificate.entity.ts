@@ -44,6 +44,9 @@ export class SslCertificate {
   @Column({ default: 30 })
   renewBeforeDays: number;
 
+  @Column({ default: false })
+  isLocked: boolean;
+
   @Column({ nullable: true })
   certificatePath: string;
 

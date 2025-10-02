@@ -40,6 +40,18 @@ let ProjectsController = class ProjectsController {
     remove(id) {
         return this.projectsService.remove(id);
     }
+    cloneRepository(id) {
+        return this.projectsService.cloneRepository(id);
+    }
+    generateSshKey(id) {
+        return this.projectsService.generateSshKey(id);
+    }
+    getSshPublicKey(id) {
+        return this.projectsService.getSshPublicKey(id);
+    }
+    deleteSshKey(id) {
+        return this.projectsService.deleteSshKey(id);
+    }
 };
 exports.ProjectsController = ProjectsController;
 __decorate([
@@ -84,6 +96,34 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)(':id/clone'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "cloneRepository", null);
+__decorate([
+    (0, common_1.Post)(':id/ssh/generate'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "generateSshKey", null);
+__decorate([
+    (0, common_1.Get)(':id/ssh/public-key'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getSshPublicKey", null);
+__decorate([
+    (0, common_1.Delete)(':id/ssh'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "deleteSshKey", null);
 exports.ProjectsController = ProjectsController = __decorate([
     (0, common_1.Controller)('projects'),
     __metadata("design:paramtypes", [projects_service_1.ProjectsService])
