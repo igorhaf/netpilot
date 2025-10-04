@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useRequireAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { CreateProjectDto } from '@/types'
-import { StackSelector } from '@/components/projects/StackSelector'
+import StackSelector from '@/components/projects/StackSelector'
 
 export default function NewProjectPage() {
   const auth = useRequireAuth()
@@ -33,6 +33,10 @@ export default function NewProjectPage() {
     repository: '',
     documentation: '',
     mainDomain: '',
+    defaultPromptTemplate: '',
+    executionMode: 'queue',
+    stackIds: [],
+    presetIds: [],
     metadata: {}
   })
 
@@ -314,8 +318,8 @@ export default function NewProjectPage() {
 
           {/* Stack Selection */}
           <StackSelector
-            selectedTechnologies={formData.technologies || []}
-            onTechnologiesChange={(technologies) => setFormData(prev => ({ ...prev, technologies }))}
+            selectedStackIds={formData.stackIds || []}
+            onChange={(stackIds) => setFormData(prev => ({ ...prev, stackIds }))}
           />
 
           {/* Actions */}

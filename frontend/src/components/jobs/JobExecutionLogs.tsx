@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, Download, RefreshCw, AlertTriangle, CheckCircle2, Clock, Search, Filter } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { jobExecutionsApi } from '@/lib/api/job-queues'
+import io from 'socket.io-client'
+import { useAuthStore } from '@/store/auth'
 
 interface JobExecutionLogsProps {
   executionId?: string
@@ -22,16 +24,54 @@ export function JobExecutionLogs({ executionId, jobQueueId, autoRefresh = false 
     search: ''
   })
   const [activeLogTab, setActiveLogTab] = useState('output')
+  const queryClient = useQueryClient()
+  const { token } = useAuthStore()
 
-  // Query para listar execuções
+  // WebSocket para atualizações em tempo real
+  useEffect(() => {
+    if (!token) return
+
+    const socket = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/jobs`, {
+      auth: { token },
+      transports: ['websocket'],
+    })
+
+    socket.on('connect', () => {
+      console.log('📡 WebSocket conectado - Job Execution Logs')
+      if (jobQueueId) {
+        socket.emit('subscribe:queue', jobQueueId)
+      } else {
+        socket.emit('subscribe:all')
+      }
+    })
+
+    socket.on('job:notification', (notification: any) => {
+      console.log('🔔 Notificação recebida (Logs):', notification)
+      queryClient.invalidateQueries({ queryKey: ['job-executions', jobQueueId, filters] })
+    })
+
+    socket.on('disconnect', () => {
+      console.log('📡 WebSocket desconectado - Job Execution Logs')
+    })
+
+    return () => {
+      if (jobQueueId) {
+        socket.emit('unsubscribe:queue', jobQueueId)
+      } else {
+        socket.emit('unsubscribe:all')
+      }
+      socket.disconnect()
+    }
+  }, [token, jobQueueId, queryClient, filters])
+
+  // Query para listar TODAS as execuções (com filtro de status opcional)
   const { data: executions, isLoading } = useQuery({
     queryKey: ['job-executions', jobQueueId, filters],
     queryFn: () => jobExecutionsApi.list({
       jobQueueId,
-      status: filters.status || undefined,
+      status: filters.status || undefined, // Filtro opcional pelo usuário
       limit: 50
     }),
-    refetchInterval: autoRefresh ? 5000 : false
   })
 
   // Query para logs da execução selecionada
@@ -130,12 +170,16 @@ export function JobExecutionLogs({ executionId, jobQueueId, autoRefresh = false 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="pending">Aguardando</SelectItem>
                 <SelectItem value="running">Executando</SelectItem>
                 <SelectItem value="completed">Concluído</SelectItem>
                 <SelectItem value="failed">Falhou</SelectItem>
                 <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
+            <Badge variant="outline" className="px-4 py-2 text-sm">
+              📡 Tempo Real
+            </Badge>
           </div>
         </CardContent>
       </Card>

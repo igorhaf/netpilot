@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -68,5 +69,15 @@ export class ProjectsController {
   @Delete(':id/ssh')
   deleteSshKey(@Param('id') id: string) {
     return this.projectsService.deleteSshKey(id);
+  }
+
+  @Post(':id/execute-prompt')
+  executePrompt(
+    @Param('id') id: string,
+    @Body() body: { prompt: string },
+    @Request() req?: any
+  ) {
+    const userId = req?.user?.userId;
+    return this.projectsService.executePromptRealtime(id, body.prompt, userId);
   }
 }

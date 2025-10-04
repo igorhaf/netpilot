@@ -8,8 +8,8 @@ export class JobExecutionQueryDto {
   jobQueueId?: string;
 
   @IsOptional()
-  @IsEnum(ExecutionStatus)
-  status?: ExecutionStatus;
+  @IsString()
+  status?: string;
 
   @IsOptional()
   @IsEnum(TriggerType)

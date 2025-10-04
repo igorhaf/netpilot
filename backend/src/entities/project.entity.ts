@@ -5,8 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Domain } from './domain.entity';
+import { Stack } from './stack.entity';
+import { Preset } from './preset.entity';
 
 @Entity('projects')
 export class Project {
@@ -57,6 +61,32 @@ export class Project {
 
   @Column('simple-json', { nullable: true })
   metadata: Record<string, any>; // Metadados flexíveis
+
+  @Column({ type: 'text', nullable: true })
+  defaultPromptTemplate: string; // Template padrão de prompt para IA
+
+  @Column({
+    type: 'enum',
+    enum: ['realtime', 'queue'],
+    default: 'queue'
+  })
+  executionMode: 'realtime' | 'queue'; // Modo de execução de prompts IA
+
+  @ManyToMany(() => Stack, { eager: true })
+  @JoinTable({
+    name: 'project_stacks',
+    joinColumn: { name: 'project_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'stack_id', referencedColumnName: 'id' }
+  })
+  stacks: Stack[];
+
+  @ManyToMany(() => Preset, { eager: true })
+  @JoinTable({
+    name: 'project_presets',
+    joinColumn: { name: 'project_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'preset_id', referencedColumnName: 'id' }
+  })
+  presets: Preset[];
 
   @OneToMany(() => Domain, (domain) => domain.project)
   domains: Domain[];

@@ -20,13 +20,23 @@ const child_process_1 = require("child_process");
 const util_1 = require("util");
 const fs = require("fs/promises");
 const project_entity_1 = require("../../entities/project.entity");
+const stack_entity_1 = require("../../entities/stack.entity");
+const preset_entity_1 = require("../../entities/preset.entity");
+const job_execution_entity_1 = require("../../entities/job-execution.entity");
 const logs_service_1 = require("../logs/logs.service");
 const log_entity_1 = require("../../entities/log.entity");
+const chat_service_1 = require("../chat/chat.service");
+const chat_message_entity_1 = require("../../entities/chat-message.entity");
+const job_execution_entity_2 = require("../../entities/job-execution.entity");
 const execAsync = (0, util_1.promisify)(child_process_1.exec);
 let ProjectsService = class ProjectsService {
-    constructor(projectRepository, logsService) {
+    constructor(projectRepository, stackRepository, presetRepository, jobExecutionRepository, logsService, chatService) {
         this.projectRepository = projectRepository;
+        this.stackRepository = stackRepository;
+        this.presetRepository = presetRepository;
+        this.jobExecutionRepository = jobExecutionRepository;
         this.logsService = logsService;
+        this.chatService = chatService;
     }
     async create(createProjectDto) {
         const log = await this.logsService.createLog(log_entity_1.LogType.PROJECT, 'Criar projeto', `Criando projeto ${createProjectDto.name}`);
@@ -61,7 +71,16 @@ let ProjectsService = class ProjectsService {
                 await execAsync(`sudo usermod -a -G projects ${username} 2>&1 || true`);
                 console.log(`ℹ️ Usuário ${username} já existe, adicionado ao grupo projects`);
             }
-            const project = this.projectRepository.create(createProjectDto);
+            const { stackIds, presetIds, ...projectData } = createProjectDto;
+            const project = this.projectRepository.create(projectData);
+            if (stackIds && stackIds.length > 0) {
+                const stacks = await this.stackRepository.findBy({ id: (0, typeorm_2.In)(stackIds) });
+                project.stacks = stacks;
+            }
+            if (presetIds && presetIds.length > 0) {
+                const presets = await this.presetRepository.findBy({ id: (0, typeorm_2.In)(presetIds) });
+                project.presets = presets;
+            }
             const savedProject = await this.projectRepository.save(project);
             try {
                 const codePath = `${projectPath}/code`;
@@ -82,6 +101,7 @@ let ProjectsService = class ProjectsService {
                         console.error(`❌ Erro ao clonar repositório: ${cloneError.message}`);
                     }
                 }
+                await this.applyPresetsToProject(savedProject, contextsPath, username);
                 await execAsync(`sudo chown -R ${username}:${username} ${projectPath}`);
                 console.log(`✅ Permissões configuradas para ${username}`);
                 await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Projeto ${savedProject.name} criado com sucesso (usuário: ${username}, pasta: ${projectPath}, contexts: ${contextsPath}${savedProject.cloned ? ', repositório clonado' : ''})`, JSON.stringify({
@@ -385,12 +405,357 @@ echo "🎉 Limpeza concluída para ${projectName}"
             throw new common_1.ConflictException(`Falha ao deletar chave SSH: ${error.message}`);
         }
     }
+    async applyPresetsToProject(project, contextsPath, username) {
+        console.log(`📦 Aplicando presets ao projeto ${project.name}...`);
+        const subdirs = ['docker', 'personas', 'configs', 'scripts', 'templates'];
+        for (const subdir of subdirs) {
+            const dirPath = `${contextsPath}/${subdir}`;
+            await execAsync(`sudo -u ${username} mkdir -p "${dirPath}"`);
+            console.log(`  📁 Criado: ${subdir}/`);
+        }
+        let totalPresets = 0;
+        if (project.stacks && project.stacks.length > 0) {
+            for (const stack of project.stacks) {
+                console.log(`  🔴 Stack: ${stack.name}`);
+                if (stack.presets && stack.presets.length > 0) {
+                    for (const preset of stack.presets) {
+                        await this.writePresetFile(contextsPath, preset, username);
+                        totalPresets++;
+                    }
+                }
+            }
+        }
+        if (project.presets && project.presets.length > 0) {
+            console.log(`  📎 Presets soltos: ${project.presets.length}`);
+            for (const preset of project.presets) {
+                await this.writePresetFile(contextsPath, preset, username);
+                totalPresets++;
+            }
+        }
+        console.log(`✅ ${totalPresets} preset${totalPresets !== 1 ? 's' : ''} aplicado${totalPresets !== 1 ? 's' : ''}`);
+    }
+    async writePresetFile(basePath, preset, username) {
+        const typeDir = {
+            'docker': 'docker',
+            'persona': 'personas',
+            'config': 'configs',
+            'script': 'scripts',
+            'template': 'templates'
+        }[preset.type];
+        const filename = preset.filename || `${preset.name.toLowerCase().replace(/\s+/g, '-')}.${this.getPresetExtension(preset)}`;
+        const fullPath = `${basePath}/${typeDir}/${filename}`;
+        const tempFile = `/tmp/preset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        await fs.writeFile(tempFile, preset.content, 'utf-8');
+        await execAsync(`sudo mv ${tempFile} "${fullPath}"`);
+        await execAsync(`sudo chown ${username}:${username} "${fullPath}"`);
+        if (preset.type === 'script') {
+            await execAsync(`sudo chmod +x "${fullPath}"`);
+        }
+        else {
+            await execAsync(`sudo chmod 644 "${fullPath}"`);
+        }
+        console.log(`    ✓ ${typeDir}/${filename}`);
+    }
+    getPresetExtension(preset) {
+        if (preset.filename && preset.filename.includes('.')) {
+            return preset.filename.split('.').pop();
+        }
+        if (preset.language) {
+            const langMap = {
+                'yaml': 'yml',
+                'json': 'json',
+                'javascript': 'js',
+                'typescript': 'ts',
+                'python': 'py',
+                'bash': 'sh',
+                'shell': 'sh',
+                'markdown': 'md',
+                'text': 'txt',
+                'nginx': 'conf'
+            };
+            return langMap[preset.language.toLowerCase()] || 'txt';
+        }
+        const typeMap = {
+            'docker': 'yml',
+            'persona': 'md',
+            'config': 'conf',
+            'script': 'sh',
+            'template': 'txt'
+        };
+        return typeMap[preset.type] || 'txt';
+    }
+    async executePromptRealtime(id, userPrompt, userId) {
+        const project = await this.findOne(id);
+        const startTime = Date.now();
+        const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`🤖 Executando prompt em tempo real para ${project.name}`);
+        console.log(`💬 Prompt: ${userPrompt}`);
+        const jobExecution = this.jobExecutionRepository.create({
+            status: job_execution_entity_2.ExecutionStatus.RUNNING,
+            startedAt: new Date(),
+            triggerType: job_execution_entity_2.TriggerType.MANUAL,
+            metadata: {
+                type: 'ai-prompt',
+                projectId: id,
+                userPrompt: userPrompt,
+                executionMode: 'realtime',
+            },
+        });
+        await this.jobExecutionRepository.save(jobExecution);
+        const userMessage = await this.chatService.create({
+            role: chat_message_entity_1.ChatMessageRole.USER,
+            content: userPrompt,
+            projectId: id,
+            userId,
+            sessionId,
+            status: chat_message_entity_1.ChatMessageStatus.COMPLETED,
+            metadata: { jobExecutionId: jobExecution.id },
+        });
+        try {
+            const fsSync = require('fs');
+            const isDocker = fsSync.existsSync('/host/home');
+            const projectPath = isDocker
+                ? `/host/home/${project.alias}/code`
+                : `/home/${project.alias}/code`;
+            const contextsPath = isDocker
+                ? `/host/home/${project.alias}/contexts`
+                : `/home/${project.alias}/contexts`;
+            let output = '';
+            output += `╭─────────────────────────────────────────────╮\n`;
+            output += `│   🤖 Claude AI - Tempo Real                │\n`;
+            output += `╰─────────────────────────────────────────────╯\n\n`;
+            output += `📁 Projeto: ${project.name}\n`;
+            output += `👤 Alias: ${project.alias}\n\n`;
+            output += `🔍 Verificando Claude CLI...\n`;
+            try {
+                const { stdout } = await execAsync('claude --version 2>&1 || echo "not_found"');
+                if (stdout.includes('not_found')) {
+                    output += `❌ Claude CLI não instalado\n`;
+                    output += `📦 Execute: npm install -g @anthropic-ai/claude-code\n`;
+                    jobExecution.status = job_execution_entity_2.ExecutionStatus.FAILED;
+                    jobExecution.completedAt = new Date();
+                    jobExecution.executionTimeMs = Date.now() - startTime;
+                    jobExecution.errorLog = output;
+                    await this.jobExecutionRepository.save(jobExecution);
+                    await this.chatService.create({
+                        role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                        content: output,
+                        projectId: id,
+                        sessionId,
+                        status: chat_message_entity_1.ChatMessageStatus.ERROR,
+                        metadata: { jobExecutionId: jobExecution.id },
+                    });
+                    return {
+                        success: false,
+                        output,
+                        executionTimeMs: Date.now() - startTime,
+                        sessionId
+                    };
+                }
+                output += `✅ Claude CLI: ${stdout.trim()}\n\n`;
+            }
+            catch (err) {
+                output += `⚠️ Erro ao verificar: ${err.message}\n`;
+            }
+            if (!fsSync.existsSync(projectPath)) {
+                output += `❌ Diretório não encontrado: ${projectPath}\n`;
+                jobExecution.status = job_execution_entity_2.ExecutionStatus.FAILED;
+                jobExecution.completedAt = new Date();
+                jobExecution.executionTimeMs = Date.now() - startTime;
+                jobExecution.errorLog = output;
+                await this.jobExecutionRepository.save(jobExecution);
+                await this.chatService.create({
+                    role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                    content: output,
+                    projectId: id,
+                    sessionId,
+                    status: chat_message_entity_1.ChatMessageStatus.ERROR,
+                    metadata: { jobExecutionId: jobExecution.id },
+                });
+                return {
+                    success: false,
+                    output,
+                    executionTimeMs: Date.now() - startTime,
+                    sessionId
+                };
+            }
+            output += `🚀 Executando no diretório: ${projectPath}\n\n`;
+            const contextInfo = await this.loadContexts(contextsPath);
+            if (contextInfo.totalFiles > 0) {
+                output += `📋 Contextos carregados: ${contextInfo.totalFiles} arquivo(s)\n`;
+                output += `   Personas: ${contextInfo.personas.length}\n`;
+                output += `   Configs: ${contextInfo.configs.length}\n`;
+                output += `   Docker: ${contextInfo.docker.length}\n\n`;
+            }
+            let finalPrompt = '';
+            if (contextInfo.personas.length > 0) {
+                finalPrompt += `# 📋 CONTEXTO - Personas\n\n`;
+                for (const persona of contextInfo.personas) {
+                    finalPrompt += `## ${persona.name}\n\n${persona.content}\n\n`;
+                }
+                finalPrompt += `---\n\n`;
+            }
+            if (project.defaultPromptTemplate) {
+                finalPrompt += `# 📋 INSTRUÇÕES PADRÃO\n\n${project.defaultPromptTemplate}\n\n---\n\n`;
+            }
+            finalPrompt += `# 📋 TAREFA\n\n${userPrompt}`;
+            const escaped = finalPrompt.replace(/"/g, '\\"').replace(/\$/g, '\\$');
+            output += `⚡ Executando Claude CLI...\n`;
+            output += `─────────────────────────────────────────────\n\n`;
+            try {
+                const { stdout: result, stderr: errors } = await execAsync(`cd ${projectPath} && claude "${escaped}"`, { timeout: 300000, maxBuffer: 10 * 1024 * 1024 });
+                output += result || 'Sem saída';
+                if (errors && errors.trim()) {
+                    output += `\n\n⚠️ Avisos:\n${errors}`;
+                }
+                output += `\n\n✅ Concluído em ${Date.now() - startTime}ms\n`;
+                jobExecution.status = job_execution_entity_2.ExecutionStatus.COMPLETED;
+                jobExecution.completedAt = new Date();
+                jobExecution.executionTimeMs = Date.now() - startTime;
+                jobExecution.outputLog = output;
+                await this.jobExecutionRepository.save(jobExecution);
+                await this.chatService.create({
+                    role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                    content: output,
+                    projectId: id,
+                    sessionId,
+                    status: chat_message_entity_1.ChatMessageStatus.COMPLETED,
+                    metadata: {
+                        executionTimeMs: Date.now() - startTime,
+                        contextsLoaded: contextInfo.totalFiles,
+                        jobExecutionId: jobExecution.id,
+                    },
+                });
+                return {
+                    success: true,
+                    output,
+                    executionTimeMs: Date.now() - startTime,
+                    sessionId
+                };
+            }
+            catch (cmdError) {
+                output += `❌ Erro ao executar Claude:\n`;
+                output += cmdError.message + '\n';
+                if (cmdError.stdout)
+                    output += `\n${cmdError.stdout}`;
+                if (cmdError.stderr)
+                    output += `\n${cmdError.stderr}`;
+                jobExecution.status = job_execution_entity_2.ExecutionStatus.FAILED;
+                jobExecution.completedAt = new Date();
+                jobExecution.executionTimeMs = Date.now() - startTime;
+                jobExecution.errorLog = output;
+                await this.jobExecutionRepository.save(jobExecution);
+                await this.chatService.create({
+                    role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                    content: output,
+                    projectId: id,
+                    sessionId,
+                    status: chat_message_entity_1.ChatMessageStatus.ERROR,
+                    metadata: {
+                        error: cmdError.message,
+                        jobExecutionId: jobExecution.id,
+                    },
+                });
+                return {
+                    success: false,
+                    output,
+                    executionTimeMs: Date.now() - startTime,
+                    sessionId
+                };
+            }
+        }
+        catch (error) {
+            console.error('❌ Erro ao executar prompt:', error);
+            const errorOutput = `Erro ao executar prompt: ${error.message}`;
+            try {
+                jobExecution.status = job_execution_entity_2.ExecutionStatus.FAILED;
+                jobExecution.completedAt = new Date();
+                jobExecution.executionTimeMs = Date.now() - startTime;
+                jobExecution.errorLog = errorOutput;
+                await this.jobExecutionRepository.save(jobExecution);
+            }
+            catch (saveError) {
+                console.error('Erro ao salvar job execution:', saveError);
+            }
+            try {
+                await this.chatService.create({
+                    role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                    content: errorOutput,
+                    projectId: id,
+                    sessionId,
+                    status: chat_message_entity_1.ChatMessageStatus.ERROR,
+                    metadata: {
+                        error: error.message,
+                        stack: error.stack,
+                        jobExecutionId: jobExecution.id,
+                    },
+                });
+            }
+            catch (chatError) {
+                console.error('Erro ao salvar mensagem de erro:', chatError);
+            }
+            return {
+                success: false,
+                output: errorOutput,
+                executionTimeMs: Date.now() - startTime,
+                sessionId
+            };
+        }
+    }
+    async loadContexts(contextsPath) {
+        const result = {
+            personas: [],
+            configs: [],
+            docker: [],
+            scripts: [],
+            templates: [],
+            totalFiles: 0
+        };
+        const fsSync = require('fs');
+        if (!fsSync.existsSync(contextsPath)) {
+            return result;
+        }
+        try {
+            const personasPath = `${contextsPath}/personas`;
+            if (fsSync.existsSync(personasPath)) {
+                const files = await fs.readdir(personasPath);
+                for (const file of files) {
+                    const content = await fs.readFile(`${personasPath}/${file}`, 'utf-8');
+                    result.personas.push({ name: file, content });
+                    result.totalFiles++;
+                }
+            }
+            const configsPath = `${contextsPath}/configs`;
+            if (fsSync.existsSync(configsPath)) {
+                const files = await fs.readdir(configsPath);
+                result.configs = files.map(f => ({ name: f }));
+                result.totalFiles += files.length;
+            }
+            const dockerPath = `${contextsPath}/docker`;
+            if (fsSync.existsSync(dockerPath)) {
+                const files = await fs.readdir(dockerPath);
+                result.docker = files.map(f => ({ name: f }));
+                result.totalFiles += files.length;
+            }
+        }
+        catch (error) {
+            console.error('Erro ao carregar contextos:', error);
+        }
+        return result;
+    }
 };
 exports.ProjectsService = ProjectsService;
 exports.ProjectsService = ProjectsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(project_entity_1.Project)),
+    __param(1, (0, typeorm_1.InjectRepository)(stack_entity_1.Stack)),
+    __param(2, (0, typeorm_1.InjectRepository)(preset_entity_1.Preset)),
+    __param(3, (0, typeorm_1.InjectRepository)(job_execution_entity_1.JobExecution)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        logs_service_1.LogsService])
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        logs_service_1.LogsService,
+        chat_service_1.ChatService])
 ], ProjectsService);
 //# sourceMappingURL=projects.service.js.map

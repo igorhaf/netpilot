@@ -12,6 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Project = void 0;
 const typeorm_1 = require("typeorm");
 const domain_entity_1 = require("./domain.entity");
+const stack_entity_1 = require("./stack.entity");
+const preset_entity_1 = require("./preset.entity");
 let Project = class Project {
 };
 exports.Project = Project;
@@ -79,6 +81,36 @@ __decorate([
     (0, typeorm_1.Column)('simple-json', { nullable: true }),
     __metadata("design:type", Object)
 ], Project.prototype, "metadata", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], Project.prototype, "defaultPromptTemplate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ['realtime', 'queue'],
+        default: 'queue'
+    }),
+    __metadata("design:type", String)
+], Project.prototype, "executionMode", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => stack_entity_1.Stack, { eager: true }),
+    (0, typeorm_1.JoinTable)({
+        name: 'project_stacks',
+        joinColumn: { name: 'project_id', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'stack_id', referencedColumnName: 'id' }
+    }),
+    __metadata("design:type", Array)
+], Project.prototype, "stacks", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => preset_entity_1.Preset, { eager: true }),
+    (0, typeorm_1.JoinTable)({
+        name: 'project_presets',
+        joinColumn: { name: 'project_id', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'preset_id', referencedColumnName: 'id' }
+    }),
+    __metadata("design:type", Array)
+], Project.prototype, "presets", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => domain_entity_1.Domain, (domain) => domain.project),
     __metadata("design:type", Array)

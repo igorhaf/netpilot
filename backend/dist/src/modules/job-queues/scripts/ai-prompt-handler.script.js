@@ -1,159 +1,209 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.execute = execute;
+const child_process_1 = require("child_process");
+const util_1 = require("util");
+const execAsync = (0, util_1.promisify)(child_process_1.exec);
 async function execute(context) {
     const startTime = Date.now();
     try {
-        const { environmentVars, metadata } = context;
+        const { environmentVars } = context;
         const projectId = environmentVars.PROJECT_ID;
         const projectName = environmentVars.PROJECT_NAME;
+        const projectAlias = environmentVars.PROJECT_ALIAS;
         const userPrompt = environmentVars.USER_PROMPT;
-        const timestamp = environmentVars.TIMESTAMP;
+        const promptTemplate = environmentVars.PROMPT_TEMPLATE || '';
         console.log('🤖 AI Prompt Handler iniciado');
-        console.log(`📁 Projeto: ${projectName} (${projectId})`);
-        console.log(`💬 Prompt: ${userPrompt.substring(0, 100)}${userPrompt.length > 100 ? '...' : ''}`);
+        console.log(`📁 Projeto: ${projectName}`);
+        console.log(`💬 Prompt: ${userPrompt.substring(0, 100)}...`);
         if (!userPrompt || userPrompt.trim().length === 0) {
             return {
                 success: false,
                 output: '',
-                error: 'Prompt vazio não pode ser processado',
+                error: 'Prompt vazio',
                 executionTimeMs: Date.now() - startTime,
             };
         }
         let output = '';
         output += `╭─────────────────────────────────────────────╮\n`;
-        output += `│   🤖 Claude AI - Processador de Prompt     │\n`;
+        output += `│   🤖 Claude AI - NetPilot                  │\n`;
         output += `╰─────────────────────────────────────────────╯\n\n`;
         output += `📁 Projeto: ${projectName}\n`;
-        output += `🆔 ID: ${projectId}\n`;
-        output += `⏰ Timestamp: ${new Date(timestamp).toLocaleString('pt-BR')}\n\n`;
-        output += `─────────────────────────────────────────────\n`;
-        output += `💬 Prompt do Usuário:\n`;
-        output += `─────────────────────────────────────────────\n`;
-        output += `${userPrompt}\n\n`;
-        output += `─────────────────────────────────────────────\n`;
-        output += `🔄 Processamento:\n`;
-        output += `─────────────────────────────────────────────\n`;
-        const wordCount = userPrompt.split(/\s+/).length;
-        const charCount = userPrompt.length;
-        output += `• Palavras: ${wordCount}\n`;
-        output += `• Caracteres: ${charCount}\n`;
-        output += `• Tipo: ${detectPromptType(userPrompt)}\n\n`;
-        output += `─────────────────────────────────────────────\n`;
-        output += `✨ Resposta do Claude (Simulado):\n`;
-        output += `─────────────────────────────────────────────\n`;
-        const response = generateSimulatedResponse(userPrompt, projectName);
-        output += `${response}\n\n`;
-        output += `─────────────────────────────────────────────\n`;
-        output += `📊 Estatísticas:\n`;
-        output += `─────────────────────────────────────────────\n`;
-        output += `• Tempo de processamento: ${Date.now() - startTime}ms\n`;
-        output += `• Status: ✅ Concluído com sucesso\n`;
-        output += `• Próximos passos: Implementar integração real com Claude API\n\n`;
-        console.log('✅ Prompt processado com sucesso');
-        return {
-            success: true,
-            output,
-            error: '',
-            executionTimeMs: Date.now() - startTime,
-        };
+        output += `👤 Alias: ${projectAlias}\n\n`;
+        output += `🔍 Verificando Claude CLI...\n`;
+        try {
+            const { stdout } = await execAsync('claude --version 2>&1 || echo "not_found"');
+            if (stdout.includes('not_found')) {
+                output += `📦 Instalando @anthropic-ai/claude-code...\n`;
+                await execAsync('npm install -g @anthropic-ai/claude-code', { timeout: 120000 });
+                output += `✅ Claude CLI instalado!\n\n`;
+            }
+            else {
+                output += `✅ Claude CLI: ${stdout.trim()}\n\n`;
+            }
+        }
+        catch (err) {
+            output += `⚠️ Erro: ${err.message}\n`;
+        }
+        const fs = require('fs');
+        const isDocker = fs.existsSync('/host/home');
+        const projectPath = isDocker ? `/host/home/${projectAlias}/code` : `/home/${projectAlias}/code`;
+        const contextsPath = isDocker ? `/host/home/${projectAlias}/contexts` : `/home/${projectAlias}/contexts`;
+        output += `🚀 Executando no diretório: ${projectPath}\n\n`;
+        if (!fs.existsSync(projectPath)) {
+            return {
+                success: false,
+                output: output + `❌ Diretório não encontrado: ${projectPath}`,
+                error: 'Diretório não existe',
+                executionTimeMs: Date.now() - startTime,
+            };
+        }
+        output += `📋 Carregando contextos...\n`;
+        const contextInfo = await loadContexts(contextsPath);
+        if (contextInfo.totalFiles > 0) {
+            output += `✅ ${contextInfo.totalFiles} arquivo(s) de contexto encontrado(s)\n`;
+            output += `   Personas: ${contextInfo.personas.length}\n`;
+            output += `   Configs: ${contextInfo.configs.length}\n`;
+            output += `   Docker: ${contextInfo.docker.length}\n`;
+            output += `   Scripts: ${contextInfo.scripts.length}\n`;
+            output += `   Templates: ${contextInfo.templates.length}\n\n`;
+        }
+        else {
+            output += `⚠️ Nenhum contexto encontrado\n\n`;
+        }
+        let finalPrompt = '';
+        if (contextInfo.personas.length > 0) {
+            finalPrompt += `# 📋 CONTEXTO - Personas\n\n`;
+            for (const persona of contextInfo.personas) {
+                finalPrompt += `## ${persona.name}\n\n`;
+                finalPrompt += `${persona.content}\n\n`;
+            }
+            finalPrompt += `---\n\n`;
+        }
+        if (contextInfo.configs.length > 0) {
+            finalPrompt += `# 📋 CONTEXTO - Arquivos de Configuração Disponíveis\n\n`;
+            finalPrompt += `Os seguintes arquivos de configuração estão disponíveis no projeto:\n\n`;
+            for (const config of contextInfo.configs) {
+                finalPrompt += `- ${config.name}\n`;
+            }
+            finalPrompt += `\n---\n\n`;
+        }
+        if (contextInfo.docker.length > 0) {
+            finalPrompt += `# 📋 CONTEXTO - Docker Compose\n\n`;
+            finalPrompt += `Os seguintes arquivos Docker estão configurados:\n\n`;
+            for (const docker of contextInfo.docker) {
+                finalPrompt += `- ${docker.name}\n`;
+            }
+            finalPrompt += `\n---\n\n`;
+        }
+        if (promptTemplate && promptTemplate.trim()) {
+            finalPrompt += `# 📋 INSTRUÇÕES PADRÃO DO PROJETO\n\n`;
+            finalPrompt += `${promptTemplate}\n\n`;
+            finalPrompt += `---\n\n`;
+        }
+        finalPrompt += `# 📋 TAREFA\n\n`;
+        finalPrompt += `${userPrompt}`;
+        const escaped = finalPrompt.replace(/"/g, '\\"').replace(/\$/g, '\\$');
+        try {
+            const { stdout: result, stderr: errors } = await execAsync(`cd ${projectPath} && claude "${escaped}"`, { timeout: 300000, maxBuffer: 10 * 1024 * 1024 });
+            output += `✨ Claude Response:\n`;
+            output += `─────────────────────────────────────────────\n`;
+            output += result || 'Sem saída';
+            if (errors)
+                output += `\n\n⚠️ ${errors}`;
+            output += `\n\n✅ Concluído (${Date.now() - startTime}ms)\n`;
+            return {
+                success: true,
+                output,
+                error: '',
+                executionTimeMs: Date.now() - startTime,
+            };
+        }
+        catch (err) {
+            output += `❌ Erro: ${err.message}\n`;
+            if (err.stdout)
+                output += `\n${err.stdout}`;
+            if (err.stderr)
+                output += `\n${err.stderr}`;
+            return {
+                success: false,
+                output,
+                error: err.message,
+                executionTimeMs: Date.now() - startTime,
+            };
+        }
     }
     catch (error) {
-        console.error('❌ Erro ao processar prompt:', error);
         return {
             success: false,
             output: '',
-            error: `Erro ao processar prompt: ${error.message}`,
+            error: error.message,
             executionTimeMs: Date.now() - startTime,
         };
     }
 }
-function detectPromptType(prompt) {
-    const lowerPrompt = prompt.toLowerCase();
-    if (lowerPrompt.includes('código') || lowerPrompt.includes('code') || lowerPrompt.includes('implementar')) {
-        return 'Geração de Código';
+async function loadContexts(contextsPath) {
+    const fs = require('fs');
+    const fsPromises = require('fs').promises;
+    const path = require('path');
+    const result = {
+        personas: [],
+        configs: [],
+        docker: [],
+        scripts: [],
+        templates: [],
+        totalFiles: 0
+    };
+    if (!fs.existsSync(contextsPath)) {
+        return result;
     }
-    else if (lowerPrompt.includes('bug') || lowerPrompt.includes('erro') || lowerPrompt.includes('corrigir')) {
-        return 'Correção de Bug';
+    try {
+        const personasPath = path.join(contextsPath, 'personas');
+        if (fs.existsSync(personasPath)) {
+            const files = await fsPromises.readdir(personasPath);
+            for (const file of files) {
+                const content = await fsPromises.readFile(path.join(personasPath, file), 'utf-8');
+                result.personas.push({ name: file, content });
+                result.totalFiles++;
+            }
+        }
+        const configsPath = path.join(contextsPath, 'configs');
+        if (fs.existsSync(configsPath)) {
+            const files = await fsPromises.readdir(configsPath);
+            for (const file of files) {
+                result.configs.push({ name: file });
+                result.totalFiles++;
+            }
+        }
+        const dockerPath = path.join(contextsPath, 'docker');
+        if (fs.existsSync(dockerPath)) {
+            const files = await fsPromises.readdir(dockerPath);
+            for (const file of files) {
+                result.docker.push({ name: file });
+                result.totalFiles++;
+            }
+        }
+        const scriptsPath = path.join(contextsPath, 'scripts');
+        if (fs.existsSync(scriptsPath)) {
+            const files = await fsPromises.readdir(scriptsPath);
+            for (const file of files) {
+                result.scripts.push({ name: file });
+                result.totalFiles++;
+            }
+        }
+        const templatesPath = path.join(contextsPath, 'templates');
+        if (fs.existsSync(templatesPath)) {
+            const files = await fsPromises.readdir(templatesPath);
+            for (const file of files) {
+                result.templates.push({ name: file });
+                result.totalFiles++;
+            }
+        }
     }
-    else if (lowerPrompt.includes('otimizar') || lowerPrompt.includes('melhorar') || lowerPrompt.includes('refatorar')) {
-        return 'Otimização';
+    catch (error) {
+        console.error('Erro ao carregar contextos:', error);
     }
-    else if (lowerPrompt.includes('explicar') || lowerPrompt.includes('como') || lowerPrompt.includes('?')) {
-        return 'Explicação/Dúvida';
-    }
-    else if (lowerPrompt.includes('teste') || lowerPrompt.includes('test')) {
-        return 'Testes';
-    }
-    else {
-        return 'Geral';
-    }
-}
-function generateSimulatedResponse(prompt, projectName) {
-    const promptType = detectPromptType(prompt);
-    let response = `Olá! Analisando seu prompt para o projeto "${projectName}".\n\n`;
-    switch (promptType) {
-        case 'Geração de Código':
-            response += `Entendi que você deseja gerar código. Aqui está uma estrutura básica:\n\n`;
-            response += `\`\`\`typescript\n`;
-            response += `// Código gerado baseado no seu prompt\n`;
-            response += `function exemplo() {\n`;
-            response += `  // Implementação aqui\n`;
-            response += `  console.log('Funcionalidade implementada');\n`;
-            response += `}\n`;
-            response += `\`\`\`\n\n`;
-            response += `💡 Sugestões:\n`;
-            response += `- Adicionar testes unitários\n`;
-            response += `- Validar inputs\n`;
-            response += `- Documentar a função\n`;
-            break;
-        case 'Correção de Bug':
-            response += `Vou ajudar a identificar e corrigir o bug.\n\n`;
-            response += `🔍 Análise:\n`;
-            response += `- Verificar logs recentes\n`;
-            response += `- Identificar padrão de erro\n`;
-            response += `- Propor correção\n\n`;
-            response += `✅ Solução proposta:\n`;
-            response += `Revisar a lógica identificada e aplicar as correções sugeridas.\n`;
-            break;
-        case 'Otimização':
-            response += `Analisando oportunidades de otimização...\n\n`;
-            response += `📈 Melhorias sugeridas:\n`;
-            response += `1. Reduzir complexidade algorítmica\n`;
-            response += `2. Implementar cache quando apropriado\n`;
-            response += `3. Otimizar queries ao banco de dados\n`;
-            response += `4. Adicionar índices necessários\n`;
-            break;
-        case 'Explicação/Dúvida':
-            response += `Vou explicar o conceito solicitado:\n\n`;
-            response += `${prompt}\n\n`;
-            response += `Resumindo: A questão abordada envolve conceitos importantes que\n`;
-            response += `podem ser aplicados ao seu projeto para melhor performance e\n`;
-            response += `manutenibilidade do código.\n`;
-            break;
-        case 'Testes':
-            response += `Gerando suite de testes...\n\n`;
-            response += `\`\`\`typescript\n`;
-            response += `describe('Teste do componente', () => {\n`;
-            response += `  it('deve executar corretamente', () => {\n`;
-            response += `    // Arrange\n`;
-            response += `    // Act\n`;
-            response += `    // Assert\n`;
-            response += `  });\n`;
-            response += `});\n`;
-            response += `\`\`\`\n`;
-            break;
-        default:
-            response += `Processando seu prompt...\n\n`;
-            response += `📝 Contexto analisado com sucesso.\n`;
-            response += `🎯 Aguardando implementação da integração real com Claude API.\n\n`;
-            response += `Em breve, você receberá respostas completas e contextuais\n`;
-            response += `baseadas no código do seu projeto!\n`;
-    }
-    response += `\n─────────────────────────────────────────────\n`;
-    response += `⚠️  NOTA: Esta é uma resposta simulada para testes.\n`;
-    response += `A integração real com Claude API será implementada em breve.\n`;
-    return response;
+    return result;
 }
 exports.default = execute;
 //# sourceMappingURL=ai-prompt-handler.script.js.map

@@ -4,7 +4,10 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
+import { Preset } from './preset.entity';
 
 @Entity('stacks')
 export class Stack {
@@ -40,6 +43,14 @@ export class Stack {
 
   @Column({ default: 0 })
   downloads: number;
+
+  @ManyToMany(() => Preset, (preset) => preset.stacks, { eager: true })
+  @JoinTable({
+    name: 'stack_presets',
+    joinColumn: { name: 'stack_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'preset_id', referencedColumnName: 'id' }
+  })
+  presets: Preset[];
 
   @CreateDateColumn()
   createdAt: Date;

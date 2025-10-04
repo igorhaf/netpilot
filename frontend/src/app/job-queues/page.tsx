@@ -39,11 +39,11 @@ import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
 import { jobQueuesApi, type JobQueue, type JobStatistics } from '@/lib/api/job-queues';
 import { JobsDashboard } from '@/components/jobs/JobsDashboard';
-import { JobExecutionLogs } from '@/components/jobs/JobExecutionLogs';
 import { RetryPolicyConfig } from '@/components/jobs/RetryPolicyConfig';
 import { RetryStats } from '@/components/jobs/RetryStats';
 import { PerformanceMetrics } from '@/components/jobs/PerformanceMetrics';
 import { JobNotifications } from '@/components/jobs/JobNotifications';
+import { JobExecutionHistory } from '@/components/jobs/JobExecutionHistory';
 
 export default function JobQueuesPage() {
   const [filters, setFilters] = useState({
@@ -55,7 +55,7 @@ export default function JobQueuesPage() {
   });
 
   const [selectedJob, setSelectedJob] = useState<JobQueue | null>(null);
-  const [activeTab, setActiveTab] = useState<'jobs' | 'logs' | 'retry' | 'performance' | 'notifications'>('jobs');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'historico' | 'retry' | 'performance' | 'notifications'>('jobs');
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -250,7 +250,7 @@ export default function JobQueuesPage() {
         <div className="flex space-x-1 border-b">
           {[
             { id: 'jobs', label: 'Jobs', icon: Settings },
-            { id: 'logs', label: 'Logs', icon: Eye },
+            { id: 'historico', label: 'Histórico', icon: Calendar },
             { id: 'retry', label: 'Retry Stats', icon: RotateCcw },
             { id: 'performance', label: 'Performance', icon: Activity },
             { id: 'notifications', label: 'Notificações', icon: Bell }
@@ -271,9 +271,9 @@ export default function JobQueuesPage() {
         </div>
 
         {/* Conteúdo baseado na aba ativa */}
-        {activeTab === 'logs' && (
+        {activeTab === 'historico' && (
           <div className="space-y-6">
-            <JobExecutionLogs />
+            <JobExecutionHistory />
           </div>
         )}
 

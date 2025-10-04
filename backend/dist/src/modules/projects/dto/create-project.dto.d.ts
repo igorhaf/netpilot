@@ -8,5 +8,9 @@ export declare class CreateProjectDto {
     documentation?: string;
     aiSessionData?: string;
     mainDomain?: string;
+    defaultPromptTemplate?: string;
+    executionMode?: 'realtime' | 'queue';
+    stackIds?: string[];
+    presetIds?: string[];
     metadata?: Record<string, any>;
 }

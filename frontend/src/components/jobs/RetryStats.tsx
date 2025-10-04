@@ -70,32 +70,19 @@ export function RetryStats({
   const loadStats = async () => {
     try {
       setLoading(true)
-      // Mock data - substituir por chamada real à API
-      const mockStats: RetryStatsData = {
-        totalExecutions: 245,
-        failedExecutions: 38,
-        retriedExecutions: 24,
-        successAfterRetry: 18,
-        maxRetryCount: 3,
-        avgRetryCount: 1.7,
-        retrySuccessRate: 75,
-        commonFailureCodes: [
-          { code: 1, count: 12 },
-          { code: 127, count: 8 },
-          { code: 2, count: 6 },
-          { code: 126, count: 4 }
-        ],
-        retryTrends: [
-          { date: '2024-01-20', retries: 5, success: 4 },
-          { date: '2024-01-21', retries: 3, success: 2 },
-          { date: '2024-01-22', retries: 7, success: 5 },
-          { date: '2024-01-23', retries: 4, success: 3 },
-          { date: '2024-01-24', retries: 6, success: 4 }
-        ]
-      }
-      setStats(mockStats)
+      // Buscar dados reais da API
+      const data = await jobExecutionsApi.getRetryStats({
+        jobQueueId,
+        timeRange
+      })
+      setStats(data)
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error)
+      toast({
+        title: "Erro ao carregar estatísticas",
+        description: "Não foi possível carregar as estatísticas de retry",
+        variant: "destructive"
+      })
     } finally {
       setLoading(false)
     }

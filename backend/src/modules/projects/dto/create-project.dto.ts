@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsBoolean, Matches } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsBoolean, Matches, IsEnum } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
@@ -37,6 +37,24 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   mainDomain?: string;
+
+  @IsOptional()
+  @IsString()
+  defaultPromptTemplate?: string;
+
+  @IsOptional()
+  @IsEnum(['realtime', 'queue'])
+  executionMode?: 'realtime' | 'queue';
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  stackIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  presetIds?: string[];
 
   @IsOptional()
   metadata?: Record<string, any>;

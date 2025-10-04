@@ -27,7 +27,7 @@ __decorate([
 ], JobExecutionQueryDto.prototype, "jobQueueId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(job_execution_entity_1.ExecutionStatus),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], JobExecutionQueryDto.prototype, "status", void 0);
 __decorate([

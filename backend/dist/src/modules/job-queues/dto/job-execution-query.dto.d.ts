@@ -1,7 +1,7 @@
-import { ExecutionStatus, TriggerType } from '../../../entities/job-execution.entity';
+import { TriggerType } from '../../../entities/job-execution.entity';
 export declare class JobExecutionQueryDto {
     jobQueueId?: string;
-    status?: ExecutionStatus;
+    status?: string;
     triggerType?: TriggerType;
     startDate?: string;
     endDate?: string;

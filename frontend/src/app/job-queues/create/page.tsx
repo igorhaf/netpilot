@@ -74,12 +74,11 @@ export default function CreateJobQueuePage() {
         scriptPath: data.shellCommand || data.scriptContent || data.scriptPath || data.internalInstruction || '', // Usar comando/conteúdo como path
         cronExpression: data.cronExpression,
         isActive: data.isActive,
-        priority: data.priority === 1 ? 'low' : data.priority <= 3 ? 'normal' : data.priority <= 7 ? 'high' : 'critical' as 'low' | 'normal' | 'high' | 'critical',
+        priority: Number(data.priority), // Enviar como número
         timeoutSeconds: data.timeout,
         maxRetries: data.retryAttempts,
-        environment: data.environment,
-        processor: 'default',
-        queueName: 'default'
+        // Remover campos que não existem no DTO
+        // environment, processor, queueName não são aceitos pelo backend
       };
 
       return jobQueuesApi.create(apiData);

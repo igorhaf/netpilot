@@ -21,7 +21,9 @@ import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { StacksModule } from './modules/stacks/stacks.module';
+import { PresetsModule } from './modules/presets/presets.module';
 import { DatabaseModule } from './modules/database/database.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { User } from './entities/user.entity';
 import { Project } from './entities/project.entity';
 import { Domain } from './entities/domain.entity';
@@ -36,6 +38,8 @@ import { JobExecution } from './entities/job-execution.entity';
 import { JobSchedule } from './entities/job-schedule.entity';
 import { Setting } from './modules/settings/settings.entity';
 import { Stack } from './entities/stack.entity';
+import { Preset } from './entities/preset.entity';
+import { ChatMessage } from './entities/chat-message.entity';
 // Docker entities temporarily removed
 
 @Module({
@@ -48,7 +52,7 @@ import { Stack } from './entities/stack.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User, Project, Domain, ProxyRule, Redirect, SslCertificate, Log, SshSession, ConsoleLog, JobQueue, JobExecution, JobSchedule, Setting, Stack],
+        entities: [User, Project, Domain, ProxyRule, Redirect, SslCertificate, Log, SshSession, ConsoleLog, JobQueue, JobExecution, JobSchedule, Setting, Stack, Preset, ChatMessage],
         synchronize: true, // Temporarily enabled to recognize new isLocked column
         logging: process.env.NODE_ENV === 'development',
       }),
@@ -92,7 +96,9 @@ import { Stack } from './entities/stack.entity';
     SeedModule,
     SettingsModule,
     StacksModule,
+    PresetsModule,
     DatabaseModule,
+    ChatModule,
   ],
   // No custom controllers in AppModule
 })

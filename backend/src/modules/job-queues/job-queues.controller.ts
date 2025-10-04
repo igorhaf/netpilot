@@ -100,6 +100,24 @@ export class JobExecutionsController {
     return this.jobExecutionsService.findAll(queryDto);
   }
 
+  @Get('retry-stats')
+  getRetryStats(
+    @Query('jobQueueId') jobQueueId?: string,
+    @Query('timeRange') timeRange?: '24h' | '7d' | '30d'
+  ) {
+    return this.jobExecutionsService.getRetryStats(jobQueueId, timeRange);
+  }
+
+  @Get('redis/stats')
+  getRedisStats() {
+    return this.jobExecutionsService.getRedisStats();
+  }
+
+  @Get('redis/health')
+  getRedisHealth() {
+    return this.jobExecutionsService.getRedisHealth();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.jobExecutionsService.findOne(id);
@@ -123,14 +141,9 @@ export class JobExecutionsController {
     }));
   }
 
-  @Get('redis/stats')
-  getRedisStats() {
-    return this.jobExecutionsService.getRedisStats();
-  }
-
-  @Get('redis/health')
-  getRedisHealth() {
-    return this.jobExecutionsService.getRedisHealth();
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.jobExecutionsService.delete(id);
   }
 }
 

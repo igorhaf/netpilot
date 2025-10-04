@@ -1,274 +1,245 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
-import { Layers, Code, Database, Cloud, Globe, Settings } from 'lucide-react'
-
-export interface TechStack {
-  id: string
-  name: string
-  description: string
-  icon: React.ReactNode
-  categories: {
-    [key: string]: {
-      name: string
-      technologies: string[]
-    }
-  }
-}
-
-const predefinedStacks: TechStack[] = [
-  {
-    id: 'full-stack-web',
-    name: 'Full Stack Web',
-    description: 'Stack completa para aplicações web modernas',
-    icon: <Globe className="h-5 w-5" />,
-    categories: {
-      frontend: {
-        name: 'Frontend',
-        technologies: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Shadcn/ui']
-      },
-      backend: {
-        name: 'Backend',
-        technologies: ['Node.js', 'NestJS', 'Express', 'TypeScript']
-      },
-      database: {
-        name: 'Banco de Dados',
-        technologies: ['PostgreSQL', 'Redis', 'TypeORM', 'Prisma']
-      },
-      tools: {
-        name: 'Ferramentas',
-        technologies: ['Docker', 'Git', 'Nginx', 'PM2']
-      }
-    }
-  },
-  {
-    id: 'react-spa',
-    name: 'React SPA',
-    description: 'Single Page Application com React',
-    icon: <Code className="h-5 w-5" />,
-    categories: {
-      frontend: {
-        name: 'Frontend',
-        technologies: ['React', 'TypeScript', 'Vite', 'React Router', 'Tailwind CSS']
-      },
-      state: {
-        name: 'Gerenciamento de Estado',
-        technologies: ['Zustand', 'React Query', 'Context API']
-      },
-      tools: {
-        name: 'Ferramentas',
-        technologies: ['ESLint', 'Prettier', 'Jest', 'Testing Library']
-      }
-    }
-  },
-  {
-    id: 'api-rest',
-    name: 'API REST',
-    description: 'API RESTful robusta e escalável',
-    icon: <Database className="h-5 w-5" />,
-    categories: {
-      backend: {
-        name: 'Backend',
-        technologies: ['Node.js', 'NestJS', 'TypeScript', 'Express']
-      },
-      database: {
-        name: 'Banco de Dados',
-        technologies: ['PostgreSQL', 'MongoDB', 'Redis', 'TypeORM']
-      },
-      auth: {
-        name: 'Autenticação',
-        technologies: ['JWT', 'Passport', 'bcrypt', 'OAuth2']
-      },
-      tools: {
-        name: 'Ferramentas',
-        technologies: ['Swagger', 'Jest', 'Helmet', 'CORS']
-      }
-    }
-  },
-  {
-    id: 'microservices',
-    name: 'Microserviços',
-    description: 'Arquitetura de microserviços com containers',
-    icon: <Cloud className="h-5 w-5" />,
-    categories: {
-      services: {
-        name: 'Serviços',
-        technologies: ['Node.js', 'NestJS', 'TypeScript', 'GraphQL']
-      },
-      containers: {
-        name: 'Containers',
-        technologies: ['Docker', 'Docker Compose', 'Kubernetes', 'Helm']
-      },
-      messaging: {
-        name: 'Mensageria',
-        technologies: ['Redis', 'RabbitMQ', 'Apache Kafka', 'Bull Queue']
-      },
-      monitoring: {
-        name: 'Monitoramento',
-        technologies: ['Prometheus', 'Grafana', 'Winston', 'Health Checks']
-      }
-    }
-  },
-  {
-    id: 'static-site',
-    name: 'Site Estático',
-    description: 'Site estático com geração automática',
-    icon: <Layers className="h-5 w-5" />,
-    categories: {
-      generator: {
-        name: 'Gerador',
-        technologies: ['Next.js', 'Gatsby', 'Hugo', 'Jekyll']
-      },
-      styling: {
-        name: 'Estilização',
-        technologies: ['Tailwind CSS', 'SCSS', 'CSS Modules', 'Styled Components']
-      },
-      cms: {
-        name: 'CMS',
-        technologies: ['Strapi', 'Contentful', 'Sanity', 'Ghost']
-      },
-      deployment: {
-        name: 'Deploy',
-        technologies: ['Vercel', 'Netlify', 'GitHub Pages', 'AWS S3']
-      }
-    }
-  }
-]
+import { useState, useEffect } from 'react'
+import { Stack, PresetFile } from '@/types'
+import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface StackSelectorProps {
-  selectedTechnologies: string[]
-  onTechnologiesChange: (technologies: string[]) => void
+  selectedStackIds: string[]
+  onChange: (stackIds: string[]) => void
 }
 
-export function StackSelector({ selectedTechnologies, onTechnologiesChange }: StackSelectorProps) {
-  const [selectedStack, setSelectedStack] = useState<string | null>(null)
+export default function StackSelector({ selectedStackIds, onChange }: StackSelectorProps) {
+  const [stacks, setStacks] = useState<Stack[]>([])
+  const [loading, setLoading] = useState(true)
+  const [expandedStacks, setExpandedStacks] = useState<Set<string>>(new Set())
 
-  const handleStackSelect = (stackId: string) => {
-    if (selectedStack === stackId) {
-      setSelectedStack(null)
-      return
-    }
+  useEffect(() => {
+    fetchStacks()
+  }, [])
 
-    setSelectedStack(stackId)
-    const stack = predefinedStacks.find(s => s.id === stackId)
-    if (stack) {
-      // Auto-select all technologies from the stack
-      const allTechnologies = Object.values(stack.categories)
-        .flatMap(category => category.technologies)
+  const fetchStacks = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('http://localhost:3001/stacks', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
 
-      const uniqueTechnologies = Array.from(new Set([...selectedTechnologies, ...allTechnologies]))
-      onTechnologiesChange(uniqueTechnologies)
+      if (response.ok) {
+        const data = await response.json()
+        setStacks(data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar stacks:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleTechnologyToggle = (technology: string) => {
-    if (selectedTechnologies.includes(technology)) {
-      onTechnologiesChange(selectedTechnologies.filter(t => t !== technology))
+  const toggleStack = (stackId: string) => {
+    const newSelectedIds = selectedStackIds.includes(stackId)
+      ? selectedStackIds.filter(id => id !== stackId)
+      : [...selectedStackIds, stackId]
+
+    onChange(newSelectedIds)
+  }
+
+  const toggleExpanded = (stackId: string) => {
+    const newExpanded = new Set(expandedStacks)
+    if (newExpanded.has(stackId)) {
+      newExpanded.delete(stackId)
     } else {
-      onTechnologiesChange([...selectedTechnologies, technology])
+      newExpanded.add(stackId)
     }
+    setExpandedStacks(newExpanded)
   }
 
-  const selectedStackData = selectedStack ? predefinedStacks.find(s => s.id === selectedStack) : null
+  const getPresetTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      docker: 'bg-blue-100 text-blue-800 border-blue-200',
+      persona: 'bg-purple-100 text-purple-800 border-purple-200',
+      config: 'bg-green-100 text-green-800 border-green-200',
+      script: 'bg-orange-100 text-orange-800 border-orange-200',
+      template: 'bg-pink-100 text-pink-800 border-pink-200'
+    }
+    return colors[type] || 'bg-gray-100 text-gray-800 border-gray-200'
+  }
+
+  const getPresetTypeIcon = (type: string) => {
+    const icons: Record<string, string> = {
+      docker: '🐳',
+      persona: '👤',
+      config: '⚙️',
+      script: '📜',
+      template: '📄'
+    }
+    return icons[type] || '📦'
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (stacks.length === 0) {
+    return (
+      <div className="text-center p-8 bg-muted rounded-lg">
+        <p className="text-muted-foreground">Nenhuma stack disponível</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Crie stacks em <a href="/preset-library" className="text-blue-600 hover:underline">Preset Library</a>
+        </p>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Stack Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Settings className="h-5 w-5" />
-            <span>Selecionar Stack de Tecnologias</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {predefinedStacks.map((stack) => (
-              <Button
-                key={stack.id}
-                variant={selectedStack === stack.id ? "default" : "outline"}
-                className="h-auto p-4 flex flex-col items-start space-y-2"
-                onClick={() => handleStackSelect(stack.id)}
-              >
-                <div className="flex items-center space-x-2">
-                  {stack.icon}
-                  <span className="font-medium">{stack.name}</span>
-                </div>
-                <p className="text-xs text-left text-muted-foreground">
-                  {stack.description}
-                </p>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-3">
+      <div className="text-sm text-muted-foreground mb-2">
+        Selecione as stacks de tecnologia para este projeto
+      </div>
 
-      {/* Technology Selection */}
-      {selectedStackData && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              {selectedStackData.icon}
-              <span>Tecnologias - {selectedStackData.name}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {Object.entries(selectedStackData.categories).map(([categoryKey, category]) => (
-              <div key={categoryKey} className="space-y-3">
-                <Label className="text-sm font-medium text-foreground">
-                  {category.name}
-                </Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {category.technologies.map((technology) => (
-                    <div key={technology} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`tech-${categoryKey}-${technology}`}
-                        checked={selectedTechnologies.includes(technology)}
-                        onCheckedChange={() => handleTechnologyToggle(technology)}
-                      />
-                      <Label
-                        htmlFor={`tech-${categoryKey}-${technology}`}
-                        className="text-sm cursor-pointer"
+      {stacks.map((stack) => {
+        const isSelected = selectedStackIds.includes(stack.id)
+        const isExpanded = expandedStacks.has(stack.id)
+
+        return (
+          <div
+            key={stack.id}
+            className={`border rounded-lg transition-all ${
+              isSelected
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {/* Stack Header */}
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                {/* Checkbox */}
+                <button
+                  type="button"
+                  onClick={() => toggleStack(stack.id)}
+                  className={`flex-shrink-0 mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? 'bg-blue-600 border-blue-600'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  {isSelected && <Check className="w-3 h-3 text-white" />}
+                </button>
+
+                {/* Stack Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{stack.icon}</span>
+                    <div>
+                      <h3 className="font-semibold text-lg">{stack.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {stack.technology} • v{stack.version}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {stack.description}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {stack.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded"
                       >
-                        {technology}
-                      </Label>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Presets Count */}
+                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                    <span>{stack.presets?.length || 0} presets incluídos</span>
+                    {stack.author && <span>Por {stack.author}</span>}
+                  </div>
+                </div>
+
+                {/* Expand Button */}
+                {stack.presets && stack.presets.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(stack.id)}
+                    className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    {isExpanded ? (
+                      <ChevronUp className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-500" />
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Presets List (Expandable) */}
+            {isExpanded && stack.presets && stack.presets.length > 0 && (
+              <div className="border-t border-gray-200 bg-white p-4">
+                <h4 className="font-medium text-sm mb-3">Presets incluídos:</h4>
+                <div className="space-y-2">
+                  {stack.presets.map((preset: PresetFile) => (
+                    <div
+                      key={preset.id}
+                      className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
+                    >
+                      <span className="text-lg">{getPresetTypeIcon(preset.type)}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{preset.name}</span>
+                          <span
+                            className={`px-2 py-0.5 text-xs rounded border ${getPresetTypeColor(
+                              preset.type
+                            )}`}
+                          >
+                            {preset.type}
+                          </span>
+                        </div>
+                        {preset.description && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {preset.description}
+                          </p>
+                        )}
+                        {preset.filename && (
+                          <p className="text-xs text-gray-500 mt-1 font-mono">
+                            {preset.filename}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {(preset.size / 1024).toFixed(1)} KB
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+            )}
+          </div>
+        )
+      })}
 
-      {/* Selected Technologies Summary */}
-      {selectedTechnologies.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Tecnologias Selecionadas ({selectedTechnologies.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {selectedTechnologies.map((tech) => (
-                <Badge key={tech} variant="secondary" className="flex items-center gap-1">
-                  {tech}
-                  <button
-                    type="button"
-                    onClick={() => handleTechnologyToggle(tech)}
-                    className="ml-1 hover:bg-red-200 rounded"
-                  >
-                    <span className="text-xs">×</span>
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Summary */}
+      {selectedStackIds.length > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm font-medium text-blue-900">
+            {selectedStackIds.length} stack{selectedStackIds.length > 1 ? 's' : ''} selecionada
+            {selectedStackIds.length > 1 ? 's' : ''}
+          </p>
+          <p className="text-xs text-blue-700 mt-1">
+            Todos os presets destas stacks serão aplicados ao projeto
+          </p>
+        </div>
       )}
     </div>
   )

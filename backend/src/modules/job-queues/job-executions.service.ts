@@ -48,14 +48,18 @@ export class JobExecutionsService {
       status: ExecutionStatus.PENDING,
       triggerType: executeJobDto.triggerType || TriggerType.MANUAL,
       triggeredBy: userId ? { id: userId } as any : null,
-      metadata: executeJobDto.metadata,
+      // Usar metadata do executeJobDto se fornecido, senão copiar do jobQueue
+      metadata: executeJobDto.metadata || jobQueue.metadata || null,
     });
 
     const savedExecution = await this.jobExecutionRepository.save(execution);
 
-    // Verificar se deve usar execução local para scripts shell que são comandos diretos
-    const shouldUseLocalExecution = jobQueue.scriptType === ScriptType.SHELL &&
-                                   !fs.existsSync(jobQueue.scriptPath);
+    // Verificar se deve usar execução local:
+    // - Scripts INTERNAL devem SEMPRE ser executados localmente (não via Redis/Python)
+    // - Scripts SHELL que são comandos diretos (não arquivos) também executam localmente
+    const shouldUseLocalExecution =
+      jobQueue.scriptType === ScriptType.INTERNAL ||
+      (jobQueue.scriptType === ScriptType.SHELL && !fs.existsSync(jobQueue.scriptPath));
 
     if (shouldUseLocalExecution) {
       // Usar execução local para comandos shell diretos
@@ -367,7 +371,18 @@ export class JobExecutionsService {
     }
 
     if (filters.status) {
-      query.andWhere('execution.status = :status', { status: filters.status });
+      // Suportar múltiplos status separados por vírgula ou array
+      const statusArray = Array.isArray(filters.status)
+        ? filters.status
+        : filters.status.includes(',')
+          ? filters.status.split(',').map(s => s.trim())
+          : [filters.status];
+
+      if (statusArray.length === 1) {
+        query.andWhere('execution.status = :status', { status: statusArray[0] });
+      } else {
+        query.andWhere('execution.status IN (:...statuses)', { statuses: statusArray });
+      }
     }
 
     if (filters.triggerType) {
@@ -471,5 +486,155 @@ export class JobExecutionsService {
       });
 
     return savedExecution;
+  }
+
+  async getRetryStats(jobQueueId?: string, timeRange: '24h' | '7d' | '30d' = '24h'): Promise<any> {
+    // Calcular data de início baseado no timeRange
+    const now = new Date();
+    const startDate = new Date();
+    switch (timeRange) {
+      case '24h':
+        startDate.setHours(now.getHours() - 24);
+        break;
+      case '7d':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(now.getDate() - 30);
+        break;
+    }
+
+    // Query base
+    let queryBuilder = this.jobExecutionRepository.createQueryBuilder('execution');
+
+    if (jobQueueId) {
+      queryBuilder = queryBuilder.where('execution.jobQueue.id = :jobQueueId', { jobQueueId });
+    }
+
+    queryBuilder = queryBuilder.andWhere('execution.createdAt >= :startDate', { startDate });
+
+    // Total de execuções
+    const totalExecutions = await queryBuilder.getCount();
+
+    // Execuções falhadas
+    const failedExecutions = await queryBuilder
+      .clone()
+      .andWhere('execution.status = :status', { status: ExecutionStatus.FAILED })
+      .getCount();
+
+    // Execuções com retry (retryCount > 0)
+    const retriedExecutions = await queryBuilder
+      .clone()
+      .andWhere('execution.retryCount > 0')
+      .getCount();
+
+    // Sucesso após retry
+    const successAfterRetry = await queryBuilder
+      .clone()
+      .andWhere('execution.retryCount > 0')
+      .andWhere('execution.status = :status', { status: ExecutionStatus.COMPLETED })
+      .getCount();
+
+    // Máximo de retries
+    const maxRetryResult = await queryBuilder
+      .clone()
+      .select('MAX(execution.retryCount)', 'max')
+      .getRawOne();
+    const maxRetryCount = Number(maxRetryResult?.max) || 0;
+
+    // Média de retries
+    const avgRetryResult = await queryBuilder
+      .clone()
+      .select('AVG(execution.retryCount)', 'avg')
+      .where('execution.retryCount > 0')
+      .getRawOne();
+    const avgRetryCount = Number(avgRetryResult?.avg) || 0;
+
+    // Taxa de sucesso após retry
+    const retrySuccessRate = retriedExecutions > 0
+      ? Math.round((successAfterRetry / retriedExecutions) * 100)
+      : 0;
+
+    // Códigos de erro mais comuns (usando errorLog)
+    const errorLogs = await queryBuilder
+      .clone()
+      .select('execution.errorLog')
+      .where('execution.status = :status', { status: ExecutionStatus.FAILED })
+      .andWhere('execution.errorLog IS NOT NULL')
+      .andWhere('execution.errorLog != \'\'')
+      .limit(100)
+      .getMany();
+
+    // Extrair códigos de erro (procurar por padrões como "exit code 1", "code: 127", etc)
+    const errorCodes = new Map<number, number>();
+    errorLogs.forEach(execution => {
+      const errorLog = execution.errorLog || '';
+      // Procurar padrões de código de erro
+      const codeMatch = errorLog.match(/(?:exit code|code:|error code)\s*:?\s*(\d+)/i);
+      if (codeMatch) {
+        const code = Number(codeMatch[1]);
+        errorCodes.set(code, (errorCodes.get(code) || 0) + 1);
+      }
+    });
+
+    // Converter para array e ordenar por contagem
+    const commonFailureCodes = Array.from(errorCodes.entries())
+      .map(([code, count]) => ({ code, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 4);
+
+    // Tendência de retries (últimos 5 dias)
+    const retryTrends = [];
+    for (let i = 4; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      const dayRetries = await this.jobExecutionRepository
+        .createQueryBuilder('execution')
+        .where('execution.createdAt >= :startDate', { startDate: date })
+        .andWhere('execution.createdAt < :endDate', { endDate: nextDate })
+        .andWhere('execution.retryCount > 0')
+        .getCount();
+
+      const daySuccess = await this.jobExecutionRepository
+        .createQueryBuilder('execution')
+        .where('execution.createdAt >= :startDate', { startDate: date })
+        .andWhere('execution.createdAt < :endDate', { endDate: nextDate })
+        .andWhere('execution.retryCount > 0')
+        .andWhere('execution.status = :status', { status: ExecutionStatus.COMPLETED })
+        .getCount();
+
+      retryTrends.push({
+        date: date.toISOString().split('T')[0],
+        retries: dayRetries,
+        success: daySuccess,
+      });
+    }
+
+    return {
+      totalExecutions,
+      failedExecutions,
+      retriedExecutions,
+      successAfterRetry,
+      maxRetryCount,
+      avgRetryCount: Math.round(avgRetryCount * 10) / 10,
+      retrySuccessRate,
+      commonFailureCodes,
+      retryTrends,
+    };
+  }
+
+  async delete(id: string): Promise<void> {
+    const execution = await this.jobExecutionRepository.findOne({ where: { id } });
+
+    if (!execution) {
+      throw new NotFoundException('Execução não encontrada');
+    }
+
+    await this.jobExecutionRepository.remove(execution);
   }
 }

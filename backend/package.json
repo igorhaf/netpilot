@@ -23,6 +23,7 @@
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts",
+    "seed:stacks": "ts-node -r tsconfig-paths/register src/seeds/run-seed.ts",
     "db:reset": "../scripts/reset-database.sh",
     "db:init": "../scripts/init-database.sh"
   },

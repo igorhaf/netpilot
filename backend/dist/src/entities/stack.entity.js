@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Stack = void 0;
 const typeorm_1 = require("typeorm");
+const preset_entity_1 = require("./preset.entity");
 let Stack = class Stack {
 };
 exports.Stack = Stack;
@@ -58,6 +59,15 @@ __decorate([
     (0, typeorm_1.Column)({ default: 0 }),
     __metadata("design:type", Number)
 ], Stack.prototype, "downloads", void 0);
+__decorate([
+    (0, typeorm_1.ManyToMany)(() => preset_entity_1.Preset, (preset) => preset.stacks, { eager: true }),
+    (0, typeorm_1.JoinTable)({
+        name: 'stack_presets',
+        joinColumn: { name: 'stack_id', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'preset_id', referencedColumnName: 'id' }
+    }),
+    __metadata("design:type", Array)
+], Stack.prototype, "presets", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

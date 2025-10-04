@@ -52,6 +52,10 @@ let ProjectsController = class ProjectsController {
     deleteSshKey(id) {
         return this.projectsService.deleteSshKey(id);
     }
+    executePrompt(id, body, req) {
+        const userId = req?.user?.userId;
+        return this.projectsService.executePromptRealtime(id, body.prompt, userId);
+    }
 };
 exports.ProjectsController = ProjectsController;
 __decorate([
@@ -124,6 +128,15 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "deleteSshKey", null);
+__decorate([
+    (0, common_1.Post)(':id/execute-prompt'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "executePrompt", null);
 exports.ProjectsController = ProjectsController = __decorate([
     (0, common_1.Controller)('projects'),
     __metadata("design:paramtypes", [projects_service_1.ProjectsService])

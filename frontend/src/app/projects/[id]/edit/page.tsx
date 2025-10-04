@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { useRequireAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { Project } from '@/types'
-import { StackSelector } from '@/components/projects/StackSelector'
+// import StackSelector from '@/components/projects/StackSelector' // Não usado na edição
 
 interface UpdateProjectDto {
   name: string
@@ -301,11 +301,7 @@ export default function EditProjectPage() {
             </Card>
           </div>
 
-          {/* Stack Selection */}
-          <StackSelector
-            selectedTechnologies={formData.technologies || []}
-            onTechnologiesChange={(technologies) => setFormData(prev => ({ ...prev, technologies }))}
-          />
+          {/* Stack Selection - Removido da edição, apenas disponível na criação */}
 
           {/* Actions */}
           <div className="flex justify-end space-x-4">

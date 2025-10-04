@@ -151,6 +151,15 @@ let JobExecutionsController = class JobExecutionsController {
     findAll(queryDto) {
         return this.jobExecutionsService.findAll(queryDto);
     }
+    getRetryStats(jobQueueId, timeRange) {
+        return this.jobExecutionsService.getRetryStats(jobQueueId, timeRange);
+    }
+    getRedisStats() {
+        return this.jobExecutionsService.getRedisStats();
+    }
+    getRedisHealth() {
+        return this.jobExecutionsService.getRedisHealth();
+    }
     findOne(id) {
         return this.jobExecutionsService.findOne(id);
     }
@@ -166,11 +175,8 @@ let JobExecutionsController = class JobExecutionsController {
             errorLog: execution.errorLog,
         }));
     }
-    getRedisStats() {
-        return this.jobExecutionsService.getRedisStats();
-    }
-    getRedisHealth() {
-        return this.jobExecutionsService.getRedisHealth();
+    delete(id) {
+        return this.jobExecutionsService.delete(id);
     }
 };
 exports.JobExecutionsController = JobExecutionsController;
@@ -181,6 +187,26 @@ __decorate([
     __metadata("design:paramtypes", [job_execution_query_dto_1.JobExecutionQueryDto]),
     __metadata("design:returntype", void 0)
 ], JobExecutionsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('retry-stats'),
+    __param(0, (0, common_1.Query)('jobQueueId')),
+    __param(1, (0, common_1.Query)('timeRange')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], JobExecutionsController.prototype, "getRetryStats", null);
+__decorate([
+    (0, common_1.Get)('redis/stats'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], JobExecutionsController.prototype, "getRedisStats", null);
+__decorate([
+    (0, common_1.Get)('redis/health'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], JobExecutionsController.prototype, "getRedisHealth", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -210,17 +236,12 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], JobExecutionsController.prototype, "getLogs", null);
 __decorate([
-    (0, common_1.Get)('redis/stats'),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], JobExecutionsController.prototype, "getRedisStats", null);
-__decorate([
-    (0, common_1.Get)('redis/health'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], JobExecutionsController.prototype, "getRedisHealth", null);
+], JobExecutionsController.prototype, "delete", null);
 exports.JobExecutionsController = JobExecutionsController = __decorate([
     (0, common_1.Controller)('job-executions'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

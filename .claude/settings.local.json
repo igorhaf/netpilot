@@ -81,7 +81,18 @@
       "Bash(git log:*)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQG5ldHBpbG90LmxvY2FsIiwic3ViIjoiZTg1ZmYxOTEtNDIyMy00MmM2LTkxOWQtMWYyMzM3NjY3YmIzIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU5MzQzODIzLCJleHAiOjE3NTk5NDg2MjN9.ymyghj1EUx-T5VSsSQndjWpQ_xD8KhSEsCc4m1c97gs\")",
       "Read(//home/**)",
-      "Read(///**)"
+      "Read(///**)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQG5ldHBpbG90LmxvY2FsIiwic3ViIjoiZTg1ZmYxOTEtNDIyMy00MmM2LTkxOWQtMWYyMzM3NjY3YmIzIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU5NTQ5NjAyLCJleHAiOjE3NjAxNTQ0MDJ9.nbJvp52tnAQjsADXN4BDxY5FRuEYfcSZcRZOqVbswR0\")",
+      "Bash(/tmp/test-job-flow.sh:*)",
+      "Bash(/tmp/test-metadata-fix.sh:*)",
+      "Bash(/tmp/test-final-completo.sh:*)",
+      "Bash(/tmp/test-criacao-manual.sh:*)",
+      "Bash(/tmp/test-chat-flow.sh:*)",
+      "Bash(/tmp/test-logs.sh:*)",
+      "Bash(/tmp/test-websocket-realtime.sh:*)",
+      "Bash(/tmp/test-queue-filter.sh:*)",
+      "Bash(/tmp/test-websocket-live.sh:*)",
+      "Bash(export:*)"
     ],
     "deny": [],
     "ask": []

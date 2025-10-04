@@ -30,13 +30,7 @@ export declare class JobExecutionsController {
         page: number;
         limit: number;
     }>;
-    findOne(id: string): Promise<import("../../entities/job-execution.entity").JobExecution>;
-    cancel(id: string): Promise<import("../../entities/job-execution.entity").JobExecution>;
-    retry(id: string): Promise<import("../../entities/job-execution.entity").JobExecution>;
-    getLogs(id: string): Promise<{
-        outputLog: string;
-        errorLog: string;
-    }>;
+    getRetryStats(jobQueueId?: string, timeRange?: '24h' | '7d' | '30d'): Promise<any>;
     getRedisStats(): Promise<{
         healthy: boolean;
         stats: any;
@@ -59,6 +53,14 @@ export declare class JobExecutionsController {
         error: any;
         timestamp: Date;
     }>;
+    findOne(id: string): Promise<import("../../entities/job-execution.entity").JobExecution>;
+    cancel(id: string): Promise<import("../../entities/job-execution.entity").JobExecution>;
+    retry(id: string): Promise<import("../../entities/job-execution.entity").JobExecution>;
+    getLogs(id: string): Promise<{
+        outputLog: string;
+        errorLog: string;
+    }>;
+    delete(id: string): Promise<void>;
 }
 export declare class JobSchedulesController {
     private readonly jobSchedulerService;

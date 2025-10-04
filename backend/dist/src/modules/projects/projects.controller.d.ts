@@ -17,4 +17,7 @@ export declare class ProjectsController {
         fingerprint: string;
     }>;
     deleteSshKey(id: string): Promise<import("../../entities/project.entity").Project>;
+    executePrompt(id: string, body: {
+        prompt: string;
+    }, req?: any): Promise<any>;
 }

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { jobExecutionsApi } from '@/lib/api/job-queues';
+import io from 'socket.io-client';
+import { useAuthStore } from '@/store/auth';
 import {
   Table,
   TableBody,
@@ -16,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { MainLayout } from '@/components/layout/main-layout';
 import {
   RotateCw,
@@ -30,7 +33,8 @@ import {
   CheckCircle2,
   XCircle,
   Pause,
-  Calendar
+  Calendar,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
@@ -48,42 +52,60 @@ export default function JobExecutionsPage() {
     limit: 20
   });
 
-  const queryClient = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Query para listar execuções
+  const queryClient = useQueryClient();
+  const { token } = useAuthStore();
+
+  // Conectar ao WebSocket para atualizações em tempo real
+  useEffect(() => {
+    if (!token) return;
+
+    const socket = io(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/jobs`, {
+      auth: { token },
+      transports: ['websocket'],
+    });
+
+    socket.on('connect', () => {
+      console.log('📡 WebSocket conectado - Job Executions');
+      // Inscrever para receber todas as notificações
+      socket.emit('subscribe:all');
+    });
+
+    // Atualizar quando job iniciar
+    socket.on('job:notification', (notification: any) => {
+      console.log('🔔 Notificação recebida:', notification);
+
+      // Invalidar queries para buscar dados atualizados
+      queryClient.invalidateQueries({ queryKey: ['job-executions'] });
+    });
+
+    socket.on('disconnect', () => {
+      console.log('📡 WebSocket desconectado - Job Executions');
+    });
+
+    return () => {
+      socket.emit('unsubscribe:all');
+      socket.disconnect();
+    };
+  }, [token, queryClient]);
+
+  // Query para listar execuções APENAS EM FILA (pending/running)
   const { data, isLoading, error } = useQuery({
     queryKey: ['job-executions', filters],
     queryFn: async () => {
+      // Filtrar APENAS pending e running via API
       const apiFilters = {
-        status: filters.status || undefined,
+        status: 'pending,running',
+        search: filters.search || undefined,
+        triggerType: filters.triggerType || undefined,
         page: filters.page,
         limit: filters.limit
       };
 
       const response = await jobExecutionsApi.list(apiFilters);
-
-      // Filtrar por busca no frontend se necessário
-      let filteredData = response.data || [];
-
-      if (filters.search) {
-        filteredData = filteredData.filter((exec: any) =>
-          exec.jobQueue?.name?.toLowerCase().includes(filters.search.toLowerCase())
-        );
-      }
-
-      if (filters.triggerType) {
-        filteredData = filteredData.filter((exec: any) => exec.triggerType === filters.triggerType);
-      }
-
-      return {
-        data: filteredData,
-        total: response.total,
-        page: response.page,
-        limit: response.limit,
-        pages: Math.ceil(response.total / response.limit)
-      };
+      return response;
     },
-    refetchInterval: 5000 // Atualizar a cada 5 segundos
   });
 
   // Mutação para cancelar execução
@@ -118,6 +140,28 @@ export default function JobExecutionsPage() {
     onError: (error: any) => {
       toast({
         title: 'Erro ao reexecutar',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Mutação para deletar execuções em massa
+  const deleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map(id => jobExecutionsApi.delete(id)));
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Execuções deletadas',
+        description: `${selectedIds.length} execução(ões) deletada(s) com sucesso!`,
+      });
+      setSelectedIds([]);
+      queryClient.invalidateQueries({ queryKey: ['job-executions'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao deletar',
         description: error.message,
         variant: 'destructive',
       });
@@ -184,6 +228,32 @@ export default function JobExecutionsPage() {
       retryMutation.mutate({ id });
     }
   };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (!data?.data) return;
+
+    if (selectedIds.length === data.data.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data.data.map((exec: any) => exec.id));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+
+    if (confirm(`Deletar ${selectedIds.length} execução(ões) selecionada(s)?`)) {
+      deleteMutation.mutate(selectedIds);
+    }
+  };
+
+  const isAllSelected = data?.data && selectedIds.length === data.data.length && data.data.length > 0;
 
   if (error) {
     return (
@@ -297,10 +367,28 @@ export default function JobExecutionsPage() {
         {/* Tabela de Execuções */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="h-5 w-5" />
-              <span>Execuções ({(data as any)?.total || 0})</span>
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <Clock className="h-5 w-5" />
+                <span>Execuções ({(data as any)?.total || 0})</span>
+                {selectedIds.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {selectedIds.length} selecionado(s)
+                  </Badge>
+                )}
+              </CardTitle>
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Deletar Selecionados
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -312,6 +400,13 @@ export default function JobExecutionsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={isAllSelected}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Selecionar todos"
+                        />
+                      </TableHead>
                       <TableHead>Job</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Tipo</TableHead>
@@ -325,6 +420,13 @@ export default function JobExecutionsPage() {
                   <TableBody>
                     {(data as any)?.data?.map((execution: any) => (
                       <TableRow key={execution.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.includes(execution.id)}
+                            onCheckedChange={() => toggleSelect(execution.id)}
+                            aria-label={`Selecionar ${execution.jobQueue.name}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">{execution.jobQueue.name}</div>

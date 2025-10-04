@@ -26,6 +26,7 @@ export default function ProjectDetailsPage() {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<any[]>([])
   const [copiedKey, setCopiedKey] = useState(false)
+  const [isRealtime, setIsRealtime] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
@@ -35,13 +36,45 @@ export default function ProjectDetailsPage() {
     enabled: !!projectId
   })
 
-  // Query para buscar jobs/executions do projeto
+  // Query para buscar job executions (temporário até ChatController ser corrigido)
   const { data: jobExecutions } = useQuery({
     queryKey: ['project-jobs', projectId],
     queryFn: () => api.get(`/job-executions?projectId=${projectId}`).then(res => res.data),
     enabled: !!projectId && activeTab === 'chat',
-    refetchInterval: 5000, // Atualiza a cada 5 segundos
+    refetchInterval: 5000,
   })
+
+  // Atualizar messages baseado em jobExecutions
+  useEffect(() => {
+    if (jobExecutions?.data && jobExecutions.data.length > 0) {
+      const allMessages: any[] = []
+
+      jobExecutions.data
+        .filter((job: any) => job.metadata?.type === 'ai-prompt')
+        .forEach((job: any) => {
+          // Adicionar mensagem do usuário
+          if (job.metadata?.userPrompt) {
+            allMessages.push({
+              role: 'user',
+              content: job.metadata.userPrompt,
+              timestamp: job.createdAt,
+            })
+          }
+
+          // Adicionar resposta do assistente
+          if (job.outputLog || job.errorLog) {
+            allMessages.push({
+              role: 'assistant',
+              content: job.outputLog || job.errorLog || 'Sem saída',
+              status: job.status,
+              timestamp: job.completedAt || job.createdAt,
+            })
+          }
+        })
+
+      setMessages(allMessages)
+    }
+  }, [jobExecutions])
 
   // Mutation para clonar repositório
   const cloneRepositoryMutation = useMutation({
@@ -98,8 +131,9 @@ export default function ProjectDetailsPage() {
   // Mutation para criar job de prompt
   const sendPromptMutation = useMutation({
     mutationFn: async (promptMessage: string) => {
+      const timestamp = new Date().getTime()
       const jobData = {
-        name: `AI Prompt - ${project.name}`,
+        name: `AI Prompt - ${project.name} - ${timestamp}`,
         description: `Prompt enviado pelo usuário: ${promptMessage.substring(0, 50)}...`,
         scriptType: 'internal',
         scriptPath: 'ai-prompt-handler',
@@ -108,35 +142,50 @@ export default function ProjectDetailsPage() {
         environmentVars: {
           PROJECT_ID: projectId,
           PROJECT_NAME: project.name,
+          PROJECT_ALIAS: project.alias,
           USER_PROMPT: promptMessage,
+          PROMPT_TEMPLATE: project.defaultPromptTemplate || '',
           TIMESTAMP: new Date().toISOString()
         },
         metadata: {
           type: 'ai-prompt',
           projectId: projectId,
-          userPrompt: promptMessage
+          userPrompt: promptMessage,
+          executionMode: isRealtime ? 'realtime' : 'queue'
         }
       }
 
-      const response = await api.post('/job-queues', jobData)
-      const jobId = response.data.id
+      // Se REALTIME: executar direto via endpoint específico (SEM Redis)
+      // Se FILA: criar job e deixar worker processar
+      if (isRealtime) {
+        // Executar direto via Claude CLI, retorna output imediatamente
+        const response = await api.post(`/projects/${projectId}/execute-prompt`, {
+          prompt: promptMessage
+        })
 
-      // Executar o job imediatamente
-      await api.post(`/job-queues/${jobId}/execute`)
+        return response.data
+      } else {
+        // Modo fila: cria o job E executa imediatamente
+        const createResponse = await api.post('/job-queues', jobData)
+        const jobId = createResponse.data.id
 
-      return response.data
+        // Executar o job imediatamente
+        const executeResponse = await api.post(`/job-queues/${jobId}/execute`, {
+          triggerType: 'manual'
+        })
+
+        return { job: createResponse.data, execution: executeResponse.data }
+      }
     },
-    onSuccess: () => {
-      toast.success('Prompt enviado para processamento!')
-      setMessage('')
+    onSuccess: (data) => {
+      // Invalidar job executions para recarregar
       queryClient.invalidateQueries({ queryKey: ['project-jobs', projectId] })
 
-      // Adicionar mensagem do usuário ao histórico
-      setMessages(prev => [...prev, {
-        role: 'user',
-        content: message,
-        timestamp: new Date().toISOString()
-      }])
+      toast.success(isRealtime
+        ? (data.success ? 'Executado com sucesso!' : 'Executado com erros')
+        : 'Executando prompt...'
+      )
+      setMessage('')
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Erro ao enviar prompt')
@@ -146,30 +195,7 @@ export default function ProjectDetailsPage() {
   // Scroll automático para última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, jobExecutions])
-
-  // Atualizar mensagens com resultados dos jobs
-  useEffect(() => {
-    if (jobExecutions && jobExecutions.length > 0) {
-      const aiMessages = jobExecutions
-        .filter((job: any) => job.metadata?.type === 'ai-prompt')
-        .map((job: any) => ({
-          role: 'assistant',
-          content: job.outputLog || job.errorLog || 'Processando...',
-          status: job.status,
-          timestamp: job.completedAt || job.startedAt || job.createdAt,
-          executionId: job.id
-        }))
-
-      // Mesclar com mensagens existentes (evitar duplicatas)
-      setMessages(prev => {
-        const existing = prev.filter(m => m.role === 'user')
-        return [...existing, ...aiMessages].sort((a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-        )
-      })
-    }
-  }, [jobExecutions])
+  }, [messages])
 
   const handleSendMessage = () => {
     if (!message.trim()) return
@@ -287,9 +313,17 @@ export default function ProjectDetailsPage() {
                               <Bot className="h-5 w-5 mt-0.5 flex-shrink-0" />
                             )}
                             <div className="flex-1 space-y-2">
-                              <p className="text-sm whitespace-pre-wrap break-words">
-                                {msg.content}
-                              </p>
+                              {msg.isTyping ? (
+                                <div className="flex items-center gap-1">
+                                  <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
+                                  <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
+                                  <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
+                                </div>
+                              ) : (
+                                <p className="text-sm whitespace-pre-wrap break-words">
+                                  {msg.content}
+                                </p>
+                              )}
                               <div className="flex items-center gap-2 text-xs opacity-70">
                                 <span>
                                   {new Date(msg.timestamp).toLocaleTimeString('pt-BR', {
@@ -327,7 +361,36 @@ export default function ProjectDetailsPage() {
                   </>
                 )}
               </CardContent>
-              <div className="p-2 border-t">
+              <div className="p-2 border-t space-y-2">
+                {/* Toggle Realtime/Queue */}
+                <div className="flex items-center justify-between px-2">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Modo de Execução
+                  </label>
+                  <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                    <button
+                      onClick={() => setIsRealtime(false)}
+                      className={`text-xs px-3 py-1 rounded transition-colors ${
+                        !isRealtime
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'hover:bg-muted-foreground/10'
+                      }`}
+                    >
+                      Fila
+                    </button>
+                    <button
+                      onClick={() => setIsRealtime(true)}
+                      className={`text-xs px-3 py-1 rounded transition-colors ${
+                        isRealtime
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'hover:bg-muted-foreground/10'
+                      }`}
+                    >
+                      Tempo Real
+                    </button>
+                  </div>
+                </div>
+
                 <div className="flex gap-2 items-end">
                   <Textarea
                     placeholder="Digite seu prompt..."

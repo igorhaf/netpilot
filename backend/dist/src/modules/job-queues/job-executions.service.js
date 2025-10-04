@@ -46,11 +46,11 @@ let JobExecutionsService = class JobExecutionsService {
             status: job_execution_entity_1.ExecutionStatus.PENDING,
             triggerType: executeJobDto.triggerType || job_execution_entity_1.TriggerType.MANUAL,
             triggeredBy: userId ? { id: userId } : null,
-            metadata: executeJobDto.metadata,
+            metadata: executeJobDto.metadata || jobQueue.metadata || null,
         });
         const savedExecution = await this.jobExecutionRepository.save(execution);
-        const shouldUseLocalExecution = jobQueue.scriptType === job_queue_entity_1.ScriptType.SHELL &&
-            !fs.existsSync(jobQueue.scriptPath);
+        const shouldUseLocalExecution = jobQueue.scriptType === job_queue_entity_1.ScriptType.INTERNAL ||
+            (jobQueue.scriptType === job_queue_entity_1.ScriptType.SHELL && !fs.existsSync(jobQueue.scriptPath));
         if (shouldUseLocalExecution) {
             console.log('Usando execução local para comando shell direto:', jobQueue.scriptPath);
             this.performExecution(savedExecution, jobQueue, executeJobDto.environmentVars)
@@ -289,7 +289,17 @@ let JobExecutionsService = class JobExecutionsService {
             query.andWhere('execution.jobQueue.id = :jobQueueId', { jobQueueId: filters.jobQueueId });
         }
         if (filters.status) {
-            query.andWhere('execution.status = :status', { status: filters.status });
+            const statusArray = Array.isArray(filters.status)
+                ? filters.status
+                : filters.status.includes(',')
+                    ? filters.status.split(',').map(s => s.trim())
+                    : [filters.status];
+            if (statusArray.length === 1) {
+                query.andWhere('execution.status = :status', { status: statusArray[0] });
+            }
+            else {
+                query.andWhere('execution.status IN (:...statuses)', { statuses: statusArray });
+            }
         }
         if (filters.triggerType) {
             query.andWhere('execution.triggerType = :triggerType', { triggerType: filters.triggerType });
@@ -363,6 +373,119 @@ let JobExecutionsService = class JobExecutionsService {
             console.error('Erro na reexecução do job:', error);
         });
         return savedExecution;
+    }
+    async getRetryStats(jobQueueId, timeRange = '24h') {
+        const now = new Date();
+        const startDate = new Date();
+        switch (timeRange) {
+            case '24h':
+                startDate.setHours(now.getHours() - 24);
+                break;
+            case '7d':
+                startDate.setDate(now.getDate() - 7);
+                break;
+            case '30d':
+                startDate.setDate(now.getDate() - 30);
+                break;
+        }
+        let queryBuilder = this.jobExecutionRepository.createQueryBuilder('execution');
+        if (jobQueueId) {
+            queryBuilder = queryBuilder.where('execution.jobQueue.id = :jobQueueId', { jobQueueId });
+        }
+        queryBuilder = queryBuilder.andWhere('execution.createdAt >= :startDate', { startDate });
+        const totalExecutions = await queryBuilder.getCount();
+        const failedExecutions = await queryBuilder
+            .clone()
+            .andWhere('execution.status = :status', { status: job_execution_entity_1.ExecutionStatus.FAILED })
+            .getCount();
+        const retriedExecutions = await queryBuilder
+            .clone()
+            .andWhere('execution.retryCount > 0')
+            .getCount();
+        const successAfterRetry = await queryBuilder
+            .clone()
+            .andWhere('execution.retryCount > 0')
+            .andWhere('execution.status = :status', { status: job_execution_entity_1.ExecutionStatus.COMPLETED })
+            .getCount();
+        const maxRetryResult = await queryBuilder
+            .clone()
+            .select('MAX(execution.retryCount)', 'max')
+            .getRawOne();
+        const maxRetryCount = Number(maxRetryResult?.max) || 0;
+        const avgRetryResult = await queryBuilder
+            .clone()
+            .select('AVG(execution.retryCount)', 'avg')
+            .where('execution.retryCount > 0')
+            .getRawOne();
+        const avgRetryCount = Number(avgRetryResult?.avg) || 0;
+        const retrySuccessRate = retriedExecutions > 0
+            ? Math.round((successAfterRetry / retriedExecutions) * 100)
+            : 0;
+        const errorLogs = await queryBuilder
+            .clone()
+            .select('execution.errorLog')
+            .where('execution.status = :status', { status: job_execution_entity_1.ExecutionStatus.FAILED })
+            .andWhere('execution.errorLog IS NOT NULL')
+            .andWhere('execution.errorLog != \'\'')
+            .limit(100)
+            .getMany();
+        const errorCodes = new Map();
+        errorLogs.forEach(execution => {
+            const errorLog = execution.errorLog || '';
+            const codeMatch = errorLog.match(/(?:exit code|code:|error code)\s*:?\s*(\d+)/i);
+            if (codeMatch) {
+                const code = Number(codeMatch[1]);
+                errorCodes.set(code, (errorCodes.get(code) || 0) + 1);
+            }
+        });
+        const commonFailureCodes = Array.from(errorCodes.entries())
+            .map(([code, count]) => ({ code, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 4);
+        const retryTrends = [];
+        for (let i = 4; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const dayRetries = await this.jobExecutionRepository
+                .createQueryBuilder('execution')
+                .where('execution.createdAt >= :startDate', { startDate: date })
+                .andWhere('execution.createdAt < :endDate', { endDate: nextDate })
+                .andWhere('execution.retryCount > 0')
+                .getCount();
+            const daySuccess = await this.jobExecutionRepository
+                .createQueryBuilder('execution')
+                .where('execution.createdAt >= :startDate', { startDate: date })
+                .andWhere('execution.createdAt < :endDate', { endDate: nextDate })
+                .andWhere('execution.retryCount > 0')
+                .andWhere('execution.status = :status', { status: job_execution_entity_1.ExecutionStatus.COMPLETED })
+                .getCount();
+            retryTrends.push({
+                date: date.toISOString().split('T')[0],
+                retries: dayRetries,
+                success: daySuccess,
+            });
+        }
+        return {
+            totalExecutions,
+            failedExecutions,
+            retriedExecutions,
+            successAfterRetry,
+            maxRetryCount,
+            avgRetryCount: Math.round(avgRetryCount * 10) / 10,
+            retrySuccessRate,
+            commonFailureCodes,
+            retryTrends,
+        };
+    }
+    async delete(id) {
+        const execution = await this.jobExecutionRepository.findOne({ where: { id } });
+        if (!execution) {
+            throw new common_1.NotFoundException('Execução não encontrada');
+        }
+        await this.jobExecutionRepository.remove(execution);
     }
 };
 exports.JobExecutionsService = JobExecutionsService;

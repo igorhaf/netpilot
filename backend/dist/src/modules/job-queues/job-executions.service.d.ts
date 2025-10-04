@@ -47,4 +47,6 @@ export declare class JobExecutionsService {
     findOne(id: string): Promise<JobExecution>;
     cancel(id: string): Promise<JobExecution>;
     retry(id: string): Promise<JobExecution>;
+    getRetryStats(jobQueueId?: string, timeRange?: '24h' | '7d' | '30d'): Promise<any>;
+    delete(id: string): Promise<void>;
 }

@@ -194,6 +194,22 @@ export const jobExecutionsApi = {
       outputLog: execution.outputLog,
       errorLog: execution.errorLog
     };
+  },
+
+  // Get retry statistics
+  async getRetryStats(filters: { jobQueueId?: string; timeRange?: '24h' | '7d' | '30d' } = {}): Promise<any> {
+    const params = new URLSearchParams()
+
+    if (filters.jobQueueId) params.append('jobQueueId', filters.jobQueueId)
+    if (filters.timeRange) params.append('timeRange', filters.timeRange)
+
+    const response = await api.get(`/job-executions/retry-stats?${params.toString()}`)
+    return response.data
+  },
+
+  // Delete execution
+  async delete(id: string): Promise<void> {
+    await api.delete(`/job-executions/${id}`)
   }
 }
 

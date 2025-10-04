@@ -1,4 +1,6 @@
 import { Domain } from './domain.entity';
+import { Stack } from './stack.entity';
+import { Preset } from './preset.entity';
 export declare class Project {
     id: string;
     name: string;
@@ -16,6 +18,10 @@ export declare class Project {
     aiSessionData: string;
     mainDomain: string;
     metadata: Record<string, any>;
+    defaultPromptTemplate: string;
+    executionMode: 'realtime' | 'queue';
+    stacks: Stack[];
+    presets: Preset[];
     domains: Domain[];
     createdAt: Date;
     updatedAt: Date;

@@ -18,9 +18,17 @@ export interface Project {
   isActive: boolean
   technologies?: string[]
   repository: string
+  cloned?: boolean
+  hasSshKey?: boolean
+  sshPublicKey?: string
+  sshKeyFingerprint?: string
   documentation?: string
   aiSessionData?: string
   mainDomain?: string
+  defaultPromptTemplate?: string
+  executionMode?: 'realtime' | 'queue'
+  stacks?: Stack[]
+  presets?: PresetFile[]
   metadata?: Record<string, any>
   domains?: Domain[]
   createdAt: string
@@ -158,6 +166,10 @@ export interface CreateProjectDto {
   documentation?: string
   aiSessionData?: string
   mainDomain?: string
+  defaultPromptTemplate?: string
+  executionMode?: 'realtime' | 'queue'
+  stackIds?: string[]
+  presetIds?: string[]
   metadata?: Record<string, any>
 }
 

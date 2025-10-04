@@ -62,6 +62,28 @@ __decorate([
 ], CreateProjectDto.prototype, "mainDomain", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateProjectDto.prototype, "defaultPromptTemplate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(['realtime', 'queue']),
+    __metadata("design:type", String)
+], CreateProjectDto.prototype, "executionMode", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], CreateProjectDto.prototype, "stackIds", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], CreateProjectDto.prototype, "presetIds", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Object)
 ], CreateProjectDto.prototype, "metadata", void 0);
 //# sourceMappingURL=create-project.dto.js.map
