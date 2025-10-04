@@ -8,11 +8,14 @@ import { ConsoleController } from './console.controller';
 import { ConsoleGateway } from './console.gateway';
 import { SshSession } from '../../entities/ssh-session.entity';
 import { ConsoleLog } from '../../entities/console-log.entity';
+import { User } from '../../entities/user.entity';
+import { LogsModule } from '../logs/logs.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([SshSession, ConsoleLog]),
+        TypeOrmModule.forFeature([SshSession, ConsoleLog, User]),
         HttpModule,
+        LogsModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => ({

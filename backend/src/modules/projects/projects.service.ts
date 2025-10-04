@@ -463,56 +463,113 @@ echo "🎉 Limpeza concluída para ${projectName}"
       }
 
       const username = project.alias;
-      const sshDir = `/home/${username}/.ssh`;
+
+      // Detectar se está rodando em Docker
+      const fsSync = require('fs');
+      const isDocker = fsSync.existsSync('/host/home');
+
+      let sshDir = `/home/${username}/.ssh`;
+      if (isDocker) {
+        sshDir = `/host/home/${username}/.ssh`;
+      }
+
       const privateKeyPath = `${sshDir}/id_rsa`;
       const publicKeyPath = `${sshDir}/id_rsa.pub`;
 
-      console.log(`🔑 Gerando chave SSH para usuário: ${username}`);
+      console.log(`🔑 Gerando chave SSH para usuário: ${username} (Docker: ${isDocker})`);
 
-      // 1. Criar diretório .ssh se não existir
-      await execAsync(`sudo -u ${username} mkdir -p ${sshDir}`);
-      await execAsync(`sudo chmod 700 ${sshDir}`);
+      if (isDocker) {
+        // 1. Criar diretório .ssh (modo Docker)
+        await execAsync(`mkdir -p ${sshDir}`);
+        await execAsync(`chmod 700 ${sshDir}`);
 
-      // 2. Gerar chave SSH (sem passphrase)
-      await execAsync(
-        `sudo -u ${username} ssh-keygen -t rsa -b 4096 -f ${privateKeyPath} -N "" -C "${username}@netpilot"`,
-        { timeout: 30000 }
-      );
+        // 2. Gerar chave SSH
+        await execAsync(
+          `ssh-keygen -t rsa -b 4096 -f ${privateKeyPath} -N "" -C "${username}@netpilot"`,
+          { timeout: 30000 }
+        );
 
-      // 3. Ajustar permissões
-      await execAsync(`sudo chmod 600 ${privateKeyPath}`);
-      await execAsync(`sudo chmod 644 ${publicKeyPath}`);
+        // 3. Ajustar permissões
+        await execAsync(`chmod 600 ${privateKeyPath}`);
+        await execAsync(`chmod 644 ${publicKeyPath}`);
 
-      // 4. Ler chave pública
-      const { stdout: publicKey } = await execAsync(`sudo cat ${publicKeyPath}`);
+        // 4. Ler chave pública
+        const { stdout: publicKey } = await execAsync(`cat ${publicKeyPath}`);
 
-      // 5. Obter fingerprint
-      const { stdout: fingerprint } = await execAsync(
-        `sudo ssh-keygen -lf ${publicKeyPath} -E sha256 | awk '{print $2}'`
-      );
+        // 5. Obter fingerprint
+        const { stdout: fingerprint } = await execAsync(
+          `ssh-keygen -lf ${publicKeyPath} -E sha256 | awk '{print $2}'`
+        );
 
-      // 6. Atualizar projeto no banco
-      project.hasSshKey = true;
-      project.sshPublicKey = publicKey.trim();
-      project.sshKeyFingerprint = fingerprint.trim();
+        // 6. Atualizar projeto no banco
+        project.hasSshKey = true;
+        project.sshPublicKey = publicKey.trim();
+        project.sshKeyFingerprint = fingerprint.trim();
 
-      const savedProject = await this.projectRepository.save(project);
+        const savedProject = await this.projectRepository.save(project);
 
-      console.log(`✅ Chave SSH gerada com sucesso para ${username}`);
-      console.log(`   Fingerprint: ${fingerprint.trim()}`);
+        console.log(`✅ Chave SSH gerada com sucesso para ${username}`);
+        console.log(`   Fingerprint: ${fingerprint.trim()}`);
 
-      await this.logsService.updateLogStatus(
-        log.id,
-        LogStatus.SUCCESS,
-        `Chave SSH gerada com sucesso`,
-        JSON.stringify({
-          projectId: savedProject.id,
-          fingerprint: fingerprint.trim(),
-          publicKeyPath
-        }),
-      );
+        await this.logsService.updateLogStatus(
+          log.id,
+          LogStatus.SUCCESS,
+          `Chave SSH gerada com sucesso`,
+          JSON.stringify({
+            projectId: savedProject.id,
+            fingerprint: fingerprint.trim(),
+            publicKeyPath
+          }),
+        );
 
-      return savedProject;
+        return savedProject;
+      } else {
+        // Modo host com sudo
+        // 1. Criar diretório .ssh
+        await execAsync(`sudo -u ${username} mkdir -p ${sshDir}`);
+        await execAsync(`sudo chmod 700 ${sshDir}`);
+
+        // 2. Gerar chave SSH
+        await execAsync(
+          `sudo -u ${username} ssh-keygen -t rsa -b 4096 -f ${privateKeyPath} -N "" -C "${username}@netpilot"`,
+          { timeout: 30000 }
+        );
+
+        // 3. Ajustar permissões
+        await execAsync(`sudo chmod 600 ${privateKeyPath}`);
+        await execAsync(`sudo chmod 644 ${publicKeyPath}`);
+
+        // 4. Ler chave pública
+        const { stdout: publicKey } = await execAsync(`sudo cat ${publicKeyPath}`);
+
+        // 5. Obter fingerprint
+        const { stdout: fingerprint } = await execAsync(
+          `sudo ssh-keygen -lf ${publicKeyPath} -E sha256 | awk '{print $2}'`
+        );
+
+        // 6. Atualizar projeto no banco
+        project.hasSshKey = true;
+        project.sshPublicKey = publicKey.trim();
+        project.sshKeyFingerprint = fingerprint.trim();
+
+        const savedProject = await this.projectRepository.save(project);
+
+        console.log(`✅ Chave SSH gerada com sucesso para ${username}`);
+        console.log(`   Fingerprint: ${fingerprint.trim()}`);
+
+        await this.logsService.updateLogStatus(
+          log.id,
+          LogStatus.SUCCESS,
+          `Chave SSH gerada com sucesso`,
+          JSON.stringify({
+            projectId: savedProject.id,
+            fingerprint: fingerprint.trim(),
+            publicKeyPath
+          }),
+        );
+
+        return savedProject;
+      }
     } catch (error) {
       if (error instanceof ConflictException || error instanceof NotFoundException) {
         throw error;
@@ -562,12 +619,24 @@ echo "🎉 Limpeza concluída para ${projectName}"
       }
 
       const username = project.alias;
-      const sshDir = `/home/${username}/.ssh`;
 
-      console.log(`🗑️ Deletando chaves SSH para usuário: ${username}`);
+      // Detectar se está rodando em Docker
+      const fsSync = require('fs');
+      const isDocker = fsSync.existsSync('/host/home');
+
+      let sshDir = `/home/${username}/.ssh`;
+      if (isDocker) {
+        sshDir = `/host/home/${username}/.ssh`;
+      }
+
+      console.log(`🗑️ Deletando chaves SSH para usuário: ${username} (Docker: ${isDocker})`);
 
       // Deletar chaves SSH
-      await execAsync(`sudo rm -f ${sshDir}/id_rsa ${sshDir}/id_rsa.pub`);
+      if (isDocker) {
+        await execAsync(`rm -f ${sshDir}/id_rsa ${sshDir}/id_rsa.pub`);
+      } else {
+        await execAsync(`sudo rm -f ${sshDir}/id_rsa ${sshDir}/id_rsa.pub`);
+      }
 
       // Atualizar projeto
       project.hasSshKey = false;

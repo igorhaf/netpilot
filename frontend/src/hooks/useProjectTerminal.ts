@@ -18,11 +18,7 @@ interface UseProjectTerminalProps {
 export function useProjectTerminal({ projectId, projectAlias }: UseProjectTerminalProps) {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
-  const [terminalOutput, setTerminalOutput] = useState<string[]>([
-    `Conectando ao projeto ${projectAlias}...`,
-    `Mudando para diretório /home/${projectAlias}`,
-    `Terminal do projeto ${projectAlias} pronto!`
-  ])
+  const [terminalOutput, setTerminalOutput] = useState<string[]>([])
   const [commandHistory, setCommandHistory] = useState<TerminalCommand[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [isExecuting, setIsExecuting] = useState(false)
@@ -70,7 +66,6 @@ export function useProjectTerminal({ projectId, projectAlias }: UseProjectTermin
     newSocket.on('connect', () => {
       console.log(`✅ WebSocket conectado! ID: ${newSocket.id}`)
       setIsConnected(true)
-      setTerminalOutput(prev => [...prev, `Conectado ao terminal do projeto ${projectAlias}`])
     })
 
     newSocket.on('disconnect', (reason) => {

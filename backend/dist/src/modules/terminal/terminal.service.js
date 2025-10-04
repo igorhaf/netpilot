@@ -23,12 +23,17 @@ let TerminalService = TerminalService_1 = class TerminalService extends events_1
             const fs = require('fs');
             const isDocker = fs.existsSync('/host/home');
             this.logger.log(`[TerminalService] isDocker: ${isDocker}, user: ${options?.user}, command: ${command}`);
+            if (command.match(/^\s*ls\s/)) {
+                if (!command.includes('--color')) {
+                    fullCommand = command.replace(/^(\s*ls\s)/, '$1--color=always ');
+                }
+            }
             if (options?.user) {
                 let workDir = options.workingDir || `/home/${options.user}`;
-                const escapedCommand = command.replace(/"/g, '\\"').replace(/'/g, "\\'");
+                const escapedCommand = fullCommand.replace(/"/g, '\\"').replace(/'/g, "\\'");
                 if (isDocker) {
                     workDir = workDir.replace('/home', '/host/home');
-                    fullCommand = `cd ${workDir} && ${command}`;
+                    fullCommand = `cd ${workDir} && ${fullCommand}`;
                     this.logger.log(`[TerminalService] Docker mode - executing: ${fullCommand}`);
                 }
                 else {
@@ -37,12 +42,19 @@ let TerminalService = TerminalService_1 = class TerminalService extends events_1
                 }
             }
             else {
-                this.logger.log(`[TerminalService] No user specified, executing directly: ${command}`);
+                this.logger.log(`[TerminalService] No user specified, executing directly: ${fullCommand}`);
             }
             const spawnOptions = {
                 stdio: ['pipe', 'pipe', 'pipe'],
                 shell: true,
-                env: { ...process.env, FORCE_COLOR: '1' },
+                env: {
+                    ...process.env,
+                    FORCE_COLOR: '1',
+                    COLORTERM: 'truecolor',
+                    TERM: 'xterm-256color',
+                    CLICOLOR: '1',
+                    CLICOLOR_FORCE: '1'
+                },
             };
             if (options?.workingDir && !options?.user) {
                 spawnOptions.cwd = options.workingDir;

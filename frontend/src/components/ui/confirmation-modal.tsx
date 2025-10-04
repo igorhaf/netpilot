@@ -30,23 +30,23 @@ export function ConfirmationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card border border-border rounded-lg shadow-lg max-w-md w-full mx-4">
+      <div className="bg-background border border-border rounded-lg shadow-lg max-w-md w-full mx-4">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-yellow-500/10">
-              <AlertTriangle className="h-6 w-6 text-yellow-500" />
+            <div className="p-2 rounded-lg bg-destructive/10">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+              <h3 className="text-lg font-semibold">{title}</h3>
               <p className="text-sm text-muted-foreground">{subtitle}</p>
             </div>
           </div>
 
           {/* Item with trash icon */}
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-muted/30">
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-muted">
             <Trash2 className="h-5 w-5 text-muted-foreground" />
-            <span className="font-medium text-foreground">{itemName}</span>
+            <span className="font-medium">{itemName}</span>
           </div>
 
           {/* Consequences */}
@@ -55,7 +55,7 @@ export function ConfirmationModal({
             <ul className="space-y-2">
               {consequences.map((consequence, index) => (
                 <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <span className="text-red-500 mt-1">•</span>
+                  <span className="text-destructive mt-1">•</span>
                   {consequence}
                 </li>
               ))}
@@ -67,14 +67,14 @@ export function ConfirmationModal({
             <button
               onClick={onClose}
               disabled={isLoading}
-              className="btn-secondary"
+              className="px-4 py-2 text-sm font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={onConfirm}
               disabled={isLoading}
-              className="btn-primary bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600"
+              className="px-4 py-2 text-sm font-medium rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? 'Excluindo...' : confirmText}
             </button>

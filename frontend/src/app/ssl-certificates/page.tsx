@@ -40,18 +40,11 @@ export default function SslCertificatesPage() {
     ? allCertificates?.filter(cert => cert.domainId === domainFilter)
     : allCertificates
 
-  const { data: stats } = useQuery({
-    queryKey: ['ssl-certificates-stats'],
-    queryFn: () => api.get('/ssl-certificates/stats').then(res => res.data),
-    enabled: !!auth,
-  })
-
   // Mutation para renovar certificado individual
   const renewCertificateMutation = useMutation({
     mutationFn: (id: string) => api.post(`/ssl-certificates/${id}/renew`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssl-certificates'] })
-      queryClient.invalidateQueries({ queryKey: ['ssl-certificates-stats'] })
       toast.success('Certificado renovado com sucesso!')
     },
     onError: (error: any) => {
@@ -64,7 +57,6 @@ export default function SslCertificatesPage() {
     mutationFn: () => api.post('/ssl-certificates/renew-expired'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssl-certificates'] })
-      queryClient.invalidateQueries({ queryKey: ['ssl-certificates-stats'] })
       toast.success('Certificados expirados renovados com sucesso!')
     },
     onError: (error: any) => {
@@ -77,7 +69,6 @@ export default function SslCertificatesPage() {
     mutationFn: (id: string) => api.delete(`/ssl-certificates/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssl-certificates'] })
-      queryClient.invalidateQueries({ queryKey: ['ssl-certificates-stats'] })
       toast.success('Certificado excluído com sucesso!')
       setCertificateToDelete(null)
     },
@@ -89,24 +80,15 @@ export default function SslCertificatesPage() {
   // Mutation para travar/destravar certificado
   const toggleLockMutation = useMutation({
     mutationFn: async (certificate: SslCertificate) => {
-      // TODO: Implementar quando o backend suportar isLocked para certificados SSL
-      const response = await api.patch(`/ssl-certificates/${certificate.id}`, {
-        primaryDomain: certificate.primaryDomain,
-        sanDomains: certificate.sanDomains,
-        autoRenew: certificate.autoRenew,
-        renewBeforeDays: certificate.renewBeforeDays,
-        isLocked: !certificate.isLocked,
-        domainId: certificate.domainId,
-      })
+      const response = await api.post(`/ssl-certificates/${certificate.id}/toggle-lock`)
       return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssl-certificates'] })
-      queryClient.invalidateQueries({ queryKey: ['ssl-certificates-stats'] })
       toast.success('Status do travamento atualizado!')
     },
     onError: (error: any) => {
-      toast.error('Funcionalidade de travamento ainda não implementada no backend para certificados SSL')
+      toast.error(error.response?.data?.message || 'Erro ao atualizar travamento')
     },
   })
 
@@ -180,67 +162,6 @@ export default function SslCertificatesPage() {
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        <div className="flex items-center justify-end">
-          <Button
-            onClick={handleRenewExpired}
-            disabled={renewExpiredMutation.isPending}
-            className="h-14 w-14 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg p-0"
-            title="Renovar certificados expirados"
-          >
-            <RefreshCw className={`h-6 w-6 ${renewExpiredMutation.isPending ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-
-        {/* Stats */}
-        {stats && (
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total</p>
-                    <p className="text-2xl font-bold">{stats.total}</p>
-                  </div>
-                  <Shield className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Válidos</p>
-                    <p className="text-2xl font-bold">{stats.valid}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Expirando</p>
-                    <p className="text-2xl font-bold">{stats.expiring}</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-orange-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Expirados</p>
-                    <p className="text-2xl font-bold">{stats.expired}</p>
-                  </div>
-                  <XCircle className="h-8 w-8 text-red-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -414,6 +335,27 @@ export default function SslCertificatesPage() {
           isLoading={renewExpiredMutation.isPending}
           confirmText="Renovar Todos"
         />
+
+        {/* Floating Action Button */}
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50 group">
+          {/* Tooltip/Label */}
+          <button
+            onClick={handleRenewExpired}
+            className="bg-white dark:bg-gray-800 text-foreground px-4 py-2 rounded-lg shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap text-sm font-medium border border-border"
+          >
+            Renovar Expirados
+          </button>
+
+          {/* FAB Button */}
+          <button
+            onClick={handleRenewExpired}
+            disabled={renewExpiredMutation.isPending}
+            className="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-110 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Renovar Certificados Expirados"
+          >
+            <RefreshCw className={`h-6 w-6 transition-transform duration-200 ease-in-out ${renewExpiredMutation.isPending ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+          </button>
+        </div>
       </div>
     </MainLayout>
   )

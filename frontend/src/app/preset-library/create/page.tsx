@@ -9,16 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { useRequireAuth } from '@/hooks/useAuth'
 import {
   ArrowLeft,
   Save,
   Package,
-  Palette,
-  Tag,
-  X
+  Palette
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -33,11 +30,6 @@ const TECHNOLOGY_COLORS = [
   { name: 'Rust', color: '#F97316' },
 ]
 
-const SUGGESTED_TAGS = [
-  'docker', 'nginx', 'mysql', 'postgresql', 'redis', 'mongodb',
-  'api', 'frontend', 'backend', 'microservices', 'kubernetes',
-  'production', 'development', 'testing', 'ci/cd', 'security'
-]
 
 export default function CreateStackPage() {
   const auth = useRequireAuth()
@@ -46,14 +38,10 @@ export default function CreateStackPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    technology: '',
     color: '#3B82F6',
     version: '1.0.0',
     author: ''
   })
-
-  const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
 
   const breadcrumbs = [
     { label: 'Biblioteca de Presets', href: '/preset-library' },
@@ -61,7 +49,7 @@ export default function CreateStackPage() {
   ]
 
   const createStackMutation = useMutation({
-    mutationFn: async (data: typeof formData & { tags: string[] }) => {
+    mutationFn: async (data: typeof formData) => {
       const response = await api.post('/stacks', data)
       return response.data
     },
@@ -78,27 +66,6 @@ export default function CreateStackPage() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleAddTag = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      const tag = tagInput.trim().toLowerCase()
-      if (tag && !tags.includes(tag)) {
-        setTags(prev => [...prev, tag])
-        setTagInput('')
-      }
-    }
-  }
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(prev => prev.filter(tag => tag !== tagToRemove))
-  }
-
-  const handleSuggestedTag = (tag: string) => {
-    if (!tags.includes(tag)) {
-      setTags(prev => [...prev, tag])
-    }
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -107,15 +74,7 @@ export default function CreateStackPage() {
       return
     }
 
-    if (!formData.technology.trim()) {
-      toast.error('Tecnologia é obrigatória')
-      return
-    }
-
-    createStackMutation.mutate({
-      ...formData,
-      tags
-    })
+    createStackMutation.mutate(formData)
   }
 
   const handleBack = () => {
@@ -154,27 +113,15 @@ export default function CreateStackPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome da Stack *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Ex: PHP Laravel Stack"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="technology">Tecnologia *</Label>
-                  <Input
-                    id="technology"
-                    placeholder="Ex: PHP, Node.js, Python"
-                    value={formData.technology}
-                    onChange={(e) => handleInputChange('technology', e.target.value)}
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome da Stack *</Label>
+                <Input
+                  id="name"
+                  placeholder="Ex: PHP Laravel Stack"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -220,110 +167,78 @@ export default function CreateStackPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Label>Cor da Stack</Label>
+              <div className="flex items-center gap-4">
+                {/* Ícone da Tecnologia */}
+                <div className="space-y-2">
+                  <Label>Ícone da Stack</Label>
+                  <div
+                    className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg"
+                    style={{ backgroundColor: formData.color }}
+                  >
+                    {formData.name.slice(0, 2).toUpperCase() || '??'}
+                  </div>
+                </div>
+
+                {/* Seletor de Cor */}
+                <div className="flex-1 space-y-2">
+                  <Label>Cor Personalizada</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={formData.color}
+                      onChange={(e) => handleInputChange('color', e.target.value)}
+                      className="w-20 h-12 p-1 cursor-pointer"
+                    />
+                    <Input
+                      type="text"
+                      value={formData.color}
+                      onChange={(e) => handleInputChange('color', e.target.value)}
+                      placeholder="#3B82F6"
+                      className="flex-1 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cores Sugeridas */}
+              <div className="space-y-2">
+                <Label>Cores Sugeridas</Label>
                 <div className="flex flex-wrap gap-3">
                   {TECHNOLOGY_COLORS.map((tech) => (
                     <button
                       key={tech.color}
                       type="button"
                       onClick={() => handleInputChange('color', tech.color)}
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-sm transition-transform ${
-                        formData.color === tech.color ? 'ring-2 ring-blue-500 scale-110' : 'hover:scale-105'
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-sm transition-all ${
+                        formData.color === tech.color ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : 'hover:scale-105 opacity-80 hover:opacity-100'
                       }`}
                       style={{ backgroundColor: tech.color }}
+                      title={tech.name}
                     >
                       {tech.name.slice(0, 2).toUpperCase()}
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="color"
-                    value={formData.color}
-                    onChange={(e) => handleInputChange('color', e.target.value)}
-                    className="w-16 h-10 p-1"
-                  />
-                  <span className="text-sm text-muted-foreground">Ou escolha uma cor personalizada</span>
-                </div>
               </div>
 
               {/* Preview */}
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground mb-2">Prévia:</p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: formData.color }}
-                  >
-                    {formData.technology.slice(0, 2).toUpperCase() || '??'}
-                  </div>
-                  <div>
-                    <h4 className="font-medium">{formData.name || 'Nome da Stack'}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {formData.technology || 'Tecnologia'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tags */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5 text-green-500" />
-                Tags
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="tags">Adicionar Tags</Label>
-                <Input
-                  id="tags"
-                  placeholder="Digite uma tag e pressione Enter ou vírgula"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleAddTag}
-                />
-              </div>
-
-              {/* Current Tags */}
-              {tags.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Tags Adicionadas</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
-                      <Badge key={tag} variant="default" className="flex items-center gap-1">
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTag(tag)}
-                          className="ml-1 hover:bg-red-500 rounded-full p-1"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Suggested Tags */}
-              <div className="space-y-2">
-                <Label>Tags Sugeridas</Label>
-                <div className="flex flex-wrap gap-2">
-                  {SUGGESTED_TAGS.filter(tag => !tags.includes(tag)).map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => handleSuggestedTag(tag)}
+              <div className="p-4 bg-muted rounded-lg border-2 border-dashed">
+                <p className="text-sm font-medium text-muted-foreground mb-3">Prévia do Card:</p>
+                <div className="bg-card p-4 rounded-lg shadow-sm border">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: formData.color }}
                     >
-                      + {tag}
-                    </Badge>
-                  ))}
+                      {formData.name.slice(0, 2).toUpperCase() || '??'}
+                    </div>
+                    <div>
+                      <h4 className="font-medium">{formData.name || 'Nome da Stack'}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {formData.description || 'Descrição da stack'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

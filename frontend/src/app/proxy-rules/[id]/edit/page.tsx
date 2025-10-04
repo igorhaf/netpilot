@@ -143,36 +143,6 @@ export default function EditProxyRulePage() {
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleBack}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                <Route className="h-8 w-8 text-blue-500" />
-                Editar Regra de Proxy
-                {proxyRule.isLocked && (
-                  <span className="text-red-500 text-sm flex items-center gap-1">
-                    <Lock className="h-4 w-4" />
-                    TRAVADA
-                  </span>
-                )}
-              </h1>
-              <p className="text-muted-foreground">
-                {proxyRule.isLocked
-                  ? 'Esta regra está travada. Apenas o travamento pode ser alterado.'
-                  : 'Edite as configurações da regra de proxy reverso'
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Configurações de Travamento */}
           <Card>

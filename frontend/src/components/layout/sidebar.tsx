@@ -19,7 +19,8 @@ import {
   Menu,
   Network,
   ChevronRight,
-  Server
+  Server,
+  Database
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -92,9 +93,9 @@ const navigationItems: MenuItem[] = [
         icon: Terminal
       },
       {
-        name: 'Terminal',
-        href: '/terminal',
-        icon: Terminal
+        name: 'Banco de Dados',
+        href: '/database',
+        icon: Database
       }
     ]
   },

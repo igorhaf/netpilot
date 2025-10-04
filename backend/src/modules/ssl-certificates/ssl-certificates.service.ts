@@ -143,12 +143,23 @@ export class SslCertificatesService {
 
   async update(id: string, updateSslCertificateDto: UpdateSslCertificateDto): Promise<SslCertificate> {
     const certificate = await this.findOne(id);
+
+    // Prevent updating locked certificates
+    if (certificate.isLocked) {
+      throw new BadRequestException('Não é possível atualizar um certificado travado');
+    }
+
     Object.assign(certificate, updateSslCertificateDto);
     return await this.sslCertificateRepository.save(certificate);
   }
 
   async remove(id: string): Promise<void> {
     const certificate = await this.findOne(id);
+
+    // Prevent removing locked certificates
+    if (certificate.isLocked) {
+      throw new BadRequestException('Não é possível remover um certificado travado');
+    }
 
     // Delete certificate files from disk
     await this.deleteCertificateFiles(certificate);
@@ -194,6 +205,11 @@ export class SslCertificatesService {
 
   async renewCertificate(id: string): Promise<{ success: boolean; message: string }> {
     const certificate = await this.findOne(id);
+
+    // Prevent renewing locked certificates
+    if (certificate.isLocked) {
+      throw new BadRequestException('Não é possível renovar um certificado travado');
+    }
 
     try {
       this.logger.log(`🔄 Solicitando renovação de certificado SSL ao Python service para ${certificate.primaryDomain}`);

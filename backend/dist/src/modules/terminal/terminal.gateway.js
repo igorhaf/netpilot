@@ -31,7 +31,7 @@ let TerminalGateway = TerminalGateway_1 = class TerminalGateway {
         this.logger.log('[Terminal] Gateway initialized');
         this.terminalService.on('output', (output) => {
             this.logger.log(`[Terminal] Broadcasting: ${output.type} - ${output.data.substring(0, 50)}`);
-            this.server.sockets.emit('commandOutput', output);
+            this.server.emit('commandOutput', output);
         });
     }
     handleConnection(client) {

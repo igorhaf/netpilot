@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, KeyboardEvent } from 'react'
-import { Terminal, Wifi, WifiOff, History, Command, Lightbulb } from 'lucide-react'
+import { Send, Terminal as TerminalIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { useProjectTerminal } from '@/hooks/useProjectTerminal'
 
 interface ProjectTerminalProps {
@@ -9,279 +11,218 @@ interface ProjectTerminalProps {
   projectAlias: string
 }
 
+// Converter códigos ANSI para classes CSS
+const parseAnsiColors = (text: string): JSX.Element[] => {
+  const ansiRegex = /\x1b\[([0-9;]+)m/g
+  const parts: JSX.Element[] = []
+  let lastIndex = 0
+  let currentClasses: string[] = []
+
+  const colorMap: { [key: string]: string } = {
+    '30': 'text-gray-800',
+    '31': 'text-red-400',
+    '32': 'text-green-400',
+    '33': 'text-yellow-300',
+    '34': 'text-blue-400',
+    '35': 'text-purple-400',
+    '36': 'text-cyan-400',
+    '37': 'text-gray-300',
+    '90': 'text-gray-600',
+    '91': 'text-red-300',
+    '92': 'text-green-300',
+    '93': 'text-yellow-200',
+    '94': 'text-blue-300',
+    '95': 'text-purple-300',
+    '96': 'text-cyan-300',
+    '97': 'text-white',
+    '1': 'font-bold',
+    '2': 'opacity-60',
+    '3': 'italic',
+    '4': 'underline',
+  }
+
+  let match
+  while ((match = ansiRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      const textPart = text.slice(lastIndex, match.index)
+      parts.push(
+        <span key={lastIndex} className={currentClasses.length > 0 ? currentClasses.join(' ') : 'text-gray-200'}>
+          {textPart}
+        </span>
+      )
+    }
+
+    const codes = match[1].split(';')
+    if (codes.includes('0')) {
+      currentClasses = []
+    } else {
+      codes.forEach(code => {
+        if (colorMap[code]) {
+          currentClasses.push(colorMap[code])
+        }
+      })
+    }
+
+    lastIndex = ansiRegex.lastIndex
+  }
+
+  if (lastIndex < text.length) {
+    const textPart = text.slice(lastIndex)
+    parts.push(
+      <span key={lastIndex} className={currentClasses.length > 0 ? currentClasses.join(' ') : 'text-gray-200'}>
+        {textPart}
+      </span>
+    )
+  }
+
+  return parts.length > 0 ? parts : [<span key="0" className="text-gray-200">{text}</span>]
+}
+
 export function ProjectTerminal({ projectId, projectAlias }: ProjectTerminalProps) {
   const [command, setCommand] = useState('')
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [selectedSuggestion, setSelectedSuggestion] = useState(0)
-  const [showHistory, setShowHistory] = useState(false)
-
+  const [currentLine, setCurrentLine] = useState('')
+  const [cursorPosition, setCursorPosition] = useState(0)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const {
     isConnected,
     terminalOutput,
-    commandHistory,
-    currentPath,
     isExecuting,
-    suggestions,
     executeCommand,
     navigateHistory,
-    getAutocompleteSuggestions,
-    clearTerminal,
-    getPrompt
   } = useProjectTerminal({ projectId, projectAlias })
 
-  // Auto-scroll para baixo quando novo output chegar
   useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [terminalOutput])
 
-  // Focar no input quando componente montar
+  // Focus no terminal quando clicar
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus()
+    const handleClick = () => {
+      terminalRef.current?.focus()
     }
+    const terminal = terminalRef.current?.parentElement
+    terminal?.addEventListener('click', handleClick)
+    return () => terminal?.removeEventListener('click', handleClick)
   }, [])
 
-  // Handle key events
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleTerminalKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!isConnected || isExecuting) return
+
     if (e.key === 'Enter') {
       e.preventDefault()
-      if (showSuggestions && suggestions.length > 0) {
-        setCommand(suggestions[selectedSuggestion])
-        setShowSuggestions(false)
-        setSelectedSuggestion(0)
-      } else {
-        executeCommand(command)
-        setCommand('')
-        setShowSuggestions(false)
+      if (currentLine.trim()) {
+        executeCommand(currentLine)
+        setCurrentLine('')
+        setCursorPosition(0)
       }
+    } else if (e.key === 'Backspace') {
+      e.preventDefault()
+      if (cursorPosition > 0) {
+        setCurrentLine(prev => prev.slice(0, cursorPosition - 1) + prev.slice(cursorPosition))
+        setCursorPosition(prev => prev - 1)
+      }
+    } else if (e.key === 'Delete') {
+      e.preventDefault()
+      if (cursorPosition < currentLine.length) {
+        setCurrentLine(prev => prev.slice(0, cursorPosition) + prev.slice(cursorPosition + 1))
+      }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      setCursorPosition(prev => Math.max(0, prev - 1))
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      setCursorPosition(prev => Math.min(currentLine.length, prev + 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      if (showSuggestions) {
-        setSelectedSuggestion(Math.max(0, selectedSuggestion - 1))
-      } else if (showHistory) {
-        // Navigate command history
-        const historyCommand = navigateHistory('up')
-        if (historyCommand) {
-          setCommand(historyCommand)
-        }
-      } else {
-        const historyCommand = navigateHistory('up')
-        if (historyCommand) {
-          setCommand(historyCommand)
-        }
+      const historyCommand = navigateHistory('up')
+      if (historyCommand) {
+        setCurrentLine(historyCommand)
+        setCursorPosition(historyCommand.length)
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
-      if (showSuggestions) {
-        setSelectedSuggestion(Math.min(suggestions.length - 1, selectedSuggestion + 1))
-      } else {
-        const historyCommand = navigateHistory('down')
-        setCommand(historyCommand)
+      const historyCommand = navigateHistory('down')
+      if (historyCommand) {
+        setCurrentLine(historyCommand)
+        setCursorPosition(historyCommand.length)
       }
-    } else if (e.key === 'Tab') {
+    } else if (e.key === 'Home') {
       e.preventDefault()
-      if (suggestions.length > 0) {
-        setCommand(suggestions[0])
-        setShowSuggestions(false)
-      }
-    } else if (e.key === 'Escape') {
-      setShowSuggestions(false)
-      setShowHistory(false)
-    } else if (e.ctrlKey && e.key === 'c') {
+      setCursorPosition(0)
+    } else if (e.key === 'End') {
       e.preventDefault()
-      setCommand('')
-      setShowSuggestions(false)
-    } else if (e.ctrlKey && e.key === 'l') {
+      setCursorPosition(currentLine.length)
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault()
-      clearTerminal()
+      setCurrentLine(prev => prev.slice(0, cursorPosition) + e.key + prev.slice(cursorPosition))
+      setCursorPosition(prev => prev + 1)
     }
   }
 
-  // Handle input change
-  const handleInputChange = (value: string) => {
-    setCommand(value)
-
-    if (value.trim()) {
-      const suggestions = getAutocompleteSuggestions(value.trim())
-      setShowSuggestions(suggestions.length > 0)
-      setSelectedSuggestion(0)
-    } else {
-      setShowSuggestions(false)
-    }
-  }
-
-  // Execute command
-  const handleExecuteCommand = () => {
-    if (command.trim()) {
-      executeCommand(command)
-      setCommand('')
-      setShowSuggestions(false)
-    }
+  const handleSendCommand = () => {
+    if (!command.trim() || !isConnected) return
+    executeCommand(command)
+    setCommand('')
   }
 
   return (
-    <div className="space-y-4">
-      {/* Status Header */}
-      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {isConnected ? (
-              <Wifi className="h-4 w-4 text-green-500" />
-            ) : (
-              <WifiOff className="h-4 w-4 text-red-500" />
-            )}
-            <span className="text-sm font-medium">
-              {isConnected ? `Conectado ao projeto ${projectAlias}` : 'Desconectado'}
+    <div className="h-[calc(100vh-180px)]">
+      <Card className="h-full flex flex-col">
+        <CardContent
+          className="flex-1 overflow-y-auto p-6 space-y-1 bg-gray-950 font-mono text-sm cursor-text"
+          ref={terminalRef}
+          tabIndex={0}
+          onKeyDown={handleTerminalKeyDown}
+        >
+          {terminalOutput.map((line, idx) => (
+            <div key={idx} className="whitespace-pre-wrap break-words leading-relaxed">
+              {parseAnsiColors(line)}
+            </div>
+          ))}
+
+          {/* Prompt atual */}
+          <div className="flex items-center">
+            <span className="text-emerald-400 font-bold">{projectAlias}</span>
+            <span className="text-gray-500">@</span>
+            <span className="text-sky-400 font-bold">netpilot</span>
+            <span className="text-gray-500">:</span>
+            <span className="text-blue-400">~</span>
+            <span className="text-purple-400 font-bold">$&nbsp;</span>
+            <span className="flex-1 text-gray-200">
+              {currentLine.slice(0, cursorPosition)}
+              <span className="bg-gray-200 text-gray-950">
+                {cursorPosition < currentLine.length ? currentLine[cursorPosition] : ' '}
+              </span>
+              {currentLine.slice(cursorPosition + 1)}
             </span>
           </div>
-          <Badge variant="secondary">{currentPath}</Badge>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowHistory(!showHistory)}
-            className="flex items-center gap-1"
-          >
-            <History className="h-3 w-3" />
-            Histórico ({commandHistory.length})
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearTerminal}
-            className="flex items-center gap-1"
-          >
-            <Command className="h-3 w-3" />
-            Limpar
-          </Button>
-        </div>
-      </div>
+          <div ref={messagesEndRef} />
+        </CardContent>
 
-      {/* History Panel */}
-      {showHistory && (
-        <div className="p-3 bg-muted/30 rounded-lg border">
-          <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Histórico de Comandos
-          </h4>
-          <div className="max-h-32 overflow-y-auto space-y-1">
-            {commandHistory.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Nenhum comando executado ainda</p>
-            ) : (
-              commandHistory.slice(-10).map((cmd, index) => (
-                <div
-                  key={cmd.id}
-                  className="text-xs font-mono p-2 bg-background rounded cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => {
-                    setCommand(cmd.command)
-                    setShowHistory(false)
-                  }}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-foreground">{cmd.command}</span>
-                    <span className="text-muted-foreground">
-                      {cmd.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
+        <div className="p-2 border-t">
+          <div className="flex gap-2 items-end">
+            <Textarea
+              placeholder="Campo reservado para uso futuro..."
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              className="min-h-[36px] max-h-[120px] resize-none py-2 font-mono"
+              rows={1}
+              disabled={true}
+            />
+            <Button
+              onClick={handleSendCommand}
+              size="sm"
+              className="h-9 w-9 flex-shrink-0 p-0"
+              disabled={true}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      )}
-
-      {/* Terminal Output */}
-      <div
-        ref={terminalRef}
-        className="bg-black rounded-lg p-4 font-mono text-sm h-96 overflow-y-auto relative"
-      >
-        {terminalOutput.map((line, index) => (
-          <div key={index} className="text-green-400 mb-1 whitespace-pre-wrap">
-            {line}
-          </div>
-        ))}
-
-        {/* Current prompt line */}
-        <div className="flex items-center text-green-400">
-          <span className="text-blue-400">{getPrompt()}&nbsp;</span>
-          {isExecuting && (
-            <div className="w-2 h-4 bg-green-400 animate-pulse"></div>
-          )}
-        </div>
-      </div>
-
-      {/* Command Input Area */}
-      <div className="space-y-2">
-        {/* Suggestions */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="p-2 bg-muted/50 rounded-lg border">
-            <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="h-3 w-3 text-yellow-500" />
-              <span className="text-xs font-medium">Sugestões (Tab para completar)</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1 max-h-20 overflow-y-auto">
-              {suggestions.slice(0, 12).map((suggestion, index) => (
-                <button
-                  key={suggestion}
-                  className={`text-xs p-1 rounded font-mono text-left transition-colors ${
-                    index === selectedSuggestion
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background hover:bg-muted'
-                  }`}
-                  onClick={() => {
-                    setCommand(suggestion)
-                    setShowSuggestions(false)
-                    inputRef.current?.focus()
-                  }}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Input */}
-        <div className="flex gap-2">
-          <div className="flex items-center bg-black text-green-400 px-3 py-2 rounded font-mono text-sm">
-            {getPrompt()}
-          </div>
-          <input
-            ref={inputRef}
-            type="text"
-            value={command}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={isConnected ? "Digite um comando..." : "Aguarde conexão..."}
-            className="flex-1 px-3 py-2 bg-input border border-border rounded font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            disabled={!isConnected || isExecuting}
-          />
-          <Button
-            onClick={handleExecuteCommand}
-            disabled={!command.trim() || !isConnected || isExecuting}
-            variant="secondary"
-            className="px-4"
-          >
-            {isExecuting ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-            ) : (
-              'Executar'
-            )}
-          </Button>
-        </div>
-
-        {/* Keyboard shortcuts help */}
-        <div className="text-xs text-muted-foreground">
-          <span className="font-medium">Atalhos:</span> ↑/↓ Histórico • Tab Autocomplete • Ctrl+L Limpar • Ctrl+C Cancelar • Enter Executar
-        </div>
-      </div>
+      </Card>
     </div>
   )
 }

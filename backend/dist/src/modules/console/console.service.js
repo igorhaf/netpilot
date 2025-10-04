@@ -22,12 +22,17 @@ const rxjs_1 = require("rxjs");
 const crypto = require("crypto");
 const ssh_session_entity_1 = require("../../entities/ssh-session.entity");
 const console_log_entity_1 = require("../../entities/console-log.entity");
+const user_entity_1 = require("../../entities/user.entity");
+const logs_service_1 = require("../logs/logs.service");
+const log_entity_1 = require("../../entities/log.entity");
 let ConsoleService = class ConsoleService {
-    constructor(sshSessionRepository, consoleLogRepository, httpService, configService) {
+    constructor(sshSessionRepository, consoleLogRepository, userRepository, httpService, configService, logsService) {
         this.sshSessionRepository = sshSessionRepository;
         this.consoleLogRepository = consoleLogRepository;
+        this.userRepository = userRepository;
         this.httpService = httpService;
         this.configService = configService;
+        this.logsService = logsService;
         this.systemOpsUrl = this.configService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
         this.systemOpsToken = this.configService.get('SYSTEM_OPS_TOKEN', 'netpilot-internal-token');
     }
@@ -116,6 +121,7 @@ let ConsoleService = class ConsoleService {
             }));
             const result = response.data;
             await this.sshSessionRepository.increment({ id: executeDto.sessionId }, 'commandCount', 1);
+            const user = await this.userRepository.findOne({ where: { id: userId } });
             const consoleLog = this.consoleLogRepository.create({
                 command: result.command,
                 output: result.output,
@@ -130,6 +136,24 @@ let ConsoleService = class ConsoleService {
                 executedAt: new Date(result.executedAt)
             });
             const savedLog = await this.consoleLogRepository.save(consoleLog);
+            const logAction = `SSH Console: ${result.command.substring(0, 100)}${result.command.length > 100 ? '...' : ''}`;
+            const logMessage = `Comando executado por ${user?.email || userId} via Console SSH | Exit Code: ${result.exitCode} | ${result.executionTimeMs}ms`;
+            const logDetails = JSON.stringify({
+                userId: userId,
+                userEmail: user?.email,
+                userRole: user?.role,
+                sessionId: executeDto.sessionId,
+                command: result.command,
+                workingDirectory: result.workingDirectory || '~',
+                exitCode: result.exitCode,
+                success: result.success,
+                executionTime: result.executionTimeMs,
+                executedAt: result.executedAt,
+                output: result.output?.substring(0, 500),
+                errorOutput: result.errorOutput?.substring(0, 500)
+            }, null, 2);
+            const auditLog = await this.logsService.createLog(log_entity_1.LogType.SYSTEM, logAction, logMessage, logDetails);
+            await this.logsService.updateLogStatus(auditLog.id, result.success ? log_entity_1.LogStatus.SUCCESS : log_entity_1.LogStatus.FAILED);
             return savedLog;
         }
         catch (error) {
@@ -433,9 +457,12 @@ exports.ConsoleService = ConsoleService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(ssh_session_entity_1.SshSession)),
     __param(1, (0, typeorm_1.InjectRepository)(console_log_entity_1.ConsoleLog)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
+        typeorm_2.Repository,
         axios_1.HttpService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        logs_service_1.LogsService])
 ], ConsoleService);
 //# sourceMappingURL=console.service.js.map

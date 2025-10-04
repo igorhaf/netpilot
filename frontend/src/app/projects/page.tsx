@@ -30,17 +30,10 @@ export default function ProjectsPage() {
     enabled: !!auth,
   })
 
-  const { data: stats } = useQuery({
-    queryKey: ['projects-stats'],
-    queryFn: () => api.get('/projects/stats').then(res => res.data),
-    enabled: !!auth,
-  })
-
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/projects/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
-      queryClient.invalidateQueries({ queryKey: ['projects-stats'] })
       toast({
         title: 'Sucesso',
         description: 'Projeto removido com sucesso!'
@@ -85,56 +78,6 @@ export default function ProjectsPage() {
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Stats */}
-        {stats && (
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total</p>
-                    <p className="text-2xl font-bold">{stats.total}</p>
-                  </div>
-                  <FolderOpen className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Ativos</p>
-                    <p className="text-2xl font-bold">{stats.active}</p>
-                  </div>
-                  <FolderOpen className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Domínios</p>
-                    <p className="text-2xl font-bold">{stats.totalDomains}</p>
-                  </div>
-                  <Globe className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Média Domínios</p>
-                    <p className="text-2xl font-bold">{stats.avgDomainsPerProject}</p>
-                  </div>
-                  <Settings className="h-8 w-8 text-purple-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Search */}
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

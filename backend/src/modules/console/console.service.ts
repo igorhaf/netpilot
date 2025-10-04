@@ -7,7 +7,10 @@ import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
 import { SshSession } from '../../entities/ssh-session.entity';
 import { ConsoleLog } from '../../entities/console-log.entity';
+import { User } from '../../entities/user.entity';
 import { CreateSshSessionDto, UpdateSshSessionDto, ExecuteCommandDto } from '../../dtos/ssh-session.dto';
+import { LogsService } from '../logs/logs.service';
+import { LogType, LogStatus } from '../../entities/log.entity';
 
 @Injectable()
 export class ConsoleService implements OnModuleInit {
@@ -19,8 +22,11 @@ export class ConsoleService implements OnModuleInit {
         private readonly sshSessionRepository: Repository<SshSession>,
         @InjectRepository(ConsoleLog)
         private readonly consoleLogRepository: Repository<ConsoleLog>,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
+        private readonly logsService: LogsService,
     ) {
         // URL do microserviço Python
         this.systemOpsUrl = this.configService.get('SYSTEM_OPS_URL', 'http://localhost:8001');
@@ -156,6 +162,9 @@ export class ConsoleService implements OnModuleInit {
                 1
             );
 
+            // Buscar informações do usuário para auditoria
+            const user = await this.userRepository.findOne({ where: { id: userId } });
+
             // Salvar log da execução no banco local
             const consoleLog = this.consoleLogRepository.create({
                 command: result.command,
@@ -172,6 +181,37 @@ export class ConsoleService implements OnModuleInit {
             });
 
             const savedLog = await this.consoleLogRepository.save(consoleLog);
+
+            // Registrar no sistema de logs principal para auditoria
+            const logAction = `SSH Console: ${result.command.substring(0, 100)}${result.command.length > 100 ? '...' : ''}`;
+            const logMessage = `Comando executado por ${user?.email || userId} via Console SSH | Exit Code: ${result.exitCode} | ${result.executionTimeMs}ms`;
+            const logDetails = JSON.stringify({
+                userId: userId,
+                userEmail: user?.email,
+                userRole: user?.role,
+                sessionId: executeDto.sessionId,
+                command: result.command,
+                workingDirectory: result.workingDirectory || '~',
+                exitCode: result.exitCode,
+                success: result.success,
+                executionTime: result.executionTimeMs,
+                executedAt: result.executedAt,
+                output: result.output?.substring(0, 500), // Primeiros 500 chars do output
+                errorOutput: result.errorOutput?.substring(0, 500)
+            }, null, 2);
+
+            const auditLog = await this.logsService.createLog(
+                LogType.SYSTEM,
+                logAction,
+                logMessage,
+                logDetails
+            );
+
+            // Atualizar status do log baseado no resultado
+            await this.logsService.updateLogStatus(
+                auditLog.id,
+                result.success ? LogStatus.SUCCESS : LogStatus.FAILED
+            );
 
             return savedLog;
 

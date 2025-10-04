@@ -33,7 +33,7 @@ export default function DashboardPage() {
 
   const { data: recentLogs, isLoading: logsLoading, error: logsError } = useQuery<Log[]>({
     queryKey: ['dashboard-recent-logs'],
-    queryFn: () => api.get('/dashboard/recent-logs?limit=4').then(res => res.data),
+    queryFn: () => api.get('/dashboard/recent-logs?limit=6').then(res => res.data),
     retry: 1,
     refetchInterval: 5000, // Auto-refresh a cada 5 segundos
     refetchOnMount: true,
@@ -53,16 +53,16 @@ export default function DashboardPage() {
   }
 
   const SystemStatusCard = ({ name, status, uptime }: any) => (
-    <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-muted/50">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+      <div className="flex items-center gap-2">
         <div className={`h-2 w-2 rounded-full ${status === 'online' ? 'bg-green-400' : 'bg-red-400'}`} />
-        <span className="font-medium">{name}</span>
+        <span className="text-sm font-medium">{name}</span>
       </div>
       <div className="text-right">
-        <Badge variant={status === 'online' ? "default" : "destructive"}>
+        <Badge variant={status === 'online' ? "default" : "destructive"} className="text-xs">
           {status === 'online' ? 'Online' : 'Offline'}
         </Badge>
-        <p className="text-xs text-muted-foreground mt-1">{uptime}</p>
+        {uptime && <p className="text-xs text-muted-foreground mt-0.5">{uptime}</p>}
       </div>
     </div>
   )
@@ -70,66 +70,6 @@ export default function DashboardPage() {
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Domínios Ativos</p>
-                  <p className="text-2xl font-bold">{stats?.domains.active || 0}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {stats?.domains.total || 0} total
-                  </p>
-                </div>
-                <Globe className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Regras de Proxy</p>
-                  <p className="text-2xl font-bold">{stats?.proxyRules.active || 0}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {stats?.proxyRules.total || 0} total
-                  </p>
-                </div>
-                <ArrowRight className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Certificados Válidos</p>
-                  <p className="text-2xl font-bold">{stats?.sslCertificates.valid || 0}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {stats?.sslCertificates.expiring || 0} expirando
-                  </p>
-                </div>
-                <Shield className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Logs Sucesso</p>
-                  <p className="text-2xl font-bold">{stats?.logs.success || 0}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {stats?.logs.failed || 0} falhas
-                  </p>
-                </div>
-                <FileText className="h-8 w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Jobs Statistics */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Jobs</h2>
@@ -145,7 +85,7 @@ export default function DashboardPage() {
                 Status do Sistema
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               <SystemStatusCard
                 name="Nginx"
                 status={stats?.systemStatus.nginx.status}
@@ -160,6 +100,16 @@ export default function DashboardPage() {
                 name="Database"
                 status={stats?.systemStatus.database.status}
                 uptime={stats?.systemStatus.database.uptime}
+              />
+              <SystemStatusCard
+                name="WebSocket"
+                status={(stats?.systemStatus as any)?.websocket?.status || 'online'}
+                uptime={(stats?.systemStatus as any)?.websocket?.uptime}
+              />
+              <SystemStatusCard
+                name="Docker"
+                status={(stats?.systemStatus as any)?.docker?.status || 'online'}
+                uptime={(stats?.systemStatus as any)?.docker?.uptime}
               />
             </CardContent>
           </Card>

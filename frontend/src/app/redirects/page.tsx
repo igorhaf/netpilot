@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Search, RotateCcw, ArrowRight, Edit3, Trash2, ExternalLink, Filter, Lock, Unlock } from 'lucide-react'
+import { Plus, Search, RotateCcw, ArrowRight, Edit3, Trash2, ExternalLink, Lock, Unlock } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { MainLayout } from '@/components/layout/main-layout'
@@ -120,75 +120,16 @@ export default function RedirectsPage() {
   return (
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-6">
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Pesquisar redirecionamentos..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtros
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total de Redirecionamentos</p>
-                  <p className="text-2xl font-bold">{filteredRedirects.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Ativos</p>
-                  <p className="text-2xl font-bold">
-                    {filteredRedirects.filter(r => r.isActive).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Permanentes (301)</p>
-                  <p className="text-2xl font-bold">
-                    {filteredRedirects.filter(r => r.type === 'permanent').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Temporários (302)</p>
-                  <p className="text-2xl font-bold">
-                    {filteredRedirects.filter(r => r.type === 'temporary').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Search */}
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar redirecionamentos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         {/* Redirects List */}

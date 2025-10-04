@@ -21,6 +21,7 @@ import { SeedModule } from './seeds/seed.module';
 import { ConfigModule } from './modules/config/config.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { StacksModule } from './modules/stacks/stacks.module';
+import { DatabaseModule } from './modules/database/database.module';
 import { User } from './entities/user.entity';
 import { Project } from './entities/project.entity';
 import { Domain } from './entities/domain.entity';
@@ -91,6 +92,7 @@ import { Stack } from './entities/stack.entity';
     SeedModule,
     SettingsModule,
     StacksModule,
+    DatabaseModule,
   ],
   // No custom controllers in AppModule
 })

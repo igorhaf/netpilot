@@ -4,15 +4,19 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { SshSession } from '../../entities/ssh-session.entity';
 import { ConsoleLog } from '../../entities/console-log.entity';
+import { User } from '../../entities/user.entity';
 import { CreateSshSessionDto, UpdateSshSessionDto, ExecuteCommandDto } from '../../dtos/ssh-session.dto';
+import { LogsService } from '../logs/logs.service';
 export declare class ConsoleService implements OnModuleInit {
     private readonly sshSessionRepository;
     private readonly consoleLogRepository;
+    private readonly userRepository;
     private readonly httpService;
     private readonly configService;
+    private readonly logsService;
     private readonly systemOpsUrl;
     private readonly systemOpsToken;
-    constructor(sshSessionRepository: Repository<SshSession>, consoleLogRepository: Repository<ConsoleLog>, httpService: HttpService, configService: ConfigService);
+    constructor(sshSessionRepository: Repository<SshSession>, consoleLogRepository: Repository<ConsoleLog>, userRepository: Repository<User>, httpService: HttpService, configService: ConfigService, logsService: LogsService);
     onModuleInit(): Promise<void>;
     connectToSession(userId: string, sessionId: string): Promise<{
         success: boolean;

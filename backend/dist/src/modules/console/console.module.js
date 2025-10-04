@@ -17,14 +17,17 @@ const console_controller_1 = require("./console.controller");
 const console_gateway_1 = require("./console.gateway");
 const ssh_session_entity_1 = require("../../entities/ssh-session.entity");
 const console_log_entity_1 = require("../../entities/console-log.entity");
+const user_entity_1 = require("../../entities/user.entity");
+const logs_module_1 = require("../logs/logs.module");
 let ConsoleModule = class ConsoleModule {
 };
 exports.ConsoleModule = ConsoleModule;
 exports.ConsoleModule = ConsoleModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog]),
+            typeorm_1.TypeOrmModule.forFeature([ssh_session_entity_1.SshSession, console_log_entity_1.ConsoleLog, user_entity_1.User]),
             axios_1.HttpModule,
+            logs_module_1.LogsModule,
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: (configService) => ({

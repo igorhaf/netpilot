@@ -57,7 +57,7 @@ export class TerminalGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     this.terminalService.on('output', (output: CommandOutput) => {
       this.logger.log(`[Terminal] Broadcasting: ${output.type} - ${output.data.substring(0, 50)}`);
       // Emitir para todos os sockets do namespace
-      this.server.sockets.emit('commandOutput', output);
+      this.server.emit('commandOutput', output);
     });
   }
 

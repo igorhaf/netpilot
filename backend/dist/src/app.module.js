@@ -30,6 +30,7 @@ const seed_module_1 = require("./seeds/seed.module");
 const config_module_1 = require("./modules/config/config.module");
 const settings_module_1 = require("./modules/settings/settings.module");
 const stacks_module_1 = require("./modules/stacks/stacks.module");
+const database_module_1 = require("./modules/database/database.module");
 const user_entity_1 = require("./entities/user.entity");
 const project_entity_1 = require("./entities/project.entity");
 const domain_entity_1 = require("./entities/domain.entity");
@@ -102,6 +103,7 @@ exports.AppModule = AppModule = __decorate([
             seed_module_1.SeedModule,
             settings_module_1.SettingsModule,
             stacks_module_1.StacksModule,
+            database_module_1.DatabaseModule,
         ],
     })
 ], AppModule);

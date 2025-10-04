@@ -116,11 +116,17 @@ let SslCertificatesService = SslCertificatesService_1 = class SslCertificatesSer
     }
     async update(id, updateSslCertificateDto) {
         const certificate = await this.findOne(id);
+        if (certificate.isLocked) {
+            throw new common_1.BadRequestException('Não é possível atualizar um certificado travado');
+        }
         Object.assign(certificate, updateSslCertificateDto);
         return await this.sslCertificateRepository.save(certificate);
     }
     async remove(id) {
         const certificate = await this.findOne(id);
+        if (certificate.isLocked) {
+            throw new common_1.BadRequestException('Não é possível remover um certificado travado');
+        }
         await this.deleteCertificateFiles(certificate);
         await this.sslCertificateRepository.remove(certificate);
     }
@@ -157,6 +163,9 @@ let SslCertificatesService = SslCertificatesService_1 = class SslCertificatesSer
     }
     async renewCertificate(id) {
         const certificate = await this.findOne(id);
+        if (certificate.isLocked) {
+            throw new common_1.BadRequestException('Não é possível renovar um certificado travado');
+        }
         try {
             this.logger.log(`🔄 Solicitando renovação de certificado SSL ao Python service para ${certificate.primaryDomain}`);
             certificate.status = ssl_certificate_entity_1.CertificateStatus.PENDING;

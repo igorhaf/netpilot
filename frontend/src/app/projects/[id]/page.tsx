@@ -410,25 +410,6 @@ export default function ProjectDetailsPage() {
                     </p>
                   )}
                 </div>
-                <Separator />
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    Caminho do Projeto
-                  </label>
-                  <code className="bg-muted px-3 py-2 rounded text-sm block">
-                    /home/{project.alias}
-                  </code>
-                </div>
-                {project.cloned && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                      Caminho do Código
-                    </label>
-                    <code className="bg-muted px-3 py-2 rounded text-sm block">
-                      /home/{project.alias}/code
-                    </code>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -637,45 +618,6 @@ export default function ProjectDetailsPage() {
                 </CardContent>
               </Card>
 
-              {/* Informações Técnicas */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Informações Técnicas</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {project.technologies && project.technologies.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Tecnologias</label>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {project.technologies.map((tech: string) => (
-                          <Badge key={tech} variant="outline" className="flex items-center gap-1">
-                            <Tag className="h-3 w-3" />
-                            {tech}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <Separator />
-
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Criado em</label>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{formatDate(project.createdAt)}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Última atualização</label>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{formatDate(project.updatedAt)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Domínios Associados */}
@@ -737,20 +679,10 @@ export default function ProjectDetailsPage() {
 
         {activeTab === 'terminal' && (
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Terminal className="h-5 w-5 text-green-500" />
-                  Terminal do Projeto
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ProjectTerminal
-                  projectId={project.id}
-                  projectAlias={project.alias}
-                />
-              </CardContent>
-            </Card>
+            <ProjectTerminal
+              projectId={project.id}
+              projectAlias={project.alias}
+            />
           </div>
         )}
       </div>

@@ -30,16 +30,23 @@ export class TerminalService extends EventEmitter {
 
       this.logger.log(`[TerminalService] isDocker: ${isDocker}, user: ${options?.user}, command: ${command}`);
 
+      // Adicionar --color=always para comandos ls
+      if (command.match(/^\s*ls\s/)) {
+        if (!command.includes('--color')) {
+          fullCommand = command.replace(/^(\s*ls\s)/, '$1--color=always ');
+        }
+      }
+
       // Se um usuário foi especificado, executar comando como esse usuário
       if (options?.user) {
         let workDir = options.workingDir || `/home/${options.user}`;
-        const escapedCommand = command.replace(/"/g, '\\"').replace(/'/g, "\\'");
+        const escapedCommand = fullCommand.replace(/"/g, '\\"').replace(/'/g, "\\'");
 
         if (isDocker) {
           // Em ambiente Docker, o /home do host está montado em /host/home
           workDir = workDir.replace('/home', '/host/home');
           // Executar comando diretamente no workdir montado
-          fullCommand = `cd ${workDir} && ${command}`;
+          fullCommand = `cd ${workDir} && ${fullCommand}`;
           this.logger.log(`[TerminalService] Docker mode - executing: ${fullCommand}`);
         } else {
           // Fora do Docker, usar sudo normalmente
@@ -47,14 +54,21 @@ export class TerminalService extends EventEmitter {
           this.logger.log(`[TerminalService] Host mode - executing with sudo`);
         }
       } else {
-        this.logger.log(`[TerminalService] No user specified, executing directly: ${command}`);
+        this.logger.log(`[TerminalService] No user specified, executing directly: ${fullCommand}`);
       }
 
       // Spawn do processo
       const spawnOptions: any = {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
-        env: { ...process.env, FORCE_COLOR: '1' }, // Preservar cores ANSI
+        env: {
+          ...process.env,
+          FORCE_COLOR: '1',
+          COLORTERM: 'truecolor',
+          TERM: 'xterm-256color',
+          CLICOLOR: '1',
+          CLICOLOR_FORCE: '1'
+        }, // Preservar cores ANSI
       };
 
       // Se workingDir foi especificado e não estamos usando sudo, aplicar cwd
