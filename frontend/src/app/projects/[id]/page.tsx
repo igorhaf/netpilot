@@ -26,8 +26,7 @@ export default function ProjectDetailsPage() {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<any[]>([])
   const [copiedKey, setCopiedKey] = useState(false)
-  const [isRealtime, setIsRealtime] = useState(false)
-  const [isTerminalMode, setIsTerminalMode] = useState(true) // true = terminal, false = AI
+  const [isTerminalMode, setIsTerminalMode] = useState(false) // true = terminal, false = AI
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
@@ -37,45 +36,26 @@ export default function ProjectDetailsPage() {
     enabled: !!projectId
   })
 
-  // Query para buscar job executions (temporário até ChatController ser corrigido)
-  const { data: jobExecutions } = useQuery({
-    queryKey: ['project-jobs', projectId],
-    queryFn: () => api.get(`/job-executions?projectId=${projectId}`).then(res => res.data),
+  // Query para buscar mensagens do chat
+  const { data: chatMessages } = useQuery({
+    queryKey: ['chat-messages', projectId],
+    queryFn: () => api.get(`/chat/project/${projectId}?limit=100`).then(res => res.data),
     enabled: !!projectId && activeTab === 'chat',
-    refetchInterval: 5000,
+    refetchInterval: 3000, // Atualizar a cada 3 segundos
   })
 
-  // Atualizar messages baseado em jobExecutions
+  // Atualizar messages baseado em chatMessages
   useEffect(() => {
-    if (jobExecutions?.data && jobExecutions.data.length > 0) {
-      const allMessages: any[] = []
-
-      jobExecutions.data
-        .filter((job: any) => job.metadata?.type === 'ai-prompt')
-        .forEach((job: any) => {
-          // Adicionar mensagem do usuário
-          if (job.metadata?.userPrompt) {
-            allMessages.push({
-              role: 'user',
-              content: job.metadata.userPrompt,
-              timestamp: job.createdAt,
-            })
-          }
-
-          // Adicionar resposta do assistente
-          if (job.outputLog || job.errorLog) {
-            allMessages.push({
-              role: 'assistant',
-              content: job.outputLog || job.errorLog || 'Sem saída',
-              status: job.status,
-              timestamp: job.completedAt || job.createdAt,
-            })
-          }
-        })
-
-      setMessages(allMessages)
+    if (chatMessages && chatMessages.length > 0) {
+      const formattedMessages = chatMessages.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.createdAt,
+        status: msg.status,
+      }))
+      setMessages(formattedMessages)
     }
-  }, [jobExecutions])
+  }, [chatMessages])
 
   // Mutation para clonar repositório
   const cloneRepositoryMutation = useMutation({
@@ -129,33 +109,9 @@ export default function ProjectDetailsPage() {
     }
   }
 
-  // Mutation para criar job de prompt
+  // Mutation para enviar mensagem (AI ou Terminal)
   const sendPromptMutation = useMutation({
     mutationFn: async (promptMessage: string) => {
-      const timestamp = new Date().getTime()
-      const jobData = {
-        name: `AI Prompt - ${project.name} - ${timestamp}`,
-        description: `Prompt enviado pelo usuário: ${promptMessage.substring(0, 50)}...`,
-        scriptType: 'internal',
-        scriptPath: 'ai-prompt-handler',
-        isActive: true,
-        priority: 5,
-        environmentVars: {
-          PROJECT_ID: projectId,
-          PROJECT_NAME: project.name,
-          PROJECT_ALIAS: project.alias,
-          USER_PROMPT: promptMessage,
-          PROMPT_TEMPLATE: project.defaultPromptTemplate || '',
-          TIMESTAMP: new Date().toISOString()
-        },
-        metadata: {
-          type: 'ai-prompt',
-          projectId: projectId,
-          userPrompt: promptMessage,
-          executionMode: isRealtime ? 'realtime' : 'queue'
-        }
-      }
-
       // MODO TERMINAL: executar comando shell direto
       if (isTerminalMode) {
         const response = await api.post(`/projects/${projectId}/execute-command`, {
@@ -164,9 +120,7 @@ export default function ProjectDetailsPage() {
         return response.data
       }
 
-      // MODO AI
-      // Ambos (realtime e fila) usam o mesmo endpoint agora
-      // A diferença é apenas visual no frontend
+      // MODO AI: executar prompt com Claude Code
       const response = await api.post(`/projects/${projectId}/execute-prompt`, {
         prompt: promptMessage
       })
@@ -174,17 +128,14 @@ export default function ProjectDetailsPage() {
       return response.data
     },
     onSuccess: (data) => {
-      // Invalidar job executions para recarregar
-      queryClient.invalidateQueries({ queryKey: ['project-jobs', projectId] })
+      // Invalidar chat messages para recarregar
+      queryClient.invalidateQueries({ queryKey: ['chat-messages', projectId] })
 
-      toast.success(isRealtime
-        ? (data.success ? 'Executado com sucesso!' : 'Executado com erros')
-        : 'Executando prompt...'
-      )
+      toast.success(data.success ? 'Executado com sucesso!' : 'Executado com erros')
       setMessage('')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao enviar prompt')
+      toast.error(error.response?.data?.message || 'Erro ao enviar mensagem')
     },
   })
 
@@ -404,36 +355,6 @@ export default function ProjectDetailsPage() {
                   </div>
                 </div>
 
-                {/* Toggle Realtime/Queue - apenas para modo IA */}
-                {!isTerminalMode && (
-                  <div className="flex items-center justify-between px-2">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Modo de Execução IA
-                    </label>
-                    <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                      <button
-                        onClick={() => setIsRealtime(false)}
-                        className={`text-xs px-3 py-1 rounded transition-colors ${
-                          !isRealtime
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'hover:bg-muted-foreground/10'
-                        }`}
-                      >
-                        Fila
-                      </button>
-                      <button
-                        onClick={() => setIsRealtime(true)}
-                        className={`text-xs px-3 py-1 rounded transition-colors ${
-                          isRealtime
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'hover:bg-muted-foreground/10'
-                        }`}
-                      >
-                        Tempo Real
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 <div className="flex gap-2 items-end">
                   <Textarea

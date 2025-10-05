@@ -955,16 +955,6 @@ echo "🎉 Limpeza concluída para ${projectName}"
       const selectedAgent = 'bender';
 
       let output = '';
-      output += `╭─────────────────────────────────────────────╮\n`;
-      output += `│   🤖 Claude Code - ${selectedAgent.toUpperCase()}              │\n`;
-      output += `╰─────────────────────────────────────────────╯\n\n`;
-      output += `📁 Projeto: ${project.name}\n`;
-      output += `👤 Agente: ${selectedAgent}\n`;
-      output += `📂 Diretório: ${projectPath}\n\n`;
-
-      output += `🚀 Executando no diretório: ${projectPath}\n`;
-      output += `⚡ Executando com agente ${selectedAgent}...\n`;
-      output += `─────────────────────────────────────────────\n\n`;
 
       try {
         // Executar via API do FastAPI System Ops (roda no HOST)
@@ -982,12 +972,12 @@ echo "🎉 Limpeza concluída para ${projectName}"
 
         const result = response.data;
 
-        output += result.stdout || 'Sem saída';
-        if (result.stderr && result.stderr.trim()) {
-          output += `\n\n⚠️ Avisos:\n${result.stderr}`;
-        }
+        // Apenas a saída do Claude, sem formatação extra
+        output = result.stdout || 'Sem saída';
 
-        output += `\n\n✅ Concluído em ${Date.now() - startTime}ms\n`;
+        if (result.stderr && result.stderr.trim()) {
+          output += `\n\n⚠️ ${result.stderr}`;
+        }
 
         // Atualizar job execution
         jobExecution.status = ExecutionStatus.COMPLETED;

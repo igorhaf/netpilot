@@ -573,19 +573,8 @@ echo "🎉 Limpeza concluída para ${projectName}"
         try {
             const fsSync = require('fs');
             const projectPath = `/home/${project.alias}/code`;
-            // const agents = ['bender', 'marvin'];
-            // const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
             const selectedAgent = 'bender';
             let output = '';
-            output += `╭─────────────────────────────────────────────╮\n`;
-            output += `│   🤖 Claude Code - ${selectedAgent.toUpperCase()}              │\n`;
-            output += `╰─────────────────────────────────────────────╯\n\n`;
-            output += `📁 Projeto: ${project.name}\n`;
-            output += `👤 Agente: ${selectedAgent}\n`;
-            output += `📂 Diretório: ${projectPath}\n\n`;
-            output += `🚀 Executando no diretório: ${projectPath}\n`;
-            output += `⚡ Executando com agente ${selectedAgent}...\n`;
-            output += `─────────────────────────────────────────────\n\n`;
             try {
                 const systemOpsUrl = process.env.SYSTEM_OPS_URL || 'http://172.18.0.1:8001';
                 const axios = require('axios');
@@ -598,11 +587,10 @@ echo "🎉 Limpeza concluída para ${projectName}"
                     timeout: 300000
                 });
                 const result = response.data;
-                output += result.stdout || 'Sem saída';
+                output = result.stdout || 'Sem saída';
                 if (result.stderr && result.stderr.trim()) {
-                    output += `\n\n⚠️ Avisos:\n${result.stderr}`;
+                    output += `\n\n⚠️ ${result.stderr}`;
                 }
-                output += `\n\n✅ Concluído em ${Date.now() - startTime}ms\n`;
                 jobExecution.status = job_execution_entity_2.ExecutionStatus.COMPLETED;
                 jobExecution.completedAt = new Date();
                 jobExecution.executionTimeMs = Date.now() - startTime;
