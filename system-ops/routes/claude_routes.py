@@ -55,10 +55,12 @@ async def execute_claude(request: ClaudeExecuteRequest) -> ClaudeExecuteResponse
         escaped_prompt = request.prompt.replace("'", "'\"'\"'")
 
         # Comando para executar Claude Code como usuário específico
-        # --yes: aceita automaticamente todas as ações sem pedir confirmação
+        # --continue: continua a conversa anterior
+        # --print: modo não-interativo, imprime resposta e sai
+        # --permission-mode bypassPermissions: pula todas as verificações de permissão
         command = [
             'su', '-s', '/bin/bash', agent, '-c',
-            f'cd "{request.projectPath}" && claude --continue --yes --verbose "{escaped_prompt}"'
+            f'cd "{request.projectPath}" && claude --continue --print --permission-mode bypassPermissions "{escaped_prompt}"'
         ]
 
         # Executar comando
@@ -72,6 +74,8 @@ async def execute_claude(request: ClaudeExecuteRequest) -> ClaudeExecuteResponse
         execution_time_ms = int((time.time() - start_time) * 1000)
 
         logger.info(f"✅ Claude Code concluído: agent={agent}, returncode={process.returncode}, time={execution_time_ms}ms")
+        logger.info(f"📤 STDOUT: {process.stdout[:500]}")
+        logger.info(f"📤 STDERR: {process.stderr[:500]}")
 
         return ClaudeExecuteResponse(
             success=process.returncode == 0,

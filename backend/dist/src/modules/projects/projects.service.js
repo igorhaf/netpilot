@@ -573,8 +573,9 @@ echo "🎉 Limpeza concluída para ${projectName}"
         try {
             const fsSync = require('fs');
             const projectPath = `/home/${project.alias}/code`;
-            const agents = ['bender', 'marvin'];
-            const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
+            // const agents = ['bender', 'marvin'];
+            // const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
+            const selectedAgent = 'bender';
             let output = '';
             output += `╭─────────────────────────────────────────────╮\n`;
             output += `│   🤖 Claude Code - ${selectedAgent.toUpperCase()}              │\n`;

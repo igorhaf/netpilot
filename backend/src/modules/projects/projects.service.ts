@@ -948,9 +948,11 @@ echo "🎉 Limpeza concluída para ${projectName}"
       const fsSync = require('fs');
       const projectPath = `/home/${project.alias}/code`;
 
-      // Escolher agente aleatoriamente (bender ou marvin)
-      const agents = ['bender', 'marvin'];
-      const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
+      // Usar apenas bender até marvin ser re-autenticado
+      // TODO: Restaurar random quando marvin estiver funcionando
+      // const agents = ['bender', 'marvin'];
+      // const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
+      const selectedAgent = 'bender';
 
       let output = '';
       output += `╭─────────────────────────────────────────────╮\n`;
