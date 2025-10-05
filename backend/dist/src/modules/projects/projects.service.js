@@ -22,6 +22,7 @@ const fs = require("fs/promises");
 const project_entity_1 = require("../../entities/project.entity");
 const stack_entity_1 = require("../../entities/stack.entity");
 const preset_entity_1 = require("../../entities/preset.entity");
+const job_queue_entity_1 = require("../../entities/job-queue.entity");
 const job_execution_entity_1 = require("../../entities/job-execution.entity");
 const logs_service_1 = require("../logs/logs.service");
 const log_entity_1 = require("../../entities/log.entity");
@@ -30,10 +31,11 @@ const chat_message_entity_1 = require("../../entities/chat-message.entity");
 const job_execution_entity_2 = require("../../entities/job-execution.entity");
 const execAsync = (0, util_1.promisify)(child_process_1.exec);
 let ProjectsService = class ProjectsService {
-    constructor(projectRepository, stackRepository, presetRepository, jobExecutionRepository, logsService, chatService) {
+    constructor(projectRepository, stackRepository, presetRepository, jobQueueRepository, jobExecutionRepository, logsService, chatService) {
         this.projectRepository = projectRepository;
         this.stackRepository = stackRepository;
         this.presetRepository = presetRepository;
+        this.jobQueueRepository = jobQueueRepository;
         this.jobExecutionRepository = jobExecutionRepository;
         this.logsService = logsService;
         this.chatService = chatService;
@@ -104,12 +106,31 @@ let ProjectsService = class ProjectsService {
                 await this.applyPresetsToProject(savedProject, contextsPath, username);
                 await execAsync(`sudo chown -R ${username}:${username} ${projectPath}`);
                 console.log(`✅ Permissões configuradas para ${username}`);
+                console.log(`⚙️ Criando job queue para o projeto ${savedProject.name}`);
+                const jobQueue = this.jobQueueRepository.create({
+                    name: `Terminal - ${savedProject.name}`,
+                    description: `Executa comandos shell no projeto ${savedProject.name}`,
+                    scriptType: job_queue_entity_1.ScriptType.SHELL,
+                    scriptPath: 'echo "Terminal command"',
+                    isActive: true,
+                    priority: 5,
+                    metadata: {
+                        projectId: savedProject.id,
+                        projectPath: projectPath,
+                        isTerminal: true,
+                    },
+                });
+                const savedJobQueue = await this.jobQueueRepository.save(jobQueue);
+                savedProject.jobQueueId = savedJobQueue.id;
+                await this.projectRepository.save(savedProject);
+                console.log(`✅ Job queue criado: ${savedJobQueue.id}`);
                 await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Projeto ${savedProject.name} criado com sucesso (usuário: ${username}, pasta: ${projectPath}, contexts: ${contextsPath}${savedProject.cloned ? ', repositório clonado' : ''})`, JSON.stringify({
                     id: savedProject.id,
                     name: savedProject.name,
                     username: username,
                     path: projectPath,
-                    cloned: savedProject.cloned
+                    cloned: savedProject.cloned,
+                    jobQueueId: savedJobQueue.id,
                 }));
                 return savedProject;
             }
@@ -702,6 +723,96 @@ echo "🎉 Limpeza concluída para ${projectName}"
             };
         }
     }
+    async executeCommand(id, command, userId) {
+        const project = await this.findOne(id);
+        const startTime = Date.now();
+        const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`🖥️ Executando comando para ${project.name}: ${command}`);
+        const projectPath = `/home/${project.alias}`;
+        const jobExecution = this.jobExecutionRepository.create({
+            status: job_execution_entity_2.ExecutionStatus.RUNNING,
+            startedAt: new Date(),
+            triggerType: job_execution_entity_2.TriggerType.MANUAL,
+            metadata: {
+                type: 'terminal-command',
+                projectId: id,
+                command: command,
+                executionMode: project.executionMode,
+            },
+        });
+        await this.jobExecutionRepository.save(jobExecution);
+        await this.chatService.create({
+            role: chat_message_entity_1.ChatMessageRole.USER,
+            content: command,
+            projectId: id,
+            userId,
+            sessionId,
+            status: chat_message_entity_1.ChatMessageStatus.COMPLETED,
+            metadata: { jobExecutionId: jobExecution.id, isCommand: true },
+        });
+        try {
+            const { stdout, stderr } = await execAsync(command, {
+                cwd: projectPath,
+                timeout: 300000,
+                maxBuffer: 10 * 1024 * 1024,
+            });
+            let output = '';
+            if (stdout)
+                output += stdout;
+            if (stderr)
+                output += stderr;
+            if (!output.trim()) {
+                output = '[Comando executado com sucesso - sem saída]';
+            }
+            jobExecution.status = job_execution_entity_2.ExecutionStatus.COMPLETED;
+            jobExecution.completedAt = new Date();
+            jobExecution.executionTimeMs = Date.now() - startTime;
+            jobExecution.outputLog = output;
+            await this.jobExecutionRepository.save(jobExecution);
+            await this.chatService.create({
+                role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                content: output,
+                projectId: id,
+                sessionId,
+                status: chat_message_entity_1.ChatMessageStatus.COMPLETED,
+                metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true },
+            });
+            console.log(`✅ Comando executado com sucesso`);
+            return {
+                success: true,
+                output,
+                executionTimeMs: Date.now() - startTime,
+                sessionId,
+            };
+        }
+        catch (error) {
+            console.error(`❌ Erro ao executar comando: ${error.message}`);
+            let errorOutput = `Erro: ${error.message}`;
+            if (error.stdout)
+                errorOutput += `\n\nSaída padrão:\n${error.stdout}`;
+            if (error.stderr)
+                errorOutput += `\n\nSaída de erro:\n${error.stderr}`;
+            jobExecution.status = job_execution_entity_2.ExecutionStatus.FAILED;
+            jobExecution.completedAt = new Date();
+            jobExecution.executionTimeMs = Date.now() - startTime;
+            jobExecution.errorLog = errorOutput;
+            await this.jobExecutionRepository.save(jobExecution);
+            await this.chatService.create({
+                role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                content: errorOutput,
+                projectId: id,
+                sessionId,
+                status: chat_message_entity_1.ChatMessageStatus.ERROR,
+                metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true, error: error.message },
+            });
+            return {
+                success: false,
+                output: errorOutput,
+                executionTimeMs: Date.now() - startTime,
+                sessionId,
+            };
+        }
+    }
     async loadContexts(contextsPath) {
         const result = {
             personas: [],
@@ -750,8 +861,10 @@ exports.ProjectsService = ProjectsService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(project_entity_1.Project)),
     __param(1, (0, typeorm_1.InjectRepository)(stack_entity_1.Stack)),
     __param(2, (0, typeorm_1.InjectRepository)(preset_entity_1.Preset)),
-    __param(3, (0, typeorm_1.InjectRepository)(job_execution_entity_1.JobExecution)),
+    __param(3, (0, typeorm_1.InjectRepository)(job_queue_entity_1.JobQueue)),
+    __param(4, (0, typeorm_1.InjectRepository)(job_execution_entity_1.JobExecution)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

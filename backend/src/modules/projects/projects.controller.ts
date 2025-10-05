@@ -80,4 +80,14 @@ export class ProjectsController {
     const userId = req?.user?.userId;
     return this.projectsService.executePromptRealtime(id, body.prompt, userId);
   }
+
+  @Post(':id/execute-command')
+  executeCommand(
+    @Param('id') id: string,
+    @Body() body: { command: string },
+    @Request() req?: any
+  ) {
+    const userId = req?.user?.userId;
+    return this.projectsService.executeCommand(id, body.command, userId);
+  }
 }

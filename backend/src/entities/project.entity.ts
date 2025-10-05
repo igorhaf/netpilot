@@ -6,11 +6,14 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToMany,
+  ManyToOne,
   JoinTable,
+  JoinColumn,
 } from 'typeorm';
 import { Domain } from './domain.entity';
 import { Stack } from './stack.entity';
 import { Preset } from './preset.entity';
+import { JobQueue } from './job-queue.entity';
 
 @Entity('projects')
 export class Project {
@@ -71,6 +74,13 @@ export class Project {
     default: 'queue'
   })
   executionMode: 'realtime' | 'queue'; // Modo de execução de prompts IA
+
+  @Column({ nullable: true })
+  jobQueueId: string; // ID do job associado para executar comandos
+
+  @ManyToOne(() => JobQueue, { nullable: true })
+  @JoinColumn({ name: 'jobQueueId' })
+  jobQueue: JobQueue;
 
   @ManyToMany(() => Stack, { eager: true })
   @JoinTable({

@@ -1,6 +1,7 @@
 import { Domain } from './domain.entity';
 import { Stack } from './stack.entity';
 import { Preset } from './preset.entity';
+import { JobQueue } from './job-queue.entity';
 export declare class Project {
     id: string;
     name: string;
@@ -20,6 +21,8 @@ export declare class Project {
     metadata: Record<string, any>;
     defaultPromptTemplate: string;
     executionMode: 'realtime' | 'queue';
+    jobQueueId: string;
+    jobQueue: JobQueue;
     stacks: Stack[];
     presets: Preset[];
     domains: Domain[];

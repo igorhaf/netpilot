@@ -56,6 +56,10 @@ let ProjectsController = class ProjectsController {
         const userId = req?.user?.userId;
         return this.projectsService.executePromptRealtime(id, body.prompt, userId);
     }
+    executeCommand(id, body, req) {
+        const userId = req?.user?.userId;
+        return this.projectsService.executeCommand(id, body.command, userId);
+    }
 };
 exports.ProjectsController = ProjectsController;
 __decorate([
@@ -137,6 +141,15 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "executePrompt", null);
+__decorate([
+    (0, common_1.Post)(':id/execute-command'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "executeCommand", null);
 exports.ProjectsController = ProjectsController = __decorate([
     (0, common_1.Controller)('projects'),
     __metadata("design:paramtypes", [projects_service_1.ProjectsService])

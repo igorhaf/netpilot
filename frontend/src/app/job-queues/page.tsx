@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MainLayout } from '@/components/layout/main-layout';
 import {
@@ -54,6 +55,7 @@ export default function JobQueuesPage() {
     limit: 10
   });
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobQueue | null>(null);
   const [activeTab, setActiveTab] = useState<'jobs' | 'historico' | 'retry' | 'performance' | 'notifications'>('jobs');
   const [confirmModal, setConfirmModal] = useState<{
@@ -130,6 +132,28 @@ export default function JobQueuesPage() {
       toast({
         title: 'Erro ao remover job',
         description: error.response?.data?.message || error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Mutação para deletar jobs em massa
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map(id => jobQueuesApi.delete(id)));
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Jobs removidos',
+        description: `${selectedIds.length} job(s) removido(s) com sucesso!`,
+      });
+      setSelectedIds([]);
+      queryClient.invalidateQueries({ queryKey: ['job-queues'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao remover jobs',
+        description: error.message,
         variant: 'destructive',
       });
     },
@@ -228,6 +252,38 @@ export default function JobQueuesPage() {
       'danger'
     );
   };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (!data?.data) return;
+
+    if (selectedIds.length === data.data.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data.data.map((job: any) => job.id));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+
+    showConfirmModal(
+      'Remover Jobs Selecionados',
+      `Confirma a remoção de ${selectedIds.length} job(s) selecionado(s)? Esta ação não pode ser desfeita.`,
+      () => {
+        bulkDeleteMutation.mutate(selectedIds);
+        hideConfirmModal();
+      },
+      'danger'
+    );
+  };
+
+  const isAllSelected = data?.data && selectedIds.length === data.data.length && data.data.length > 0;
 
   if (error) {
     return (
@@ -371,10 +427,28 @@ export default function JobQueuesPage() {
         {/* Tabela de Jobs */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Settings className="h-5 w-5" />
-              <span>Jobs ({(data as any)?.data?.length || 0})</span>
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="h-5 w-5" />
+                <span>Jobs ({(data as any)?.data?.length || 0})</span>
+                {selectedIds.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {selectedIds.length} selecionado(s)
+                  </Badge>
+                )}
+              </CardTitle>
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Deletar Selecionados
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -387,6 +461,13 @@ export default function JobQueuesPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={isAllSelected}
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="Selecionar todos"
+                          />
+                        </TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead className="hidden sm:table-cell">Tipo</TableHead>
                         <TableHead className="hidden md:table-cell">Última Execução</TableHead>
@@ -398,6 +479,13 @@ export default function JobQueuesPage() {
                   <TableBody>
                     {(data as any)?.data?.map((job: any) => (
                       <TableRow key={job.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.includes(job.id)}
+                            onCheckedChange={() => toggleSelect(job.id)}
+                            aria-label={`Selecionar ${job.name}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className={`w-2 h-2 rounded-full ${getStatusColor(job.status, job.isActive)}`} />

@@ -20,4 +20,7 @@ export declare class ProjectsController {
     executePrompt(id: string, body: {
         prompt: string;
     }, req?: any): Promise<any>;
+    executeCommand(id: string, body: {
+        command: string;
+    }, req?: any): Promise<any>;
 }

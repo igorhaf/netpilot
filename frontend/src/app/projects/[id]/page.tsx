@@ -27,6 +27,7 @@ export default function ProjectDetailsPage() {
   const [messages, setMessages] = useState<any[]>([])
   const [copiedKey, setCopiedKey] = useState(false)
   const [isRealtime, setIsRealtime] = useState(false)
+  const [isTerminalMode, setIsTerminalMode] = useState(true) // true = terminal, false = AI
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
@@ -155,6 +156,15 @@ export default function ProjectDetailsPage() {
         }
       }
 
+      // MODO TERMINAL: executar comando shell direto
+      if (isTerminalMode) {
+        const response = await api.post(`/projects/${projectId}/execute-command`, {
+          command: promptMessage
+        })
+        return response.data
+      }
+
+      // MODO AI
       // Se REALTIME: executar direto via endpoint específico (SEM Redis)
       // Se FILA: criar job e deixar worker processar
       if (isRealtime) {
@@ -289,9 +299,24 @@ export default function ProjectDetailsPage() {
                 {messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
                     <div className="text-center space-y-3">
-                      <Bot className="h-16 w-16 mx-auto text-muted-foreground/50" />
-                      <p className="text-lg">Inicie uma conversa</p>
-                      <p className="text-sm">Envie um prompt para gerar comandos Claude através dos jobs.</p>
+                      {isTerminalMode ? (
+                        <>
+                          <Terminal className="h-16 w-16 mx-auto text-green-500/50" />
+                          <p className="text-lg font-mono">Terminal Shell Interativo</p>
+                          <p className="text-sm">Execute comandos Linux no diretório do projeto</p>
+                          <div className="text-xs text-muted-foreground/70 font-mono bg-muted/50 rounded px-3 py-2 inline-block">
+                            <div>$ ls -la</div>
+                            <div>$ cat package.json</div>
+                            <div>$ npm install</div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Bot className="h-16 w-16 mx-auto text-blue-500/50" />
+                          <p className="text-lg">Inicie uma conversa com a IA</p>
+                          <p className="text-sm">Envie um prompt para gerar código com Claude AI</p>
+                        </>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -362,42 +387,75 @@ export default function ProjectDetailsPage() {
                 )}
               </CardContent>
               <div className="p-2 border-t space-y-2">
-                {/* Toggle Realtime/Queue */}
+                {/* Toggle Terminal/AI Mode */}
                 <div className="flex items-center justify-between px-2">
                   <label className="text-xs font-medium text-muted-foreground">
-                    Modo de Execução
+                    Tipo de Interação
                   </label>
                   <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
                     <button
-                      onClick={() => setIsRealtime(false)}
-                      className={`text-xs px-3 py-1 rounded transition-colors ${
-                        !isRealtime
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'hover:bg-muted-foreground/10'
+                      onClick={() => setIsTerminalMode(true)}
+                      className={`text-xs px-3 py-1 rounded transition-colors flex items-center gap-1 ${
+                        isTerminalMode
+                          ? 'bg-green-600 text-white shadow-sm'
+                          : 'hover:bg-muted-foreground/10 text-muted-foreground'
                       }`}
                     >
-                      Fila
+                      <Terminal className="h-3 w-3" />
+                      Terminal
                     </button>
                     <button
-                      onClick={() => setIsRealtime(true)}
-                      className={`text-xs px-3 py-1 rounded transition-colors ${
-                        isRealtime
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'hover:bg-muted-foreground/10'
+                      onClick={() => setIsTerminalMode(false)}
+                      className={`text-xs px-3 py-1 rounded transition-colors flex items-center gap-1 ${
+                        !isTerminalMode
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'hover:bg-muted-foreground/10 text-muted-foreground'
                       }`}
                     >
-                      Tempo Real
+                      <Bot className="h-3 w-3" />
+                      IA
                     </button>
                   </div>
                 </div>
 
+                {/* Toggle Realtime/Queue - apenas para modo IA */}
+                {!isTerminalMode && (
+                  <div className="flex items-center justify-between px-2">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Modo de Execução IA
+                    </label>
+                    <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                      <button
+                        onClick={() => setIsRealtime(false)}
+                        className={`text-xs px-3 py-1 rounded transition-colors ${
+                          !isRealtime
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'hover:bg-muted-foreground/10'
+                        }`}
+                      >
+                        Fila
+                      </button>
+                      <button
+                        onClick={() => setIsRealtime(true)}
+                        className={`text-xs px-3 py-1 rounded transition-colors ${
+                          isRealtime
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'hover:bg-muted-foreground/10'
+                        }`}
+                      >
+                        Tempo Real
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2 items-end">
                   <Textarea
-                    placeholder="Digite seu prompt..."
+                    placeholder={isTerminalMode ? "$ Digite um comando Linux (ex: ls, pwd, cat arquivo.txt)..." : "Digite seu prompt para a IA..."}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="min-h-[36px] max-h-[120px] resize-none py-2"
+                    className={`min-h-[36px] max-h-[120px] resize-none py-2 ${isTerminalMode ? 'font-mono bg-black/5 dark:bg-white/5' : ''}`}
                     rows={1}
                     disabled={sendPromptMutation.isPending}
                   />

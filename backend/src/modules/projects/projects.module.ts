@@ -5,13 +5,14 @@ import { ProjectsController } from './projects.controller';
 import { Project } from '../../entities/project.entity';
 import { Stack } from '../../entities/stack.entity';
 import { Preset } from '../../entities/preset.entity';
+import { JobQueue } from '../../entities/job-queue.entity';
 import { JobExecution } from '../../entities/job-execution.entity';
 import { LogsModule } from '../logs/logs.module';
 import { ChatModule } from '../chat/chat.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, Stack, Preset, JobExecution]),
+    TypeOrmModule.forFeature([Project, Stack, Preset, JobQueue, JobExecution]),
     LogsModule,
     ChatModule,
   ],

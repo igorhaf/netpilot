@@ -14,6 +14,7 @@ const typeorm_1 = require("typeorm");
 const domain_entity_1 = require("./domain.entity");
 const stack_entity_1 = require("./stack.entity");
 const preset_entity_1 = require("./preset.entity");
+const job_queue_entity_1 = require("./job-queue.entity");
 let Project = class Project {
 };
 exports.Project = Project;
@@ -93,6 +94,15 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Project.prototype, "executionMode", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Project.prototype, "jobQueueId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => job_queue_entity_1.JobQueue, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'jobQueueId' }),
+    __metadata("design:type", job_queue_entity_1.JobQueue)
+], Project.prototype, "jobQueue", void 0);
 __decorate([
     (0, typeorm_1.ManyToMany)(() => stack_entity_1.Stack, { eager: true }),
     (0, typeorm_1.JoinTable)({

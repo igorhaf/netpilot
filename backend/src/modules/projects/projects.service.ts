@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Project } from '../../entities/project.entity';
 import { Stack } from '../../entities/stack.entity';
 import { Preset } from '../../entities/preset.entity';
-import { JobQueue } from '../../entities/job-queue.entity';
+import { JobQueue, ScriptType } from '../../entities/job-queue.entity';
 import { JobExecution } from '../../entities/job-execution.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -29,6 +29,8 @@ export class ProjectsService {
     private stackRepository: Repository<Stack>,
     @InjectRepository(Preset)
     private presetRepository: Repository<Preset>,
+    @InjectRepository(JobQueue)
+    private jobQueueRepository: Repository<JobQueue>,
     @InjectRepository(JobExecution)
     private jobExecutionRepository: Repository<JobExecution>,
     private logsService: LogsService,
@@ -150,6 +152,30 @@ export class ProjectsService {
         await execAsync(`sudo chown -R ${username}:${username} ${projectPath}`);
         console.log(`✅ Permissões configuradas para ${username}`);
 
+        // 7. Criar JobQueue para executar comandos do projeto
+        console.log(`⚙️ Criando job queue para o projeto ${savedProject.name}`);
+        const jobQueue = this.jobQueueRepository.create({
+          name: `Terminal - ${savedProject.name}`,
+          description: `Executa comandos shell no projeto ${savedProject.name}`,
+          scriptType: ScriptType.SHELL,
+          scriptPath: 'echo "Terminal command"', // Placeholder, será substituído pelo comando real
+          isActive: true,
+          priority: 5,
+          metadata: {
+            projectId: savedProject.id,
+            projectPath: projectPath,
+            isTerminal: true,
+          },
+        });
+
+        const savedJobQueue = await this.jobQueueRepository.save(jobQueue) as JobQueue;
+
+        // Associar job ao projeto
+        savedProject.jobQueueId = savedJobQueue.id;
+        await this.projectRepository.save(savedProject);
+
+        console.log(`✅ Job queue criado: ${savedJobQueue.id}`);
+
         await this.logsService.updateLogStatus(
           log.id,
           LogStatus.SUCCESS,
@@ -159,7 +185,8 @@ export class ProjectsService {
             name: savedProject.name,
             username: username,
             path: projectPath,
-            cloned: savedProject.cloned
+            cloned: savedProject.cloned,
+            jobQueueId: savedJobQueue.id,
           }),
         );
 
@@ -1094,6 +1121,122 @@ echo "🎉 Limpeza concluída para ${projectName}"
         output: errorOutput,
         executionTimeMs: Date.now() - startTime,
         sessionId
+      };
+    }
+  }
+
+  /**
+   * Executa comando shell no diretório do projeto
+   */
+  async executeCommand(id: string, command: string, userId?: string): Promise<any> {
+    const project = await this.findOne(id);
+    const startTime = Date.now();
+    const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    console.log(`🖥️ Executando comando para ${project.name}: ${command}`);
+
+    const projectPath = `/home/${project.alias}`;
+
+    // Criar job execution
+    const jobExecution = this.jobExecutionRepository.create({
+      status: ExecutionStatus.RUNNING,
+      startedAt: new Date(),
+      triggerType: TriggerType.MANUAL,
+      metadata: {
+        type: 'terminal-command',
+        projectId: id,
+        command: command,
+        executionMode: project.executionMode,
+      },
+    });
+    await this.jobExecutionRepository.save(jobExecution);
+
+    // Salvar comando do usuário como mensagem
+    await this.chatService.create({
+      role: ChatMessageRole.USER,
+      content: command,
+      projectId: id,
+      userId,
+      sessionId,
+      status: ChatMessageStatus.COMPLETED,
+      metadata: { jobExecutionId: jobExecution.id, isCommand: true },
+    });
+
+    try {
+      // Executar comando no diretório do projeto
+      const { stdout, stderr } = await execAsync(
+        command,
+        {
+          cwd: projectPath,
+          timeout: 300000, // 5 minutos
+          maxBuffer: 10 * 1024 * 1024, // 10MB
+        }
+      );
+
+      // Combinar stdout e stderr
+      let output = '';
+      if (stdout) output += stdout;
+      if (stderr) output += stderr;
+
+      if (!output.trim()) {
+        output = '[Comando executado com sucesso - sem saída]';
+      }
+
+      // Atualizar job execution
+      jobExecution.status = ExecutionStatus.COMPLETED;
+      jobExecution.completedAt = new Date();
+      jobExecution.executionTimeMs = Date.now() - startTime;
+      jobExecution.outputLog = output;
+      await this.jobExecutionRepository.save(jobExecution);
+
+      // Salvar saída como mensagem do assistente
+      await this.chatService.create({
+        role: ChatMessageRole.ASSISTANT,
+        content: output,
+        projectId: id,
+        sessionId,
+        status: ChatMessageStatus.COMPLETED,
+        metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true },
+      });
+
+      console.log(`✅ Comando executado com sucesso`);
+
+      return {
+        success: true,
+        output,
+        executionTimeMs: Date.now() - startTime,
+        sessionId,
+      };
+
+    } catch (error) {
+      console.error(`❌ Erro ao executar comando: ${error.message}`);
+
+      let errorOutput = `Erro: ${error.message}`;
+      if (error.stdout) errorOutput += `\n\nSaída padrão:\n${error.stdout}`;
+      if (error.stderr) errorOutput += `\n\nSaída de erro:\n${error.stderr}`;
+
+      // Atualizar job execution com erro
+      jobExecution.status = ExecutionStatus.FAILED;
+      jobExecution.completedAt = new Date();
+      jobExecution.executionTimeMs = Date.now() - startTime;
+      jobExecution.errorLog = errorOutput;
+      await this.jobExecutionRepository.save(jobExecution);
+
+      // Salvar erro como mensagem do assistente
+      await this.chatService.create({
+        role: ChatMessageRole.ASSISTANT,
+        content: errorOutput,
+        projectId: id,
+        sessionId,
+        status: ChatMessageStatus.ERROR,
+        metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true, error: error.message },
+      });
+
+      return {
+        success: false,
+        output: errorOutput,
+        executionTimeMs: Date.now() - startTime,
+        sessionId,
       };
     }
   }
