@@ -118,7 +118,12 @@ export class ProjectsService {
         const codePath = `${projectPath}/code`;
         const contextsPath = `${projectPath}/contexts`;
 
-        // 3. Criar pasta contexts para arquivos de contexto do Claude
+        // 3. Criar pastas code e contexts
+        console.log(`📁 Criando pasta code: ${codePath}`);
+        await execAsync(`sudo -u ${username} mkdir -p "${codePath}"`);
+        await execAsync(`sudo chmod 755 "${codePath}"`);
+        console.log(`✅ Pasta code criada em: ${codePath}`);
+
         console.log(`📁 Criando pasta contexts: ${contextsPath}`);
         await execAsync(`sudo -u ${username} mkdir -p "${contextsPath}"`);
         await execAsync(`sudo chmod 755 "${contextsPath}"`);
@@ -129,8 +134,9 @@ export class ProjectsService {
           console.log(`🔄 Clonando repositório: ${createProjectDto.repository}`);
 
           try {
+            // Clonar dentro da pasta code
             await execAsync(
-              `sudo -u ${username} git clone "${createProjectDto.repository}" "${codePath}"`,
+              `sudo -u ${username} git clone "${createProjectDto.repository}" "${codePath}/repo"`,
               { timeout: 180000 } // 3 minutos timeout
             );
 
@@ -138,7 +144,7 @@ export class ProjectsService {
             savedProject.cloned = true;
             await this.projectRepository.save(savedProject);
 
-            console.log(`✅ Repositório clonado em: ${codePath}`);
+            console.log(`✅ Repositório clonado em: ${codePath}/repo`);
           } catch (cloneError) {
             console.error(`❌ Erro ao clonar repositório: ${cloneError.message}`);
             // Não falhar a criação do projeto se o clone falhar
@@ -150,6 +156,10 @@ export class ProjectsService {
 
         // 6. Garantir permissões corretas
         await execAsync(`sudo chown -R ${username}:${username} ${projectPath}`);
+        // Permitir que bender/marvin acessem os diretórios (o+x no home, o+rx em code e contexts)
+        await execAsync(`sudo chmod o+x ${projectPath}`);
+        await execAsync(`sudo chmod o+rx ${codePath}`);
+        await execAsync(`sudo chmod o+rx ${contextsPath}`);
         console.log(`✅ Permissões configuradas para ${username}`);
 
         // 7. Criar JobQueue para executar comandos do projeto
@@ -853,6 +863,49 @@ echo "🎉 Limpeza concluída para ${projectName}"
   }
 
   /**
+   * Garante que o projeto tem um job associado, criando se necessário
+   */
+  private async ensureProjectJob(project: Project): Promise<void> {
+    // Se já tem jobQueueId e o job existe, não faz nada
+    if (project.jobQueueId) {
+      const existingJob = await this.jobQueueRepository.findOne({
+        where: { id: project.jobQueueId }
+      });
+
+      if (existingJob) {
+        console.log(`✅ Job já existe para ${project.name}: ${project.jobQueueId}`);
+        return;
+      }
+    }
+
+    // Job não existe ou foi deletado, recriar
+    console.log(`⚙️ Recriando job queue para o projeto ${project.name}`);
+    const projectPath = `/home/${project.alias}`;
+
+    const jobQueue = this.jobQueueRepository.create({
+      name: `Terminal - ${project.name}`,
+      description: `Executa comandos shell no projeto ${project.name}`,
+      scriptType: ScriptType.SHELL,
+      scriptPath: 'echo "Terminal command"',
+      isActive: true,
+      priority: 5,
+      metadata: {
+        projectId: project.id,
+        projectPath: projectPath,
+        isTerminal: true,
+      },
+    });
+
+    const savedJobQueue = await this.jobQueueRepository.save(jobQueue) as JobQueue;
+
+    // Atualizar projeto com o novo jobQueueId
+    project.jobQueueId = savedJobQueue.id;
+    await this.projectRepository.save(project);
+
+    console.log(`✅ Job queue recriado: ${savedJobQueue.id}`);
+  }
+
+  /**
    * Executa prompt com Claude CLI em tempo real (sem Redis/fila)
    */
   async executePromptRealtime(id: string, userPrompt: string, userId?: string): Promise<any> {
@@ -862,6 +915,9 @@ echo "🎉 Limpeza concluída para ${projectName}"
 
     console.log(`🤖 Executando prompt em tempo real para ${project.name}`);
     console.log(`💬 Prompt: ${userPrompt}`);
+
+    // Verificar se o job existe, se não, recriar
+    await this.ensureProjectJob(project);
 
     // Criar job execution para compatibilidade com frontend
     const jobExecution = this.jobExecutionRepository.create({
@@ -889,136 +945,44 @@ echo "🎉 Limpeza concluída para ${projectName}"
     });
 
     try {
-      // Detectar ambiente Docker
       const fsSync = require('fs');
-      const isDocker = fsSync.existsSync('/host/home');
-      const projectPath = isDocker
-        ? `/host/home/${project.alias}/code`
-        : `/home/${project.alias}/code`;
-      const contextsPath = isDocker
-        ? `/host/home/${project.alias}/contexts`
-        : `/home/${project.alias}/contexts`;
+      const projectPath = `/home/${project.alias}/code`;
+
+      // Escolher agente aleatoriamente (bender ou marvin)
+      const agents = ['bender', 'marvin'];
+      const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
 
       let output = '';
       output += `╭─────────────────────────────────────────────╮\n`;
-      output += `│   🤖 Claude AI - Tempo Real                │\n`;
+      output += `│   🤖 Claude Code - ${selectedAgent.toUpperCase()}              │\n`;
       output += `╰─────────────────────────────────────────────╯\n\n`;
       output += `📁 Projeto: ${project.name}\n`;
-      output += `👤 Alias: ${project.alias}\n\n`;
+      output += `👤 Agente: ${selectedAgent}\n`;
+      output += `📂 Diretório: ${projectPath}\n\n`;
 
-      // Verificar Claude CLI
-      output += `🔍 Verificando Claude CLI...\n`;
-      try {
-        const { stdout } = await execAsync('claude --version 2>&1 || echo "not_found"');
-        if (stdout.includes('not_found')) {
-          output += `❌ Claude CLI não instalado\n`;
-          output += `📦 Execute: npm install -g @anthropic-ai/claude-code\n`;
-
-          // Atualizar job execution
-          jobExecution.status = ExecutionStatus.FAILED;
-          jobExecution.completedAt = new Date();
-          jobExecution.executionTimeMs = Date.now() - startTime;
-          jobExecution.errorLog = output;
-          await this.jobExecutionRepository.save(jobExecution);
-
-          // Salvar resposta de erro
-          await this.chatService.create({
-            role: ChatMessageRole.ASSISTANT,
-            content: output,
-            projectId: id,
-            sessionId,
-            status: ChatMessageStatus.ERROR,
-            metadata: { jobExecutionId: jobExecution.id },
-          });
-
-          return {
-            success: false,
-            output,
-            executionTimeMs: Date.now() - startTime,
-            sessionId
-          };
-        }
-        output += `✅ Claude CLI: ${stdout.trim()}\n\n`;
-      } catch (err) {
-        output += `⚠️ Erro ao verificar: ${err.message}\n`;
-      }
-
-      // Verificar se diretório existe
-      if (!fsSync.existsSync(projectPath)) {
-        output += `❌ Diretório não encontrado: ${projectPath}\n`;
-
-        // Atualizar job execution
-        jobExecution.status = ExecutionStatus.FAILED;
-        jobExecution.completedAt = new Date();
-        jobExecution.executionTimeMs = Date.now() - startTime;
-        jobExecution.errorLog = output;
-        await this.jobExecutionRepository.save(jobExecution);
-
-        // Salvar resposta de erro
-        await this.chatService.create({
-          role: ChatMessageRole.ASSISTANT,
-          content: output,
-          projectId: id,
-          sessionId,
-          status: ChatMessageStatus.ERROR,
-          metadata: { jobExecutionId: jobExecution.id },
-        });
-
-        return {
-          success: false,
-          output,
-          executionTimeMs: Date.now() - startTime,
-          sessionId
-        };
-      }
-
-      output += `🚀 Executando no diretório: ${projectPath}\n\n`;
-
-      // Carregar contextos
-      const contextInfo = await this.loadContexts(contextsPath);
-
-      if (contextInfo.totalFiles > 0) {
-        output += `📋 Contextos carregados: ${contextInfo.totalFiles} arquivo(s)\n`;
-        output += `   Personas: ${contextInfo.personas.length}\n`;
-        output += `   Configs: ${contextInfo.configs.length}\n`;
-        output += `   Docker: ${contextInfo.docker.length}\n\n`;
-      }
-
-      // Construir prompt final
-      let finalPrompt = '';
-
-      // Adicionar personas
-      if (contextInfo.personas.length > 0) {
-        finalPrompt += `# 📋 CONTEXTO - Personas\n\n`;
-        for (const persona of contextInfo.personas) {
-          finalPrompt += `## ${persona.name}\n\n${persona.content}\n\n`;
-        }
-        finalPrompt += `---\n\n`;
-      }
-
-      // Adicionar template padrão
-      if (project.defaultPromptTemplate) {
-        finalPrompt += `# 📋 INSTRUÇÕES PADRÃO\n\n${project.defaultPromptTemplate}\n\n---\n\n`;
-      }
-
-      // Adicionar prompt do usuário
-      finalPrompt += `# 📋 TAREFA\n\n${userPrompt}`;
-
-      const escaped = finalPrompt.replace(/"/g, '\\"').replace(/\$/g, '\\$');
-
-      // Executar Claude CLI
-      output += `⚡ Executando Claude CLI...\n`;
+      output += `🚀 Executando no diretório: ${projectPath}\n`;
+      output += `⚡ Executando com agente ${selectedAgent}...\n`;
       output += `─────────────────────────────────────────────\n\n`;
 
       try {
-        const { stdout: result, stderr: errors } = await execAsync(
-          `cd ${projectPath} && claude "${escaped}"`,
-          { timeout: 300000, maxBuffer: 10 * 1024 * 1024 }
-        );
+        // Executar via API do FastAPI System Ops (roda no HOST)
+        const systemOpsUrl = process.env.SYSTEM_OPS_URL || 'http://172.18.0.1:8001';
+        const axios = require('axios');
 
-        output += result || 'Sem saída';
-        if (errors && errors.trim()) {
-          output += `\n\n⚠️ Avisos:\n${errors}`;
+        const response = await axios.post(`${systemOpsUrl}/claude/execute`, {
+          projectPath: projectPath,
+          prompt: userPrompt,
+          agent: selectedAgent,
+          timeoutSeconds: 300
+        }, {
+          timeout: 300000 // 5 minutos
+        });
+
+        const result = response.data;
+
+        output += result.stdout || 'Sem saída';
+        if (result.stderr && result.stderr.trim()) {
+          output += `\n\n⚠️ Avisos:\n${result.stderr}`;
         }
 
         output += `\n\n✅ Concluído em ${Date.now() - startTime}ms\n`;
@@ -1039,7 +1003,7 @@ echo "🎉 Limpeza concluída para ${projectName}"
           status: ChatMessageStatus.COMPLETED,
           metadata: {
             executionTimeMs: Date.now() - startTime,
-            contextsLoaded: contextInfo.totalFiles,
+            agent: selectedAgent,
             jobExecutionId: jobExecution.id,
           },
         });
@@ -1050,13 +1014,14 @@ echo "🎉 Limpeza concluída para ${projectName}"
           executionTimeMs: Date.now() - startTime,
           sessionId
         };
-      } catch (cmdError) {
-        output += `❌ Erro ao executar Claude:\n`;
-        output += cmdError.message + '\n';
-        if (cmdError.stdout) output += `\n${cmdError.stdout}`;
-        if (cmdError.stderr) output += `\n${cmdError.stderr}`;
 
-        // Atualizar job execution com erro
+      } catch (error) {
+        output += `❌ Erro na execução:\n${error.message}\n`;
+        if (error.stderr) {
+          output += `\n${error.stderr}\n`;
+        }
+
+        // Atualizar job execution como falha
         jobExecution.status = ExecutionStatus.FAILED;
         jobExecution.completedAt = new Date();
         jobExecution.executionTimeMs = Date.now() - startTime;
@@ -1070,10 +1035,7 @@ echo "🎉 Limpeza concluída para ${projectName}"
           projectId: id,
           sessionId,
           status: ChatMessageStatus.ERROR,
-          metadata: {
-            error: cmdError.message,
-            jobExecutionId: jobExecution.id,
-          },
+          metadata: { jobExecutionId: jobExecution.id },
         });
 
         return {
@@ -1134,6 +1096,9 @@ echo "🎉 Limpeza concluída para ${projectName}"
     const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     console.log(`🖥️ Executando comando para ${project.name}: ${command}`);
+
+    // Garantir que o job existe
+    await this.ensureProjectJob(project);
 
     const projectPath = `/home/${project.alias}`;
 

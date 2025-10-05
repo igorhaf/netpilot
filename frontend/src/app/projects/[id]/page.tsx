@@ -165,27 +165,13 @@ export default function ProjectDetailsPage() {
       }
 
       // MODO AI
-      // Se REALTIME: executar direto via endpoint específico (SEM Redis)
-      // Se FILA: criar job e deixar worker processar
-      if (isRealtime) {
-        // Executar direto via Claude CLI, retorna output imediatamente
-        const response = await api.post(`/projects/${projectId}/execute-prompt`, {
-          prompt: promptMessage
-        })
+      // Ambos (realtime e fila) usam o mesmo endpoint agora
+      // A diferença é apenas visual no frontend
+      const response = await api.post(`/projects/${projectId}/execute-prompt`, {
+        prompt: promptMessage
+      })
 
-        return response.data
-      } else {
-        // Modo fila: cria o job E executa imediatamente
-        const createResponse = await api.post('/job-queues', jobData)
-        const jobId = createResponse.data.id
-
-        // Executar o job imediatamente
-        const executeResponse = await api.post(`/job-queues/${jobId}/execute`, {
-          triggerType: 'manual'
-        })
-
-        return { job: createResponse.data, execution: executeResponse.data }
-      }
+      return response.data
     },
     onSuccess: (data) => {
       // Invalidar job executions para recarregar

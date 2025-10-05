@@ -92,7 +92,12 @@
       "Bash(/tmp/test-websocket-realtime.sh:*)",
       "Bash(/tmp/test-queue-filter.sh:*)",
       "Bash(/tmp/test-websocket-live.sh:*)",
-      "Bash(export:*)"
+      "Bash(export:*)",
+      "Bash(claude --version)",
+      "Bash(./scripts/setup-claude-agents.sh:*)",
+      "Bash(su -s /bin/bash bender -c 'cd /home/deit/code && claude --continue \"\"liste os arquivos do diretorio atual\"\"')",
+      "Bash(su -s /bin/bash marvin -c 'cd /home/deit/code && claude --continue \"\"crie um arquivo README.md com o titulo Projeto Deit\"\"')",
+      "Bash(su -s /bin/bash bender -c 'cat /home/bender/.claude/.credentials.json')"
     ],
     "deny": [],
     "ask": []

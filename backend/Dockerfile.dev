@@ -1,7 +1,7 @@
 FROM node:18-alpine
 
-# Instalar git para clone de repositórios
-RUN apk add --no-cache git
+# Instalar git, bash, shadow e python3
+RUN apk add --no-cache git bash shadow python3
 
 WORKDIR /app
 
@@ -14,6 +14,9 @@ COPY . .
 
 # Build da aplicação
 RUN npm run build
+
+# Instalar Claude Code CLI globalmente
+RUN npm install -g @anthropic-ai/claude-code
 
 # Expor porta
 EXPOSE 3001

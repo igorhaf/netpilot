@@ -33,6 +33,7 @@ export declare class ProjectsService {
     private applyPresetsToProject;
     private writePresetFile;
     private getPresetExtension;
+    private ensureProjectJob;
     executePromptRealtime(id: string, userPrompt: string, userId?: string): Promise<any>;
     executeCommand(id: string, command: string, userId?: string): Promise<any>;
     private loadContexts;
