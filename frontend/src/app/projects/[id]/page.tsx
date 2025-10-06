@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Globe, GitBranch, FileText, Calendar, Tag, ExternalLink, Terminal, Info, MessageSquare, Settings, Send, Bot, Loader2, GitPullRequest, Key, Copy, Trash2, Check } from 'lucide-react'
+import { Globe, GitBranch, FileText, Calendar, Tag, ExternalLink, Terminal, Info, MessageSquare, Settings, Send, Bot, Loader2, GitPullRequest, Key, Copy, Trash2, Check, Layers } from 'lucide-react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +15,7 @@ import api from '@/lib/api'
 import { Project, Domain } from '@/types'
 import toast from 'react-hot-toast'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer'
 import { TerminalMessage } from '@/components/chat/TerminalMessage'
@@ -31,6 +32,24 @@ export default function ProjectDetailsPage() {
   const [isTerminalMode, setIsTerminalMode] = useState(false) // true = terminal, false = AI
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
+
+  // Stack configuration states
+  const [stackConfig, setStackConfig] = useState({
+    frontend: [] as string[],
+    backend: [] as string[],
+    database: [] as string[],
+    services: [] as string[],
+    personas: [] as string[]
+  })
+
+  const toggleTech = (category: keyof typeof stackConfig, tech: string) => {
+    setStackConfig(prev => ({
+      ...prev,
+      [category]: prev[category].includes(tech)
+        ? prev[category].filter(t => t !== tech)
+        : [...prev[category], tech]
+    }))
+  }
 
   const { data: project, isLoading, error } = useQuery({
     queryKey: ['project', projectId],
@@ -210,12 +229,15 @@ export default function ProjectDetailsPage() {
     <MainLayout breadcrumbs={breadcrumbs}>
       <div className="space-y-4">
         {/* Navegação por Abas */}
-        <div className="flex space-x-1 border-b">
+        <div className="flex space-x-1 border-b overflow-x-auto">
           {[
             { id: 'chat', label: 'Chat', icon: MessageSquare },
+            { id: 'git', label: 'Git Clone', icon: GitBranch },
+            { id: 'ssh', label: 'SSH Keys', icon: Key },
+            { id: 'stack', label: 'Stack & Config', icon: Layers },
+            { id: 'terminal', label: 'Terminal', icon: Terminal },
             { id: 'options', label: 'Opções', icon: Settings },
-            { id: 'overview', label: 'Informações Gerais', icon: Info },
-            { id: 'terminal', label: 'Terminal', icon: Terminal }
+            { id: 'overview', label: 'Info', icon: Info }
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -339,6 +361,320 @@ export default function ProjectDetailsPage() {
                 </div>
               </div>
             </Card>
+          </div>
+        )}
+
+        {/* Aba Git Clone */}
+        {activeTab === 'git' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <GitBranch className="h-5 w-5" />
+                Git Clone - Clonar Repositório
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">URL do Repositório</label>
+                <input
+                  type="text"
+                  placeholder="https://github.com/usuario/repositorio.git"
+                  className="w-full px-3 py-2 border rounded-lg bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Diretório de Destino</label>
+                <input
+                  type="text"
+                  value="./code"
+                  disabled
+                  className="w-full px-3 py-2 border rounded-lg bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  O repositório será clonado em: /home/{project?.alias}/code
+                </p>
+              </div>
+              <Button className="w-full">
+                <GitBranch className="h-4 w-4 mr-2" />
+                Clonar Repositório
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Aba SSH Keys */}
+        {activeTab === 'ssh' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Gerenciador de Chaves SSH
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!project?.hasSshKey ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma chave SSH configurada. Gere uma para usar com repositórios Git.
+                  </p>
+                  <Button className="w-full">
+                    <Key className="h-4 w-4 mr-2" />
+                    Gerar Par de Chaves SSH
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                      ✓ Chaves SSH configuradas
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Fingerprint: {project.sshKeyFingerprint}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Chave Pública</label>
+                    <div className="relative">
+                      <textarea
+                        value={project.sshPublicKey}
+                        readOnly
+                        rows={4}
+                        className="w-full bg-muted px-3 py-2 rounded-lg text-xs font-mono resize-none"
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="absolute top-2 right-2"
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copiar
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Adicione esta chave no GitHub/GitLab para autenticação SSH
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Aba Stack & Configurações */}
+        {activeTab === 'stack' && (
+          <div className="space-y-6">
+            {/* Frontend Stack */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Globe className="h-4 w-4 text-blue-500" />
+                  </div>
+                  Frontend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {['React', 'Vue', 'Angular', 'Svelte', 'Next.js', 'Nuxt', 'Vite', 'Tailwind'].map(tech => (
+                    <div
+                      key={tech}
+                      onClick={() => toggleTech('frontend', tech)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        stackConfig.frontend.includes(tech)
+                          ? 'border-blue-500 bg-blue-500/10'
+                          : 'border-border hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{tech}</span>
+                        <Switch
+                          checked={stackConfig.frontend.includes(tech)}
+                          onCheckedChange={() => toggleTech('frontend', tech)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Backend Stack */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <Terminal className="h-4 w-4 text-green-500" />
+                  </div>
+                  Backend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {['Node.js', 'Python', 'PHP', 'Ruby', 'Java', 'Go', 'Rust', '.NET'].map(tech => (
+                    <div
+                      key={tech}
+                      onClick={() => toggleTech('backend', tech)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        stackConfig.backend.includes(tech)
+                          ? 'border-green-500 bg-green-500/10'
+                          : 'border-border hover:border-green-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{tech}</span>
+                        <Switch
+                          checked={stackConfig.backend.includes(tech)}
+                          onCheckedChange={() => toggleTech('backend', tech)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Database Stack */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-purple-500" />
+                  </div>
+                  Database
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'MariaDB', 'Elasticsearch', 'Cassandra'].map(tech => (
+                    <div
+                      key={tech}
+                      onClick={() => toggleTech('database', tech)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        stackConfig.database.includes(tech)
+                          ? 'border-purple-500 bg-purple-500/10'
+                          : 'border-border hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{tech}</span>
+                        <Switch
+                          checked={stackConfig.database.includes(tech)}
+                          onCheckedChange={() => toggleTech('database', tech)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Services (Docker) */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                    <Layers className="h-4 w-4 text-cyan-500" />
+                  </div>
+                  Services & DevOps
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {['Docker', 'Kubernetes', 'Nginx', 'Apache', 'Traefik', 'RabbitMQ', 'Kafka', 'MinIO'].map(tech => (
+                    <div
+                      key={tech}
+                      onClick={() => toggleTech('services', tech)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        stackConfig.services.includes(tech)
+                          ? 'border-cyan-500 bg-cyan-500/10'
+                          : 'border-border hover:border-cyan-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{tech}</span>
+                        <Switch
+                          checked={stackConfig.services.includes(tech)}
+                          onCheckedChange={() => toggleTech('services', tech)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* AI Personas */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-orange-500" />
+                  </div>
+                  Personas de IA
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {['Senior Dev', 'Code Reviewer', 'DevOps Expert', 'UI/UX Designer', 'DBA Specialist', 'Security Analyst', 'QA Tester', 'Arquiteto'].map(tech => (
+                    <div
+                      key={tech}
+                      onClick={() => toggleTech('personas', tech)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        stackConfig.personas.includes(tech)
+                          ? 'border-orange-500 bg-orange-500/10'
+                          : 'border-border hover:border-orange-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{tech}</span>
+                        <Switch
+                          checked={stackConfig.personas.includes(tech)}
+                          onCheckedChange={() => toggleTech('personas', tech)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Scripts de Automação */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Scripts de Automação</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Pre-prompt Script</label>
+                  <Textarea
+                    placeholder="#!/bin/bash&#10;# Executado ANTES do Claude processar&#10;echo 'Setup do ambiente...'"
+                    rows={4}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Executado antes da IA processar (setup, validações, etc)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Post-prompt Script</label>
+                  <Textarea
+                    placeholder="#!/bin/bash&#10;# Executado DEPOIS do Claude processar&#10;npm run format && git add ."
+                    rows={4}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Executado após a IA processar (formatação, testes, deploy, etc)
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Botão Salvar */}
+            <Button className="w-full" size="lg">
+              <Settings className="h-4 w-4 mr-2" />
+              Salvar Configurações do Stack
+            </Button>
           </div>
         )}
 
