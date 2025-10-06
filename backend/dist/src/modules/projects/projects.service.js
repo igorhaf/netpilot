@@ -698,9 +698,10 @@ echo "🎉 Limpeza concluída para ${projectName}"
             },
         });
         await this.jobExecutionRepository.save(jobExecution);
+        const formattedCommand = '$ ' + command;
         await this.chatService.create({
             role: chat_message_entity_1.ChatMessageRole.USER,
-            content: command,
+            content: formattedCommand,
             projectId: id,
             userId,
             sessionId,
@@ -708,31 +709,51 @@ echo "🎉 Limpeza concluída para ${projectName}"
             metadata: { jobExecutionId: jobExecution.id, isCommand: true },
         });
         try {
-            const { stdout, stderr } = await execAsync(command, {
-                cwd: projectPath,
+            const systemOpsUrl = process.env.SYSTEM_OPS_URL || 'http://172.18.0.1:8001';
+            const axios = require('axios');
+            const response = await axios.post(`${systemOpsUrl}/system/execute-command-stream`, {
+                command: command,
+                workingDirectory: `${projectPath}/code`,
+                timeout: 300
+            }, {
                 timeout: 300000,
-                maxBuffer: 10 * 1024 * 1024,
+                responseType: 'stream'
             });
             let output = '';
-            if (stdout)
-                output += stdout;
-            if (stderr)
-                output += stderr;
+            let tempOutput = '';
+            const assistantMessage = await this.chatService.create({
+                role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
+                content: '```bash\n```',
+                projectId: id,
+                sessionId,
+                status: chat_message_entity_1.ChatMessageStatus.STREAMING,
+                metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true },
+            });
+            for await (const chunk of response.data) {
+                const line = chunk.toString();
+                output += line;
+                tempOutput += line;
+                if (tempOutput.split('\n').length > 5) {
+                    const formattedOutput = '```bash\n' + output + '\n```';
+                    await this.chatService.update(assistantMessage.id, {
+                        content: formattedOutput,
+                        status: chat_message_entity_1.ChatMessageStatus.STREAMING,
+                    });
+                    tempOutput = '';
+                }
+            }
             if (!output.trim()) {
                 output = '[Comando executado com sucesso - sem saída]';
             }
+            const formattedOutput = '```bash\n' + output + '\n```';
             jobExecution.status = job_execution_entity_2.ExecutionStatus.COMPLETED;
             jobExecution.completedAt = new Date();
             jobExecution.executionTimeMs = Date.now() - startTime;
             jobExecution.outputLog = output;
             await this.jobExecutionRepository.save(jobExecution);
-            await this.chatService.create({
-                role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
-                content: output,
-                projectId: id,
-                sessionId,
+            await this.chatService.update(assistantMessage.id, {
+                content: formattedOutput,
                 status: chat_message_entity_1.ChatMessageStatus.COMPLETED,
-                metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true },
             });
             console.log(`✅ Comando executado com sucesso`);
             return {
@@ -749,6 +770,7 @@ echo "🎉 Limpeza concluída para ${projectName}"
                 errorOutput += `\n\nSaída padrão:\n${error.stdout}`;
             if (error.stderr)
                 errorOutput += `\n\nSaída de erro:\n${error.stderr}`;
+            const formattedError = '```bash\n' + errorOutput + '\n```';
             jobExecution.status = job_execution_entity_2.ExecutionStatus.FAILED;
             jobExecution.completedAt = new Date();
             jobExecution.executionTimeMs = Date.now() - startTime;
@@ -756,7 +778,7 @@ echo "🎉 Limpeza concluída para ${projectName}"
             await this.jobExecutionRepository.save(jobExecution);
             await this.chatService.create({
                 role: chat_message_entity_1.ChatMessageRole.ASSISTANT,
-                content: errorOutput,
+                content: formattedError,
                 projectId: id,
                 sessionId,
                 status: chat_message_entity_1.ChatMessageStatus.ERROR,

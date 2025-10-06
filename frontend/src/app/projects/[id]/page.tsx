@@ -16,6 +16,8 @@ import { Project, Domain } from '@/types'
 import toast from 'react-hot-toast'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer'
+import { TerminalMessage } from '@/components/chat/TerminalMessage'
 
 export default function ProjectDetailsPage() {
   const auth = useRequireAuth()
@@ -52,6 +54,8 @@ export default function ProjectDetailsPage() {
         content: msg.content,
         timestamp: msg.createdAt,
         status: msg.status,
+        isCommand: msg.metadata?.isCommand,
+        isCommandOutput: msg.metadata?.isCommandOutput,
       }))
       setMessages(formattedMessages)
     }
@@ -231,8 +235,8 @@ export default function ProjectDetailsPage() {
         {/* Conteúdo baseado na aba ativa */}
         {activeTab === 'chat' && (
           <div className="h-[calc(100vh-180px)]">
-            <Card className="h-full flex flex-col">
-              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
+            <Card className="h-full flex flex-col bg-black border-gray-800">
+              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 bg-black text-gray-100">
                 {messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
                     <div className="text-center space-y-3">
@@ -259,77 +263,31 @@ export default function ProjectDetailsPage() {
                 ) : (
                   <>
                     {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[80%] rounded-lg p-4 ${
-                            msg.role === 'user'
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-muted border'
-                          }`}
-                        >
-                          <div className="flex items-start gap-2">
-                            {msg.role === 'assistant' && (
-                              <Bot className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                            )}
-                            <div className="flex-1 space-y-2">
-                              {msg.isTyping ? (
-                                <div className="flex items-center gap-1">
-                                  <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
-                                  <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
-                                  <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
-                                </div>
-                              ) : (
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {msg.content}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 text-xs opacity-70">
-                                <span>
-                                  {new Date(msg.timestamp).toLocaleTimeString('pt-BR', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                                {msg.status && (
-                                  <Badge
-                                    variant={
-                                      msg.status === 'completed'
-                                        ? 'default'
-                                        : msg.status === 'failed'
-                                        ? 'destructive'
-                                        : 'secondary'
-                                    }
-                                    className="text-xs"
-                                  >
-                                    {msg.status === 'completed'
-                                      ? 'Concluído'
-                                      : msg.status === 'failed'
-                                      ? 'Falhou'
-                                      : msg.status === 'running'
-                                      ? 'Executando'
-                                      : 'Pendente'}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
+                      <div key={idx} className="mb-2">
+                        {msg.isTyping ? (
+                          <div className="flex items-center gap-1 text-gray-400 text-xs">
+                            <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
+                            <span className="animate-bounce inline-block" style={{ animationDelay: '150ms' }}>.</span>
+                            <span className="animate-bounce inline-block" style={{ animationDelay: '300ms' }}>.</span>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="font-mono text-xs">
+                            <MarkdownRenderer content={msg.content} />
+                          </div>
+                        )}
                       </div>
                     ))}
                     <div ref={messagesEndRef} />
                   </>
                 )}
               </CardContent>
-              <div className="p-2 border-t space-y-2">
+              <div className="p-2 border-t border-gray-800 space-y-2 bg-black">
                 {/* Toggle Terminal/AI Mode */}
                 <div className="flex items-center justify-between px-2">
-                  <label className="text-xs font-medium text-muted-foreground">
+                  <label className="text-xs font-medium text-gray-400">
                     Tipo de Interação
                   </label>
-                  <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                  <div className="flex items-center gap-2 bg-gray-900 p-1 rounded-lg">
                     <button
                       onClick={() => setIsTerminalMode(true)}
                       className={`text-xs px-3 py-1 rounded transition-colors flex items-center gap-1 ${
@@ -362,7 +320,7 @@ export default function ProjectDetailsPage() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className={`min-h-[36px] max-h-[120px] resize-none py-2 ${isTerminalMode ? 'font-mono bg-black/5 dark:bg-white/5' : ''}`}
+                    className="min-h-[36px] max-h-[120px] resize-none py-2 font-mono bg-transparent border-white text-white placeholder:text-gray-500"
                     rows={1}
                     disabled={sendPromptMutation.isPending}
                   />

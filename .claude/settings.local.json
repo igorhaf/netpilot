@@ -107,7 +107,8 @@
       "Bash(su -s /bin/bash marvin -c 'cd /home/deit/code && timeout 15 claude -p --continue --permission-mode bypassPermissions \"\"what is 2+2\"\" 2>&1')",
       "Bash(/home/projects/netpilot/scripts/setup-claude-agents.sh:*)",
       "Bash(su -s /bin/bash bender -c 'cd /home/deit/code && timeout 15 claude -p --permission-mode bypassPermissions \"\"what is 2+2?\"\" 2>&1')",
-      "Bash(su -s /bin/bash marvin -c 'cd /home/deit/code && timeout 15 claude -p --permission-mode bypassPermissions \"\"crie um arquivo teste.txt com o conteudo Hello World\"\" 2>&1')"
+      "Bash(su -s /bin/bash marvin -c 'cd /home/deit/code && timeout 15 claude -p --permission-mode bypassPermissions \"\"crie um arquivo teste.txt com o conteudo Hello World\"\" 2>&1')",
+      "Bash(xargs -r kill)"
     ],
     "deny": [],
     "ask": []

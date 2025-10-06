@@ -54,13 +54,18 @@ async def execute_claude(request: ClaudeExecuteRequest) -> ClaudeExecuteResponse
         # Escapar prompt para shell
         escaped_prompt = request.prompt.replace("'", "'\"'\"'")
 
+        # Adicionar contexto do diretório de trabalho ao prompt
+        enhanced_prompt = f"Working directory is {request.projectPath}. When creating files or projects, always use relative paths or the current directory. {escaped_prompt}"
+        escaped_enhanced_prompt = enhanced_prompt.replace("'", "'\"'\"'")
+
         # Comando para executar Claude Code como usuário específico
+        # cd: muda para o diretório do projeto antes de executar
         # --continue: continua a conversa anterior
         # --print: modo não-interativo, imprime resposta e sai
         # --permission-mode bypassPermissions: pula todas as verificações de permissão
         command = [
             'su', '-s', '/bin/bash', agent, '-c',
-            f'cd "{request.projectPath}" && claude --continue --print --permission-mode bypassPermissions "{escaped_prompt}"'
+            f'cd "{request.projectPath}" && claude --continue --print --permission-mode bypassPermissions "{escaped_enhanced_prompt}"'
         ]
 
         # Executar comando

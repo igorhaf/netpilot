@@ -1108,10 +1108,11 @@ echo "🎉 Limpeza concluída para ${projectName}"
     });
     await this.jobExecutionRepository.save(jobExecution);
 
-    // Salvar comando do usuário como mensagem
+    // Salvar comando do usuário como mensagem (sem markdown, apenas com $)
+    const formattedCommand = '$ ' + command;
     await this.chatService.create({
       role: ChatMessageRole.USER,
-      content: command,
+      content: formattedCommand,
       projectId: id,
       userId,
       sessionId,
@@ -1120,24 +1121,56 @@ echo "🎉 Limpeza concluída para ${projectName}"
     });
 
     try {
-      // Executar comando no diretório do projeto
-      const { stdout, stderr } = await execAsync(
-        command,
-        {
-          cwd: projectPath,
-          timeout: 300000, // 5 minutos
-          maxBuffer: 10 * 1024 * 1024, // 10MB
-        }
-      );
+      // Executar comando via FastAPI System Ops (no HOST) com streaming
+      const systemOpsUrl = process.env.SYSTEM_OPS_URL || 'http://172.18.0.1:8001';
+      const axios = require('axios');
 
-      // Combinar stdout e stderr
+      // Fazer requisição de streaming
+      const response = await axios.post(`${systemOpsUrl}/system/execute-command-stream`, {
+        command: command,
+        workingDirectory: `${projectPath}/code`,
+        timeout: 300
+      }, {
+        timeout: 300000, // 5 minutos
+        responseType: 'stream'
+      });
+
       let output = '';
-      if (stdout) output += stdout;
-      if (stderr) output += stderr;
+      let tempOutput = '';
+
+      // Criar mensagem inicial vazia para ir atualizando
+      const assistantMessage = await this.chatService.create({
+        role: ChatMessageRole.ASSISTANT,
+        content: '```bash\n```',
+        projectId: id,
+        sessionId,
+        status: ChatMessageStatus.STREAMING,
+        metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true },
+      });
+
+      // Processar stream linha por linha
+      for await (const chunk of response.data) {
+        const line = chunk.toString();
+        output += line;
+        tempOutput += line;
+
+        // Atualizar mensagem a cada 10 linhas ou 500ms
+        if (tempOutput.split('\n').length > 5) {
+          const formattedOutput = '```bash\n' + output + '\n```';
+          await this.chatService.update(assistantMessage.id, {
+            content: formattedOutput,
+            status: ChatMessageStatus.STREAMING,
+          });
+          tempOutput = '';
+        }
+      }
 
       if (!output.trim()) {
         output = '[Comando executado com sucesso - sem saída]';
       }
+
+      // Formatar output final como markdown bash
+      const formattedOutput = '```bash\n' + output + '\n```';
 
       // Atualizar job execution
       jobExecution.status = ExecutionStatus.COMPLETED;
@@ -1146,14 +1179,10 @@ echo "🎉 Limpeza concluída para ${projectName}"
       jobExecution.outputLog = output;
       await this.jobExecutionRepository.save(jobExecution);
 
-      // Salvar saída como mensagem do assistente
-      await this.chatService.create({
-        role: ChatMessageRole.ASSISTANT,
-        content: output,
-        projectId: id,
-        sessionId,
+      // Atualizar mensagem final
+      await this.chatService.update(assistantMessage.id, {
+        content: formattedOutput,
         status: ChatMessageStatus.COMPLETED,
-        metadata: { jobExecutionId: jobExecution.id, isCommandOutput: true },
       });
 
       console.log(`✅ Comando executado com sucesso`);
@@ -1172,6 +1201,9 @@ echo "🎉 Limpeza concluída para ${projectName}"
       if (error.stdout) errorOutput += `\n\nSaída padrão:\n${error.stdout}`;
       if (error.stderr) errorOutput += `\n\nSaída de erro:\n${error.stderr}`;
 
+      // Formatar erro como markdown bash
+      const formattedError = '```bash\n' + errorOutput + '\n```';
+
       // Atualizar job execution com erro
       jobExecution.status = ExecutionStatus.FAILED;
       jobExecution.completedAt = new Date();
@@ -1179,10 +1211,10 @@ echo "🎉 Limpeza concluída para ${projectName}"
       jobExecution.errorLog = errorOutput;
       await this.jobExecutionRepository.save(jobExecution);
 
-      // Salvar erro como mensagem do assistente
+      // Salvar erro como mensagem do assistente com markdown bash
       await this.chatService.create({
         role: ChatMessageRole.ASSISTANT,
-        content: errorOutput,
+        content: formattedError,
         projectId: id,
         sessionId,
         status: ChatMessageStatus.ERROR,
