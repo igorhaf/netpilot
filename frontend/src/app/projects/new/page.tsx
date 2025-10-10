@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useRequireAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 import { CreateProjectDto } from '@/types'
-import StackSelector from '@/components/projects/StackSelector'
+import PresetSelector from '@/components/projects/PresetSelector'
 
 export default function NewProjectPage() {
   const auth = useRequireAuth()
@@ -35,7 +35,6 @@ export default function NewProjectPage() {
     mainDomain: '',
     defaultPromptTemplate: '',
     executionMode: 'queue',
-    stackIds: [],
     presetIds: [],
     metadata: {}
   })
@@ -316,10 +315,11 @@ export default function NewProjectPage() {
             </Card>
           </div>
 
-          {/* Stack Selection */}
-          <StackSelector
-            selectedStackIds={formData.stackIds || []}
-            onChange={(stackIds) => setFormData(prev => ({ ...prev, stackIds }))}
+          {/* Preset Selection */}
+          <PresetSelector
+            selectedPresetIds={formData.presetIds || []}
+            onChange={(presetIds) => setFormData(prev => ({ ...prev, presetIds }))}
+            excludeStackPresets={false}
           />
 
           {/* Actions */}

@@ -41,9 +41,6 @@ export class Preset {
   @Column({ type: 'int', default: 0 })
   size: number;
 
-  @Column({ default: true })
-  isActive: boolean;
-
   @ManyToMany(() => Stack, (stack) => stack.presets)
   stacks: Stack[];
 

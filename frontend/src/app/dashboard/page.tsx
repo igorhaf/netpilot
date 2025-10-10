@@ -53,7 +53,7 @@ export default function DashboardPage() {
   }
 
   const SystemStatusCard = ({ name, status, uptime }: any) => (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+    <div className="flex items-center justify-between py-3 px-3 rounded-lg bg-muted/50">
       <div className="flex items-center gap-2">
         <div className={`h-2 w-2 rounded-full ${status === 'online' ? 'bg-green-400' : 'bg-red-400'}`} />
         <span className="text-sm font-medium">{name}</span>
@@ -97,19 +97,24 @@ export default function DashboardPage() {
                 uptime={stats?.systemStatus.traefik.uptime}
               />
               <SystemStatusCard
-                name="Database"
-                status={stats?.systemStatus.database.status}
-                uptime={stats?.systemStatus.database.uptime}
+                name="PostgreSQL"
+                status={stats?.systemStatus.postgresql.status}
+                uptime={stats?.systemStatus.postgresql.uptime}
+              />
+              <SystemStatusCard
+                name="MySQL"
+                status={stats?.systemStatus.mysql.status}
+                uptime={stats?.systemStatus.mysql.uptime}
+              />
+              <SystemStatusCard
+                name="Redis"
+                status={stats?.systemStatus.redis.status}
+                uptime={stats?.systemStatus.redis.uptime}
               />
               <SystemStatusCard
                 name="WebSocket"
-                status={(stats?.systemStatus as any)?.websocket?.status || 'online'}
-                uptime={(stats?.systemStatus as any)?.websocket?.uptime}
-              />
-              <SystemStatusCard
-                name="Docker"
-                status={(stats?.systemStatus as any)?.docker?.status || 'online'}
-                uptime={(stats?.systemStatus as any)?.docker?.uptime}
+                status={stats?.systemStatus.websocket.status}
+                uptime={stats?.systemStatus.websocket.uptime}
               />
             </CardContent>
           </Card>
@@ -132,22 +137,24 @@ export default function DashboardPage() {
                   Erro ao carregar logs: {(logsError as Error).message}
                 </div>
               ) : recentLogs && recentLogs.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {recentLogs.map((log) => {
                     const StatusIcon = log.status === 'success' ? CheckCircle :
                                      log.status === 'failed' ? XCircle :
                                      log.status === 'running' ? Activity : AlertTriangle
 
                     return (
-                      <div key={log.id} className="flex items-center gap-3 py-2">
-                        <StatusIcon className={`h-4 w-4 ${getStatusColor(log.status)}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{log.action}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatRelativeTime(log.createdAt)}
-                          </p>
+                      <div key={log.id} className="flex items-center justify-between py-3 px-3 rounded-lg bg-muted/50">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <StatusIcon className={`h-4 w-4 flex-shrink-0 ${getStatusColor(log.status)}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{log.action}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatRelativeTime(log.createdAt)}
+                            </p>
+                          </div>
                         </div>
-                        <Badge variant={log.status === 'success' ? "default" : log.status === 'failed' ? "destructive" : "secondary"}>
+                        <Badge variant={log.status === 'success' ? "default" : log.status === 'failed' ? "destructive" : "secondary"} className="text-xs">
                           {log.status}
                         </Badge>
                       </div>

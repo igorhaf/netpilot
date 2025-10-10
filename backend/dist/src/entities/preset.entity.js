@@ -56,10 +56,6 @@ __decorate([
     __metadata("design:type", Number)
 ], Preset.prototype, "size", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], Preset.prototype, "isActive", void 0);
-__decorate([
     (0, typeorm_1.ManyToMany)(() => stack_entity_1.Stack, (stack) => stack.presets),
     __metadata("design:type", Array)
 ], Preset.prototype, "stacks", void 0);

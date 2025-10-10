@@ -34,7 +34,19 @@ export declare class DashboardController {
                 status: string;
                 uptime: string;
             };
-            database: {
+            postgresql: {
+                status: string;
+                uptime: string;
+            };
+            mysql: {
+                status: string;
+                uptime: string;
+            };
+            redis: {
+                status: string;
+                uptime: string;
+            };
+            websocket: {
                 status: string;
                 uptime: string;
             };

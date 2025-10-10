@@ -36,6 +36,19 @@ export class ProjectsController {
     return this.projectsService.getStats();
   }
 
+  @Get(':id/presets')
+  getProjectPresets(@Param('id') id: string) {
+    return this.projectsService.getProjectPresets(id);
+  }
+
+  @Patch(':id/presets')
+  updateProjectPresets(
+    @Param('id') id: string,
+    @Body() body: { presetIds: string[] }
+  ) {
+    return this.projectsService.updateProjectPresets(id, body.presetIds);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.projectsService.findOne(id);
@@ -89,5 +102,38 @@ export class ProjectsController {
   ) {
     const userId = req?.user?.userId;
     return this.projectsService.executeCommand(id, body.command, userId);
+  }
+
+  @Get(':id/git/status')
+  getGitStatus(@Param('id') id: string) {
+    return this.projectsService.getGitStatus(id);
+  }
+
+  @Post(':id/git/pull')
+  gitPull(@Param('id') id: string) {
+    return this.projectsService.gitPull(id);
+  }
+
+  @Post(':id/git/commit')
+  gitCommit(
+    @Param('id') id: string,
+    @Body() body: { message: string }
+  ) {
+    return this.projectsService.gitCommit(id, body.message);
+  }
+
+  @Post(':id/git/push')
+  gitPush(@Param('id') id: string) {
+    return this.projectsService.gitPush(id);
+  }
+
+  @Get(':id/git/diff')
+  getGitDiff(@Param('id') id: string) {
+    return this.projectsService.getGitDiff(id);
+  }
+
+  @Post(':id/git/generate-commit-message')
+  generateCommitMessage(@Param('id') id: string) {
+    return this.projectsService.generateCommitMessage(id);
   }
 }

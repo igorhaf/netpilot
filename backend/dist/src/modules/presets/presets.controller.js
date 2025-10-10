@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PresetsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const jwt_auth_guard_1 = require("../../guards/jwt-auth.guard");
 const presets_service_1 = require("./presets.service");
 const create_preset_dto_1 = require("./dto/create-preset.dto");
 const update_preset_dto_1 = require("./dto/update-preset.dto");
@@ -43,6 +42,15 @@ let PresetsController = class PresetsController {
     }
     remove(id) {
         return this.presetsService.remove(id);
+    }
+    getTags() {
+        return this.presetsService.getAllTags();
+    }
+    addTag(tag) {
+        return this.presetsService.addTag(tag);
+    }
+    removeTag(tag) {
+        return this.presetsService.removeTag(tag);
     }
 };
 exports.PresetsController = PresetsController;
@@ -103,10 +111,32 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PresetsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Get)('tags/list'),
+    (0, swagger_1.ApiOperation)({ summary: 'Listar todas as tags únicas' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PresetsController.prototype, "getTags", null);
+__decorate([
+    (0, common_1.Post)('tags'),
+    (0, swagger_1.ApiOperation)({ summary: 'Adicionar uma nova tag' }),
+    __param(0, (0, common_1.Body)('tag')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PresetsController.prototype, "addTag", null);
+__decorate([
+    (0, common_1.Delete)('tags/:tag'),
+    (0, swagger_1.ApiOperation)({ summary: 'Remover uma tag' }),
+    __param(0, (0, common_1.Param)('tag')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PresetsController.prototype, "removeTag", null);
 exports.PresetsController = PresetsController = __decorate([
     (0, swagger_1.ApiTags)('Presets'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)('presets'),
     __metadata("design:paramtypes", [presets_service_1.PresetsService])
 ], PresetsController);

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Settings, User, Shield, Bell, Monitor, LogOut, RefreshCw, Edit3, Key, Download, Upload, Check, X, Clock, Database, Wifi } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Settings, User, Shield, Bell, Monitor, LogOut, RefreshCw, Edit3, Key, Download, Upload, Check, X, Clock, Database, Wifi, Tag, Plus } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import api from '@/lib/api'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -297,6 +299,38 @@ export default function SettingsPage() {
         hostname: 'netpilot-server',
         kernelVersion: '5.15.0-91-generic'
     })
+
+    // Tags management
+    const [newTag, setNewTag] = useState('')
+    const queryClient = useQueryClient()
+
+    const { data: tags = [], refetch: refetchTags } = useQuery({
+        queryKey: ['preset-tags'],
+        queryFn: () => api.get('/presets/tags/list').then(res => res.data)
+    })
+
+    const addTagMutation = useMutation({
+        mutationFn: (tag: string) => api.post('/presets/tags', { tag }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['preset-tags'] })
+            setNewTag('')
+            toast.success('Tag adicionada com sucesso')
+        }
+    })
+
+    const removeTagMutation = useMutation({
+        mutationFn: (tag: string) => api.delete(`/presets/tags/${encodeURIComponent(tag)}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['preset-tags'] })
+            toast.success('Tag removida com sucesso')
+        }
+    })
+
+    const handleAddTag = () => {
+        if (newTag.trim()) {
+            addTagMutation.mutate(newTag.trim())
+        }
+    }
 
     // Dados de integrações disponíveis
     const [integrations] = useState([
@@ -1180,6 +1214,70 @@ export default function SettingsPage() {
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs text-muted-foreground">Última atividade suspeita</span>
                                     <span className="text-xs text-red-600">25/01 22:45</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Tags Management */}
+                    <Card className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                                <Tag className="h-6 w-6 text-purple-500" />
+                                <h2 className="text-lg font-semibold">Tags de Presets</h2>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            {/* Add Tag Input */}
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="Nova tag..."
+                                    value={newTag}
+                                    onChange={(e) => setNewTag(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    size="sm"
+                                    onClick={handleAddTag}
+                                    disabled={!newTag.trim() || addTagMutation.isPending}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            {/* Tags List */}
+                            <div className="max-h-40 overflow-y-auto space-y-2">
+                                {tags && tags.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {tags.map((tag: string) => (
+                                            <Badge
+                                                key={tag}
+                                                variant="secondary"
+                                                className="flex items-center gap-1 pr-1"
+                                            >
+                                                <span>{tag}</span>
+                                                <button
+                                                    onClick={() => removeTagMutation.mutate(tag)}
+                                                    className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                                                    disabled={removeTagMutation.isPending}
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                        Nenhuma tag cadastrada
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="pt-2 border-t">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Total de tags</span>
+                                    <span className="text-xs font-medium">{tags?.length || 0}</span>
                                 </div>
                             </div>
                         </div>

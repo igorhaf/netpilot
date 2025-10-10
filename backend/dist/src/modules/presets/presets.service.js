@@ -126,6 +126,31 @@ let PresetsService = class PresetsService {
             totalSize: parseInt(totalSize?.totalSize || '0'),
         };
     }
+    async getAllTags() {
+        const presets = await this.presetRepository.find({
+            select: ['tags'],
+        });
+        const allTags = new Set();
+        presets.forEach(preset => {
+            if (preset.tags && Array.isArray(preset.tags)) {
+                preset.tags.forEach(tag => allTags.add(tag));
+            }
+        });
+        return Array.from(allTags).sort();
+    }
+    async addTag(tag) {
+        return this.getAllTags();
+    }
+    async removeTag(tag) {
+        const presets = await this.presetRepository.find();
+        for (const preset of presets) {
+            if (preset.tags && preset.tags.includes(tag)) {
+                preset.tags = preset.tags.filter(t => t !== tag);
+                await this.presetRepository.save(preset);
+            }
+        }
+        return this.getAllTags();
+    }
 };
 exports.PresetsService = PresetsService;
 exports.PresetsService = PresetsService = __decorate([

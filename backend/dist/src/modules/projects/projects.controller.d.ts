@@ -7,6 +7,30 @@ export declare class ProjectsController {
     create(createProjectDto: CreateProjectDto): Promise<import("../../entities/project.entity").Project>;
     findAll(includeInactive?: string): Promise<import("../../entities/project.entity").Project[]>;
     getStats(): Promise<any>;
+    getProjectPresets(id: string): Promise<{
+        presets: import("../../entities/preset.entity").Preset[];
+        categorized: {
+            tecnologias: any[];
+            personas: any[];
+            templates: any[];
+            configs: any[];
+            docker: any[];
+            scripts: any[];
+        };
+    }>;
+    updateProjectPresets(id: string, body: {
+        presetIds: string[];
+    }): Promise<{
+        presets: import("../../entities/preset.entity").Preset[];
+        categorized: {
+            tecnologias: any[];
+            personas: any[];
+            templates: any[];
+            configs: any[];
+            docker: any[];
+            scripts: any[];
+        };
+    }>;
     findOne(id: string): Promise<import("../../entities/project.entity").Project>;
     update(id: string, updateProjectDto: UpdateProjectDto): Promise<import("../../entities/project.entity").Project>;
     remove(id: string): Promise<void>;
@@ -23,4 +47,12 @@ export declare class ProjectsController {
     executeCommand(id: string, body: {
         command: string;
     }, req?: any): Promise<any>;
+    getGitStatus(id: string): Promise<any>;
+    gitPull(id: string): Promise<any>;
+    gitCommit(id: string, body: {
+        message: string;
+    }): Promise<any>;
+    gitPush(id: string): Promise<any>;
+    getGitDiff(id: string): Promise<any>;
+    generateCommitMessage(id: string): Promise<any>;
 }

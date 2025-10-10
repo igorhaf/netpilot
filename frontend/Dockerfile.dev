@@ -1,8 +1,5 @@
 FROM node:18-alpine
 
-# Instalar git, bash, shadow e python3
-RUN apk add --no-cache git bash shadow python3
-
 WORKDIR /app
 
 # Instalar dependências
@@ -10,7 +7,7 @@ COPY package*.json ./
 RUN npm install
 
 # Expor porta
-EXPOSE 3001
+EXPOSE 3000
 
 # Modo desenvolvimento com hot reload
-CMD ["npm", "run", "start:dev"]
+CMD ["npm", "run", "dev"]

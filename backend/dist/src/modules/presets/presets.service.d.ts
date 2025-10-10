@@ -14,4 +14,7 @@ export declare class PresetsService {
     remove(id: string): Promise<void>;
     findByStack(stackId: string): Promise<Preset[]>;
     getStatistics(): Promise<any>;
+    getAllTags(): Promise<string[]>;
+    addTag(tag: string): Promise<string[]>;
+    removeTag(tag: string): Promise<string[]>;
 }

@@ -150,4 +150,39 @@ export class PresetsService {
       totalSize: parseInt(totalSize?.totalSize || '0'),
     };
   }
+
+  async getAllTags(): Promise<string[]> {
+    const presets = await this.presetRepository.find({
+      select: ['tags'],
+    });
+
+    const allTags = new Set<string>();
+    presets.forEach(preset => {
+      if (preset.tags && Array.isArray(preset.tags)) {
+        preset.tags.forEach(tag => allTags.add(tag));
+      }
+    });
+
+    return Array.from(allTags).sort();
+  }
+
+  async addTag(tag: string): Promise<string[]> {
+    // Tag é adicionada quando usada em um preset
+    // Aqui apenas retornamos as tags existentes
+    return this.getAllTags();
+  }
+
+  async removeTag(tag: string): Promise<string[]> {
+    // Remove a tag de todos os presets que a contém
+    const presets = await this.presetRepository.find();
+
+    for (const preset of presets) {
+      if (preset.tags && preset.tags.includes(tag)) {
+        preset.tags = preset.tags.filter(t => t !== tag);
+        await this.presetRepository.save(preset);
+      }
+    }
+
+    return this.getAllTags();
+  }
 }

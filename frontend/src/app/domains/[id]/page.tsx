@@ -410,12 +410,6 @@ export default function DomainDetailPage() {
                                     <Terminal className="h-4 w-4" />
                                   </Button>
                                 </Link>
-
-                                <Link href={`/docker/containers/${container.id}/stats`}>
-                                  <Button size="sm" variant="outline" title="Estatísticas">
-                                    <Activity className="h-4 w-4" />
-                                  </Button>
-                                </Link>
                               </>
                             )}
                           </div>

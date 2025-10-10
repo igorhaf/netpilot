@@ -31,6 +31,12 @@ let ProjectsController = class ProjectsController {
     getStats() {
         return this.projectsService.getStats();
     }
+    getProjectPresets(id) {
+        return this.projectsService.getProjectPresets(id);
+    }
+    updateProjectPresets(id, body) {
+        return this.projectsService.updateProjectPresets(id, body.presetIds);
+    }
     findOne(id) {
         return this.projectsService.findOne(id);
     }
@@ -60,6 +66,24 @@ let ProjectsController = class ProjectsController {
         const userId = req?.user?.userId;
         return this.projectsService.executeCommand(id, body.command, userId);
     }
+    getGitStatus(id) {
+        return this.projectsService.getGitStatus(id);
+    }
+    gitPull(id) {
+        return this.projectsService.gitPull(id);
+    }
+    gitCommit(id, body) {
+        return this.projectsService.gitCommit(id, body.message);
+    }
+    gitPush(id) {
+        return this.projectsService.gitPush(id);
+    }
+    getGitDiff(id) {
+        return this.projectsService.getGitDiff(id);
+    }
+    generateCommitMessage(id) {
+        return this.projectsService.generateCommitMessage(id);
+    }
 };
 exports.ProjectsController = ProjectsController;
 __decorate([
@@ -82,6 +106,21 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "getStats", null);
+__decorate([
+    (0, common_1.Get)(':id/presets'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getProjectPresets", null);
+__decorate([
+    (0, common_1.Patch)(':id/presets'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "updateProjectPresets", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -150,6 +189,49 @@ __decorate([
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", void 0)
 ], ProjectsController.prototype, "executeCommand", null);
+__decorate([
+    (0, common_1.Get)(':id/git/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getGitStatus", null);
+__decorate([
+    (0, common_1.Post)(':id/git/pull'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "gitPull", null);
+__decorate([
+    (0, common_1.Post)(':id/git/commit'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "gitCommit", null);
+__decorate([
+    (0, common_1.Post)(':id/git/push'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "gitPush", null);
+__decorate([
+    (0, common_1.Get)(':id/git/diff'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "getGitDiff", null);
+__decorate([
+    (0, common_1.Post)(':id/git/generate-commit-message'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "generateCommitMessage", null);
 exports.ProjectsController = ProjectsController = __decorate([
     (0, common_1.Controller)('projects'),
     __metadata("design:paramtypes", [projects_service_1.ProjectsService])

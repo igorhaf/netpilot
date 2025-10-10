@@ -9,18 +9,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const bull_1 = require("@nestjs/bull");
 const dashboard_controller_1 = require("./dashboard.controller");
 const dashboard_service_1 = require("./dashboard.service");
 const domain_entity_1 = require("../../entities/domain.entity");
 const ssl_certificate_entity_1 = require("../../entities/ssl-certificate.entity");
 const log_entity_1 = require("../../entities/log.entity");
 const proxy_rule_entity_1 = require("../../entities/proxy-rule.entity");
+const websocket_module_1 = require("../websocket/websocket.module");
 let DashboardModule = class DashboardModule {
 };
 exports.DashboardModule = DashboardModule;
 exports.DashboardModule = DashboardModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([domain_entity_1.Domain, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, proxy_rule_entity_1.ProxyRule])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([domain_entity_1.Domain, ssl_certificate_entity_1.SslCertificate, log_entity_1.Log, proxy_rule_entity_1.ProxyRule]),
+            bull_1.BullModule.registerQueue({
+                name: 'job-processor',
+            }),
+            websocket_module_1.WebSocketModule,
+        ],
         controllers: [dashboard_controller_1.DashboardController],
         providers: [dashboard_service_1.DashboardService],
     })

@@ -9,7 +9,6 @@ export declare class Preset {
     filename: string;
     tags: string[];
     size: number;
-    isActive: boolean;
     stacks: Stack[];
     createdAt: Date;
     updatedAt: Date;

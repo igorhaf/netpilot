@@ -27,7 +27,6 @@ export interface Project {
   mainDomain?: string
   defaultPromptTemplate?: string
   executionMode?: 'realtime' | 'queue'
-  stacks?: Stack[]
   presets?: PresetFile[]
   metadata?: Record<string, any>
   domains?: Domain[]
@@ -149,7 +148,19 @@ export interface DashboardStats {
       status: string
       uptime: string
     }
-    database: {
+    postgresql: {
+      status: string
+      uptime: string
+    }
+    mysql: {
+      status: string
+      uptime: string
+    }
+    redis: {
+      status: string
+      uptime: string
+    }
+    websocket: {
       status: string
       uptime: string
     }
@@ -168,7 +179,6 @@ export interface CreateProjectDto {
   mainDomain?: string
   defaultPromptTemplate?: string
   executionMode?: 'realtime' | 'queue'
-  stackIds?: string[]
   presetIds?: string[]
   metadata?: Record<string, any>
 }

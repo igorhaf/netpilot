@@ -12,7 +12,7 @@ export function TerminalMessage({ content, isCommand }: TerminalMessageProps) {
   if (isCommand) {
     // Comando do usuário - estilo de prompt bash
     return (
-      <div className="font-mono text-sm bg-blue-900 p-2 rounded">
+      <div className="font-mono text-sm bg-blue-900 p-2 rounded border border-gray-600">
         <div className="flex items-start gap-2">
           <span className="text-green-500 font-bold select-none">$</span>
           <SyntaxHighlighter
@@ -42,7 +42,7 @@ export function TerminalMessage({ content, isCommand }: TerminalMessageProps) {
 
   // Saída do comando - estilo terminal output
   return (
-    <div className="font-mono text-sm bg-red-900 p-2 rounded">
+    <div className="font-mono text-sm bg-red-900 p-2 rounded border border-gray-600">
       <div className="text-yellow-300 text-xs mb-1">TERMINAL OUTPUT:</div>
       <SyntaxHighlighter
         language="bash"

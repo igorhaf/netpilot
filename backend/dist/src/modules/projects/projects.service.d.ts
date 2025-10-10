@@ -1,6 +1,5 @@
 import { Repository } from 'typeorm';
 import { Project } from '../../entities/project.entity';
-import { Stack } from '../../entities/stack.entity';
 import { Preset } from '../../entities/preset.entity';
 import { JobQueue } from '../../entities/job-queue.entity';
 import { JobExecution } from '../../entities/job-execution.entity';
@@ -10,13 +9,12 @@ import { LogsService } from '../logs/logs.service';
 import { ChatService } from '../chat/chat.service';
 export declare class ProjectsService {
     private projectRepository;
-    private stackRepository;
     private presetRepository;
     private jobQueueRepository;
     private jobExecutionRepository;
     private logsService;
     private chatService;
-    constructor(projectRepository: Repository<Project>, stackRepository: Repository<Stack>, presetRepository: Repository<Preset>, jobQueueRepository: Repository<JobQueue>, jobExecutionRepository: Repository<JobExecution>, logsService: LogsService, chatService: ChatService);
+    constructor(projectRepository: Repository<Project>, presetRepository: Repository<Preset>, jobQueueRepository: Repository<JobQueue>, jobExecutionRepository: Repository<JobExecution>, logsService: LogsService, chatService: ChatService);
     create(createProjectDto: CreateProjectDto): Promise<Project>;
     findAll(includeInactive?: boolean): Promise<Project[]>;
     findOne(id: string): Promise<Project>;
@@ -37,4 +35,32 @@ export declare class ProjectsService {
     executePromptRealtime(id: string, userPrompt: string, userId?: string): Promise<any>;
     executeCommand(id: string, command: string, userId?: string): Promise<any>;
     private loadContexts;
+    getProjectPresets(id: string): Promise<{
+        presets: Preset[];
+        categorized: {
+            tecnologias: any[];
+            personas: any[];
+            templates: any[];
+            configs: any[];
+            docker: any[];
+            scripts: any[];
+        };
+    }>;
+    updateProjectPresets(id: string, presetIds: string[]): Promise<{
+        presets: Preset[];
+        categorized: {
+            tecnologias: any[];
+            personas: any[];
+            templates: any[];
+            configs: any[];
+            docker: any[];
+            scripts: any[];
+        };
+    }>;
+    getGitStatus(id: string): Promise<any>;
+    gitPull(id: string): Promise<any>;
+    gitCommit(id: string, message: string): Promise<any>;
+    gitPush(id: string): Promise<any>;
+    getGitDiff(id: string): Promise<any>;
+    generateCommitMessage(id: string): Promise<any>;
 }

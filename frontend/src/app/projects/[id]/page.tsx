@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Globe, GitBranch, FileText, Calendar, Tag, ExternalLink, Terminal, Info, MessageSquare, Settings, Send, Bot, Loader2, GitPullRequest, Key, Copy, Trash2, Check, Layers } from 'lucide-react'
+import { Globe, GitBranch, FileText, Calendar, Tag, ExternalLink, Terminal, Info, MessageSquare, Settings, Send, Bot, Loader2, GitPullRequest, Key, Copy, Trash2, Check, Layers, Upload, Download, RefreshCw } from 'lucide-react'
 import { MainLayout } from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,6 +32,24 @@ export default function ProjectDetailsPage() {
   const [isTerminalMode, setIsTerminalMode] = useState(false) // true = terminal, false = AI
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
+  const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([])
+  const [userPromptText, setUserPromptText] = useState('')
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([])
+  const [finalPromptText, setFinalPromptText] = useState('')
+  const [activePromptTab, setActivePromptTab] = useState<'context' | 'prompt' | 'final'>('prompt')
+  const [commits, setCommits] = useState<string[]>([])
+  const [newCommit, setNewCommit] = useState('')
+  const [imageModalOpen, setImageModalOpen] = useState(false)
+  const [imageModalSrc, setImageModalSrc] = useState('')
+
+  // Git tab states
+  const [activeGitTab, setActiveGitTab] = useState<'status' | 'commit' | 'config'>('status')
+  const [gitStatus, setGitStatus] = useState<any>(null)
+  const [gitDiff, setGitDiff] = useState('')
+  const [commitMessage, setCommitMessage] = useState('')
+  const [stagedFiles, setStagedFiles] = useState<string[]>([])
+  const [generatingCommitMessage, setGeneratingCommitMessage] = useState(false)
+  const [repositoryUrl, setRepositoryUrl] = useState('')
 
   // Stack configuration states
   const [stackConfig, setStackConfig] = useState({
@@ -56,6 +74,42 @@ export default function ProjectDetailsPage() {
     queryFn: () => api.get(`/projects/${projectId}`).then(res => res.data),
     enabled: !!projectId
   })
+
+  // Query para buscar presets do projeto
+  const { data: projectPresets } = useQuery({
+    queryKey: ['project-presets', projectId],
+    queryFn: () => api.get(`/projects/${projectId}/presets`).then(res => res.data),
+    enabled: !!projectId && activeTab === 'stack',
+  })
+
+  // Query para buscar TODOS os presets disponíveis
+  const { data: allPresets } = useQuery({
+    queryKey: ['all-presets'],
+    queryFn: () => api.get('/presets').then(res => res.data),
+    enabled: activeTab === 'stack',
+  })
+
+  // Mutation para salvar contextos de prompt
+  const savePresetsMutation = useMutation({
+    mutationFn: async (presetIds: string[]) => {
+      return api.patch(`/projects/${projectId}/presets`, { presetIds }).then(res => res.data)
+    },
+    onSuccess: () => {
+      toast.success('Contextos de prompt atualizados com sucesso!')
+      queryClient.invalidateQueries({ queryKey: ['project-presets', projectId] })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao atualizar contextos')
+    },
+  })
+
+  // Inicializar selectedPresetIds quando projectPresets carregar
+  useEffect(() => {
+    if (projectPresets?.presets) {
+      const ids = projectPresets.presets.map((p: any) => p.id)
+      setSelectedPresetIds(ids)
+    }
+  }, [projectPresets])
 
   // Query para buscar mensagens do chat
   const { data: chatMessages } = useQuery({
@@ -122,6 +176,99 @@ export default function ProjectDetailsPage() {
     },
   })
 
+  // Query para buscar git status
+  const { data: gitStatusData, refetch: refetchGitStatus } = useQuery({
+    queryKey: ['git-status', projectId],
+    queryFn: () => api.get(`/projects/${projectId}/git/status`).then(res => res.data),
+    enabled: !!projectId && activeTab === 'git' && project?.cloned,
+    refetchInterval: 5000,
+  })
+
+  // Mutation para git pull
+  const gitPullMutation = useMutation({
+    mutationFn: async () => {
+      return api.post(`/projects/${projectId}/git/pull`).then(res => res.data)
+    },
+    onSuccess: () => {
+      toast.success('Pull realizado com sucesso!')
+      refetchGitStatus()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao fazer pull')
+    },
+  })
+
+  // Mutation para git commit
+  const gitCommitMutation = useMutation({
+    mutationFn: async (message: string) => {
+      return api.post(`/projects/${projectId}/git/commit`, { message }).then(res => res.data)
+    },
+    onSuccess: () => {
+      toast.success('Commit realizado com sucesso!')
+      setCommitMessage('')
+      setStagedFiles([])
+      refetchGitStatus()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao fazer commit')
+    },
+  })
+
+  // Mutation para git push
+  const gitPushMutation = useMutation({
+    mutationFn: async () => {
+      return api.post(`/projects/${projectId}/git/push`).then(res => res.data)
+    },
+    onSuccess: () => {
+      toast.success('Push realizado com sucesso!')
+      refetchGitStatus()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao fazer push')
+    },
+  })
+
+  // Mutation para stage/unstage arquivos
+  const gitStageMutation = useMutation({
+    mutationFn: async ({ file, stage }: { file: string; stage: boolean }) => {
+      return api.post(`/projects/${projectId}/git/stage`, { file, stage }).then(res => res.data)
+    },
+    onSuccess: () => {
+      refetchGitStatus()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao stage/unstage arquivo')
+    },
+  })
+
+  // Mutation para gerar mensagem de commit com IA
+  const generateCommitMessageMutation = useMutation({
+    mutationFn: async (diff: string) => {
+      return api.post(`/projects/${projectId}/git/generate-commit-message`, { diff }).then(res => res.data)
+    },
+    onSuccess: (data) => {
+      setCommitMessage(data.message)
+      toast.success('Mensagem de commit gerada!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao gerar mensagem de commit')
+    },
+  })
+
+  // Query para buscar diff
+  const { data: gitDiffData } = useQuery({
+    queryKey: ['git-diff', projectId],
+    queryFn: () => api.get(`/projects/${projectId}/git/diff`).then(res => res.data),
+    enabled: !!projectId && activeTab === 'git' && activeGitTab === 'commit' && project?.cloned,
+  })
+
+  // Inicializar repositoryUrl quando project carregar
+  useEffect(() => {
+    if (project?.repository) {
+      setRepositoryUrl(project.repository)
+    }
+  }, [project])
+
   // Função para copiar chave pública
   const handleCopyPublicKey = () => {
     if (project?.sshPublicKey) {
@@ -179,6 +326,180 @@ export default function ProjectDetailsPage() {
     }
   }
 
+  const togglePreset = (presetId: string) => {
+    setSelectedPresetIds(prev =>
+      prev.includes(presetId)
+        ? prev.filter(id => id !== presetId)
+        : [...prev, presetId]
+    )
+  }
+
+  const handleSavePresets = () => {
+    savePresetsMutation.mutate(selectedPresetIds)
+  }
+
+  // Gerar contexto com base nos presets selecionados
+  const generateContext = () => {
+    if (!allPresets || selectedPresetIds.length === 0) return ''
+
+    let context = '## CONTEXTO DO DESENVOLVIMENTO\n\n'
+
+    const selectedPresets = allPresets.filter((p: any) => selectedPresetIds.includes(p.id))
+
+    // Frontend
+    const frontend = selectedPresets.filter((p: any) => p.tags?.includes('frontend'))
+    if (frontend.length > 0) {
+      context += '### Frontend:\n'
+      frontend.forEach((p: any) => {
+        context += `- ${p.name}\n`
+      })
+      context += '\n'
+    }
+
+    // Backend
+    const backend = selectedPresets.filter((p: any) => p.tags?.includes('backend'))
+    if (backend.length > 0) {
+      context += '### Backend:\n'
+      backend.forEach((p: any) => {
+        context += `- ${p.name}\n`
+      })
+      context += '\n'
+    }
+
+    // Database
+    const database = selectedPresets.filter((p: any) => p.tags?.includes('database'))
+    if (database.length > 0) {
+      context += '### Database:\n'
+      database.forEach((p: any) => {
+        context += `- ${p.name}\n`
+      })
+      context += '\n'
+    }
+
+    // Personas
+    const personas = selectedPresets.filter((p: any) => p.type === 'persona')
+    if (personas.length > 0) {
+      context += '### Persona:\n'
+      personas.forEach((p: any) => {
+        context += `${p.name}\n`
+      })
+      context += '\n'
+    }
+
+    return context
+  }
+
+  // Gerar prompt final
+  const generateFinalPrompt = () => {
+    let finalPrompt = generateContext()
+
+    if (uploadedFiles.length > 0) {
+      finalPrompt += '### Arquivos Anexados:\n'
+      uploadedFiles.forEach(file => {
+        finalPrompt += `- ${file.name} (${file.type})\n`
+      })
+      finalPrompt += '\n'
+    }
+
+    if (userPromptText.trim()) {
+      finalPrompt += '## REQUISIÇÃO\n\n'
+      finalPrompt += userPromptText
+    }
+
+    return finalPrompt || 'Configure o contexto e digite seu prompt...'
+  }
+
+  // Atualizar prompt final automaticamente quando contextos mudarem
+  useEffect(() => {
+    setFinalPromptText(generateFinalPrompt())
+  }, [selectedPresetIds, uploadedFiles, userPromptText, allPresets])
+
+  // Upload de arquivos
+  const handleFileUpload = (files: FileList | File[]) => {
+    Array.from(files).forEach(file => {
+      const reader = new FileReader()
+
+      reader.onload = (e) => {
+        const fileObj = {
+          name: file.name,
+          type: file.type,
+          content: e.target?.result,
+          size: file.size
+        }
+
+        setUploadedFiles(prev => [...prev, fileObj])
+      }
+
+      if (file.type.startsWith('image/')) {
+        reader.readAsDataURL(file)
+      } else {
+        reader.readAsText(file)
+      }
+    })
+  }
+
+  // Paste event para imagens
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (activeTab !== 'stack') return
+
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      for (let item of Array.from(items)) {
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile()
+          if (file) handleFileUpload([file])
+        }
+      }
+    }
+
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [activeTab])
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const copyFinalPrompt = () => {
+    navigator.clipboard.writeText(finalPromptText)
+    toast.success('Prompt copiado!')
+  }
+
+  const regenerateFinalPrompt = () => {
+    setFinalPromptText(generateFinalPrompt())
+    toast.success('Prompt regenerado!')
+  }
+
+  const translateToEnglish = () => {
+    const currentText = finalPromptText
+    const translatedPrompt = `Translate the following prompt to English and return only the translated version:\n\n${currentText}`
+    setFinalPromptText(translatedPrompt)
+    toast.success('Instrução de tradução adicionada!')
+  }
+
+  const addCommit = () => {
+    if (newCommit.trim()) {
+      setCommits(prev => [...prev, newCommit.trim()])
+      setNewCommit('')
+    }
+  }
+
+  const removeCommit = (index: number) => {
+    setCommits(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const openImageModal = (src: string) => {
+    setImageModalSrc(src)
+    setImageModalOpen(true)
+  }
+
+  const closeImageModal = () => {
+    setImageModalOpen(false)
+    setImageModalSrc('')
+  }
+
   if (!auth) return null
 
   if (isLoading) {
@@ -232,11 +553,9 @@ export default function ProjectDetailsPage() {
         <div className="flex space-x-1 border-b overflow-x-auto">
           {[
             { id: 'chat', label: 'Chat', icon: MessageSquare },
-            { id: 'git', label: 'Git Clone', icon: GitBranch },
-            { id: 'ssh', label: 'SSH Keys', icon: Key },
-            { id: 'stack', label: 'Stack & Config', icon: Layers },
+            { id: 'git', label: 'Git', icon: GitBranch },
+            { id: 'stack', label: 'Contextos de Prompt', icon: Layers },
             { id: 'terminal', label: 'Terminal', icon: Terminal },
-            { id: 'options', label: 'Opções', icon: Settings },
             { id: 'overview', label: 'Info', icon: Info }
           ].map(({ id, label, icon: Icon }) => (
             <button
@@ -285,7 +604,7 @@ export default function ProjectDetailsPage() {
                 ) : (
                   <>
                     {messages.map((msg, idx) => (
-                      <div key={idx} className="mb-2">
+                      <div key={idx} className="mb-4">
                         {msg.isTyping ? (
                           <div className="flex items-center gap-1 text-gray-400 text-xs">
                             <span className="animate-bounce inline-block" style={{ animationDelay: '0ms' }}>.</span>
@@ -364,497 +683,811 @@ export default function ProjectDetailsPage() {
           </div>
         )}
 
-        {/* Aba Git Clone */}
-        {activeTab === 'git' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GitBranch className="h-5 w-5" />
-                Git Clone - Clonar Repositório
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">URL do Repositório</label>
-                <input
-                  type="text"
-                  placeholder="https://github.com/usuario/repositorio.git"
-                  className="w-full px-3 py-2 border rounded-lg bg-background"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Diretório de Destino</label>
-                <input
-                  type="text"
-                  value="./code"
-                  disabled
-                  className="w-full px-3 py-2 border rounded-lg bg-muted"
-                />
-                <p className="text-xs text-muted-foreground">
-                  O repositório será clonado em: /home/{project?.alias}/code
-                </p>
-              </div>
-              <Button className="w-full">
-                <GitBranch className="h-4 w-4 mr-2" />
-                Clonar Repositório
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Aba SSH Keys */}
-        {activeTab === 'ssh' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                Gerenciador de Chaves SSH
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {!project?.hasSshKey ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Nenhuma chave SSH configurada. Gere uma para usar com repositórios Git.
-                  </p>
-                  <Button className="w-full">
-                    <Key className="h-4 w-4 mr-2" />
-                    Gerar Par de Chaves SSH
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                    <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                      ✓ Chaves SSH configuradas
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Fingerprint: {project.sshKeyFingerprint}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Chave Pública</label>
-                    <div className="relative">
-                      <textarea
-                        value={project.sshPublicKey}
-                        readOnly
-                        rows={4}
-                        className="w-full bg-muted px-3 py-2 rounded-lg text-xs font-mono resize-none"
-                      />
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="absolute top-2 right-2"
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Copiar
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Adicione esta chave no GitHub/GitLab para autenticação SSH
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Aba Stack & Configurações */}
+        {/* Aba Contextos de Prompt */}
         {activeTab === 'stack' && (
-          <div className="space-y-6">
-            {/* Frontend Stack */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <Globe className="h-4 w-4 text-blue-500" />
-                  </div>
-                  Frontend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {['React', 'Vue', 'Angular', 'Svelte', 'Next.js', 'Nuxt', 'Vite', 'Tailwind'].map(tech => (
-                    <div
-                      key={tech}
-                      onClick={() => toggleTech('frontend', tech)}
-                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        stackConfig.frontend.includes(tech)
-                          ? 'border-blue-500 bg-blue-500/10'
-                          : 'border-border hover:border-blue-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{tech}</span>
-                        <Switch
-                          checked={stackConfig.frontend.includes(tech)}
-                          onCheckedChange={() => toggleTech('frontend', tech)}
+          <div className="flex gap-6 h-[calc(100vh-200px)]">
+            {!projectPresets || !allPresets ? (
+              <div className="flex items-center justify-center w-full p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                {/* Sidebar - Três Seções com Scroll Independente */}
+                <div className="w-56 border-r border-border flex flex-col h-full">
+
+                  {/* Seção 1: Commits */}
+                  <div className="border-b border-border p-4 max-h-[30%] overflow-y-auto">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+                      <GitBranch className="h-3 w-3" />
+                      Commits
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex gap-1">
+                        <Input
+                          type="text"
+                          value={newCommit}
+                          onChange={(e) => setNewCommit(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && addCommit()}
+                          placeholder="Hash ou mensagem..."
+                          className="text-xs h-7"
                         />
+                        <Button
+                          onClick={addCommit}
+                          size="sm"
+                          className="h-7 px-2"
+                        >
+                          +
+                        </Button>
+                      </div>
+                      {commits.length > 0 && (
+                        <div className="space-y-1">
+                          {commits.map((commit, index) => (
+                            <div key={index} className="flex items-center gap-1 bg-muted/50 rounded px-2 py-1">
+                              <span className="text-xs truncate flex-1">{commit}</span>
+                              <button
+                                onClick={() => removeCommit(index)}
+                                className="text-xs text-red-500 hover:text-red-700"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Seção 2: Arquivos Anexados */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="border-b border-border p-4 max-h-[30%] overflow-y-auto">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+                        <FileText className="h-3 w-3" />
+                        Arquivos Anexados ({uploadedFiles.length})
+                      </h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {uploadedFiles.map((file, index) => (
+                          <div key={index} className="relative group">
+                            {file.type.startsWith('image/') ? (
+                              <div
+                                onClick={() => openImageModal(file.content)}
+                                className="relative rounded border border-border overflow-hidden cursor-pointer hover:ring-1 hover:ring-primary transition-all"
+                                style={{ width: '32px', height: '32px' }}
+                              >
+                                <img
+                                  src={file.content}
+                                  alt={file.name}
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    removeFile(index)
+                                  }}
+                                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center text-[10px] hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                className="relative rounded border border-border bg-muted/50 flex items-center justify-center"
+                                style={{ width: '32px', height: '32px' }}
+                              >
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <button
+                                  onClick={() => removeFile(index)}
+                                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center text-[10px] hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  )}
 
-            {/* Backend Stack */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                    <Terminal className="h-4 w-4 text-green-500" />
+                  {/* Seção 3: Presets (Conteúdo Atual) */}
+                  <div className="flex-1 p-4 overflow-y-auto">
+                    <div className="space-y-6">
+                      {/* Frontend */}
+                      {allPresets.filter((p: any) => p.tags?.includes('frontend')).length > 0 && (
+                        <div className="space-y-2">
+                          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                            <Layers className="h-3 w-3" />
+                            Frontend
+                          </h3>
+                          <div className="space-y-1">
+                            {allPresets
+                              .filter((p: any) => p.tags?.includes('frontend'))
+                              .map((preset: any) => {
+                                const isSelected = selectedPresetIds.includes(preset.id)
+                                return (
+                                  <button
+                                    key={preset.id}
+                                    onClick={() => togglePreset(preset.id)}
+                                    className={`w-full p-2 rounded text-xs transition-all text-left ${
+                                      isSelected
+                                        ? 'bg-blue-500/10 border border-blue-500/50 text-foreground'
+                                        : 'bg-muted/50 border border-transparent hover:bg-muted text-foreground'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-blue-500' : 'bg-muted-foreground/30'}`} />
+                                      <span className="truncate">{preset.name}</span>
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Backend */}
+                      {allPresets.filter((p: any) => p.tags?.includes('backend')).length > 0 && (
+                        <div className="space-y-2">
+                          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                            <Layers className="h-3 w-3" />
+                            Backend
+                          </h3>
+                          <div className="space-y-1">
+                            {allPresets
+                              .filter((p: any) => p.tags?.includes('backend'))
+                              .map((preset: any) => {
+                                const isSelected = selectedPresetIds.includes(preset.id)
+                                return (
+                                  <button
+                                    key={preset.id}
+                                    onClick={() => togglePreset(preset.id)}
+                                    className={`w-full p-2 rounded text-xs transition-all text-left ${
+                                      isSelected
+                                        ? 'bg-green-500/10 border border-green-500/50 text-foreground'
+                                        : 'bg-muted/50 border border-transparent hover:bg-muted text-foreground'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                                      <span className="truncate">{preset.name}</span>
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Database */}
+                      {allPresets.filter((p: any) => p.tags?.includes('database')).length > 0 && (
+                        <div className="space-y-2">
+                          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                            <Layers className="h-3 w-3" />
+                            Database
+                          </h3>
+                          <div className="space-y-1">
+                            {allPresets
+                              .filter((p: any) => p.tags?.includes('database'))
+                              .map((preset: any) => {
+                                const isSelected = selectedPresetIds.includes(preset.id)
+                                return (
+                                  <button
+                                    key={preset.id}
+                                    onClick={() => togglePreset(preset.id)}
+                                    className={`w-full p-2 rounded text-xs transition-all text-left ${
+                                      isSelected
+                                        ? 'bg-orange-500/10 border border-orange-500/50 text-foreground'
+                                        : 'bg-muted/50 border border-transparent hover:bg-muted text-foreground'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-orange-500' : 'bg-muted-foreground/30'}`} />
+                                      <span className="truncate">{preset.name}</span>
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Personas */}
+                      {allPresets.filter((p: any) => p.type === 'persona').length > 0 && (
+                        <div className="space-y-2">
+                          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                            <Bot className="h-3 w-3" />
+                            Personas
+                          </h3>
+                          <div className="space-y-1">
+                            {allPresets
+                              .filter((p: any) => p.type === 'persona')
+                              .map((preset: any) => {
+                                const isSelected = selectedPresetIds.includes(preset.id)
+                                return (
+                                  <button
+                                    key={preset.id}
+                                    onClick={() => togglePreset(preset.id)}
+                                    className={`w-full p-2 rounded text-xs transition-all text-left ${
+                                      isSelected
+                                        ? 'bg-purple-500/10 border border-purple-500/50 text-foreground'
+                                        : 'bg-muted/50 border border-transparent hover:bg-muted text-foreground'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-purple-500' : 'bg-muted-foreground/30'}`} />
+                                      <span className="truncate">{preset.name}</span>
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  Backend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {['Node.js', 'Python', 'PHP', 'Ruby', 'Java', 'Go', 'Rust', '.NET'].map(tech => (
-                    <div
-                      key={tech}
-                      onClick={() => toggleTech('backend', tech)}
-                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        stackConfig.backend.includes(tech)
-                          ? 'border-green-500 bg-green-500/10'
-                          : 'border-border hover:border-green-300'
+
+                </div>
+
+                {/* Content Area - Prompt Builder */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {/* Sub-Tabs Navigation */}
+                  <div className="flex space-x-1 border-b mb-4">
+                    <button
+                      onClick={() => setActivePromptTab('context')}
+                      className={`px-3 py-2 text-xs font-medium rounded-t transition-colors ${
+                        activePromptTab === 'context'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{tech}</span>
-                        <Switch
-                          checked={stackConfig.backend.includes(tech)}
-                          onCheckedChange={() => toggleTech('backend', tech)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Database Stack */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-purple-500" />
-                  </div>
-                  Database
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'MariaDB', 'Elasticsearch', 'Cassandra'].map(tech => (
-                    <div
-                      key={tech}
-                      onClick={() => toggleTech('database', tech)}
-                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        stackConfig.database.includes(tech)
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-border hover:border-purple-300'
+                      Contexto Gerado
+                    </button>
+                    <button
+                      onClick={() => setActivePromptTab('prompt')}
+                      className={`px-3 py-2 text-xs font-medium rounded-t transition-colors ${
+                        activePromptTab === 'prompt'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{tech}</span>
-                        <Switch
-                          checked={stackConfig.database.includes(tech)}
-                          onCheckedChange={() => toggleTech('database', tech)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Services (Docker) */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                    <Layers className="h-4 w-4 text-cyan-500" />
-                  </div>
-                  Services & DevOps
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {['Docker', 'Kubernetes', 'Nginx', 'Apache', 'Traefik', 'RabbitMQ', 'Kafka', 'MinIO'].map(tech => (
-                    <div
-                      key={tech}
-                      onClick={() => toggleTech('services', tech)}
-                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        stackConfig.services.includes(tech)
-                          ? 'border-cyan-500 bg-cyan-500/10'
-                          : 'border-border hover:border-cyan-300'
+                      Seu Prompt
+                    </button>
+                    <button
+                      onClick={() => setActivePromptTab('final')}
+                      className={`px-3 py-2 text-xs font-medium rounded-t transition-colors ${
+                        activePromptTab === 'final'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{tech}</span>
-                        <Switch
-                          checked={stackConfig.services.includes(tech)}
-                          onCheckedChange={() => toggleTech('services', tech)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* AI Personas */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-orange-500" />
+                      Prompt Final
+                    </button>
                   </div>
-                  Personas de IA
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {['Senior Dev', 'Code Reviewer', 'DevOps Expert', 'UI/UX Designer', 'DBA Specialist', 'Security Analyst', 'QA Tester', 'Arquiteto'].map(tech => (
-                    <div
-                      key={tech}
-                      onClick={() => toggleTech('personas', tech)}
-                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        stackConfig.personas.includes(tech)
-                          ? 'border-orange-500 bg-orange-500/10'
-                          : 'border-border hover:border-orange-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{tech}</span>
-                        <Switch
-                          checked={stackConfig.personas.includes(tech)}
-                          onCheckedChange={() => toggleTech('personas', tech)}
+
+                  {/* Tab Content */}
+                  <div className="flex-1 overflow-y-auto">
+                    {activePromptTab === 'context' && (
+                      <div>
+                        <Textarea
+                          value={generateContext()}
+                          readOnly
+                          className="min-h-[400px] font-mono text-xs bg-muted/50 resize-none"
+                          placeholder="Selecione contextos na barra lateral..."
                         />
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    )}
 
-            {/* Scripts de Automação */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Scripts de Automação</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Pre-prompt Script</label>
-                  <Textarea
-                    placeholder="#!/bin/bash&#10;# Executado ANTES do Claude processar&#10;echo 'Setup do ambiente...'"
-                    rows={4}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Executado antes da IA processar (setup, validações, etc)
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Post-prompt Script</label>
-                  <Textarea
-                    placeholder="#!/bin/bash&#10;# Executado DEPOIS do Claude processar&#10;npm run format && git add ."
-                    rows={4}
-                    className="font-mono text-xs"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Executado após a IA processar (formatação, testes, deploy, etc)
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                    {activePromptTab === 'prompt' && (
+                      <div>
+                        <div
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            e.currentTarget.classList.add('ring-2', 'ring-primary')
+                          }}
+                          onDragLeave={(e) => {
+                            e.currentTarget.classList.remove('ring-2', 'ring-primary')
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            e.currentTarget.classList.remove('ring-2', 'ring-primary')
+                            handleFileUpload(e.dataTransfer.files)
+                          }}
+                        >
+                          <Textarea
+                            value={userPromptText}
+                            onChange={(e) => setUserPromptText(e.target.value)}
+                            className="min-h-[400px] resize-none"
+                            placeholder="Digite seu prompt aqui... (Arraste arquivos ou Ctrl+V para colar imagens)"
+                          />
+                        </div>
+                      </div>
+                    )}
 
-            {/* Botão Salvar */}
-            <Button className="w-full" size="lg">
-              <Settings className="h-4 w-4 mr-2" />
-              Salvar Configurações do Stack
-            </Button>
+                    {activePromptTab === 'final' && (
+                      <div className="space-y-4">
+                        <div
+                          className="relative group"
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            e.currentTarget.classList.add('ring-2', 'ring-primary')
+                          }}
+                          onDragLeave={(e) => {
+                            e.currentTarget.classList.remove('ring-2', 'ring-primary')
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            e.currentTarget.classList.remove('ring-2', 'ring-primary')
+                            handleFileUpload(e.dataTransfer.files)
+                          }}
+                        >
+                          <Textarea
+                            value={finalPromptText}
+                            onChange={(e) => setFinalPromptText(e.target.value)}
+                            className="min-h-[400px] font-mono text-xs resize-none"
+                            placeholder="O prompt contextualizado aparecerá aqui... (Arraste arquivos ou Ctrl+V para colar imagens)"
+                          />
+                          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              onClick={translateToEnglish}
+                              variant="secondary"
+                              size="sm"
+                              className="h-7 text-xs"
+                            >
+                              🌐 EN
+                            </Button>
+                            <Button
+                              onClick={regenerateFinalPrompt}
+                              variant="secondary"
+                              size="sm"
+                              className="h-7 text-xs"
+                            >
+                              <Loader2 className="h-3 w-3 mr-1" />
+                              Regenerar
+                            </Button>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={copyFinalPrompt}
+                          className="w-full"
+                          variant="default"
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copiar Prompt Contextualizado
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {activeTab === 'options' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Repositório</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    URL do Repositório
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      value={project.repository || ''}
-                      disabled={project.cloned}
-                      placeholder="git@github.com:usuario/repositorio.git"
-                      className="flex-1"
-                      readOnly
-                    />
-                    {project.repository && !project.cloned && (
+        {activeTab === 'git' && (
+          <div className="flex flex-col h-[calc(100vh-200px)]">
+            {/* Sub-Tabs Git */}
+            <div className="flex space-x-1 border-b mb-4">
+              <button
+                onClick={() => setActiveGitTab('status')}
+                className={`px-3 py-2 text-xs font-medium rounded-t transition-colors ${
+                  activeGitTab === 'status'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Status & Pull
+              </button>
+              <button
+                onClick={() => setActiveGitTab('commit')}
+                className={`px-3 py-2 text-xs font-medium rounded-t transition-colors ${
+                  activeGitTab === 'commit'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Commit & Push
+              </button>
+              <button
+                onClick={() => setActiveGitTab('config')}
+                className={`px-3 py-2 text-xs font-medium rounded-t transition-colors ${
+                  activeGitTab === 'config'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Configuração
+              </button>
+            </div>
+
+            {/* Git Status & Pull Tab */}
+            {activeGitTab === 'status' && (
+              <div className="flex-1 overflow-y-auto space-y-4">
+                {!project.cloned ? (
+                  <Card>
+                    <CardContent className="p-6">
+                      <p className="text-muted-foreground text-center">Repositório ainda não clonado. Configure na aba Configuração.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Ações Git */}
+                    <div className="flex gap-2">
                       <Button
-                        onClick={() => cloneRepositoryMutation.mutate()}
-                        disabled={cloneRepositoryMutation.isPending}
+                        onClick={() => gitPullMutation.mutate()}
+                        disabled={gitPullMutation.isPending}
                         className="flex items-center gap-2"
                       >
-                        {cloneRepositoryMutation.isPending ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Clonando...
-                          </>
-                        ) : (
-                          <>
-                            <GitPullRequest className="h-4 w-4" />
-                            Clonar
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                  {project.cloned && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
-                      <Badge variant="default" className="bg-green-600">
-                        Clonado
-                      </Badge>
-                      <span>Repositório clonado em /home/{project.alias}/code</span>
-                    </div>
-                  )}
-                  {!project.repository && (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Nenhum repositório configurado para este projeto
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  Chaves SSH (Git)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!project.hasSshKey ? (
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Nenhuma chave SSH configurada para este projeto. Gere uma chave SSH para usar com repositórios Git.
-                    </p>
-                    <Button
-                      onClick={() => generateSshKeyMutation.mutate()}
-                      disabled={generateSshKeyMutation.isPending}
-                      className="flex items-center gap-2"
-                    >
-                      {generateSshKeyMutation.isPending ? (
-                        <>
+                        {gitPullMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Gerando...
-                        </>
-                      ) : (
-                        <>
-                          <Key className="h-4 w-4" />
-                          Gerar Chave SSH
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        Pull
+                      </Button>
+                      <Button
+                        onClick={() => refetchGitStatus()}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Atualizar
+                      </Button>
+                    </div>
+
+                    {/* Git Status */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm">Status do Repositório</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {gitStatusData ? (
+                          <div className="space-y-4">
+                            {/* Modified Files */}
+                            {gitStatusData.modified && gitStatusData.modified.length > 0 && (
+                              <div>
+                                <h4 className="text-xs font-semibold text-amber-600 mb-2">Modificados ({gitStatusData.modified.length})</h4>
+                                <div className="space-y-1">
+                                  {gitStatusData.modified.map((file: string, idx: number) => (
+                                    <div key={idx} className="text-xs font-mono bg-amber-50 dark:bg-amber-950/20 p-2 rounded">
+                                      {file}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Untracked Files */}
+                            {gitStatusData.untracked && gitStatusData.untracked.length > 0 && (
+                              <div>
+                                <h4 className="text-xs font-semibold text-gray-600 mb-2">Não Rastreados ({gitStatusData.untracked.length})</h4>
+                                <div className="space-y-1">
+                                  {gitStatusData.untracked.map((file: string, idx: number) => (
+                                    <div key={idx} className="text-xs font-mono bg-gray-50 dark:bg-gray-950/20 p-2 rounded">
+                                      {file}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Deleted Files */}
+                            {gitStatusData.deleted && gitStatusData.deleted.length > 0 && (
+                              <div>
+                                <h4 className="text-xs font-semibold text-red-600 mb-2">Deletados ({gitStatusData.deleted.length})</h4>
+                                <div className="space-y-1">
+                                  {gitStatusData.deleted.map((file: string, idx: number) => (
+                                    <div key={idx} className="text-xs font-mono bg-red-50 dark:bg-red-950/20 p-2 rounded">
+                                      {file}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Clean State */}
+                            {(!gitStatusData.modified || gitStatusData.modified.length === 0) &&
+                              (!gitStatusData.untracked || gitStatusData.untracked.length === 0) &&
+                              (!gitStatusData.deleted || gitStatusData.deleted.length === 0) && (
+                                <p className="text-sm text-green-600 flex items-center gap-2">
+                                  <Check className="h-4 w-4" />
+                                  Árvore de trabalho limpa
+                                </p>
+                              )}
+
+                            {/* Branch Info */}
+                            {gitStatusData.branch && (
+                              <div className="pt-4 border-t">
+                                <p className="text-xs text-muted-foreground">
+                                  Branch: <span className="font-mono font-semibold">{gitStatusData.branch}</span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Git Commit & Push Tab */}
+            {activeGitTab === 'commit' && (
+              <div className="flex-1 overflow-y-auto space-y-4">
+                {!project.cloned ? (
+                  <Card>
+                    <CardContent className="p-6">
+                      <p className="text-muted-foreground text-center">Repositório ainda não clonado. Configure na aba Configuração.</p>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-green-600">
-                      <Badge variant="default" className="bg-green-600">
-                        Configurado
-                      </Badge>
-                      <span>Chaves armazenadas em /home/{project.alias}/.ssh/</span>
-                    </div>
+                  <>
+                    {/* Diff Viewer */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm flex items-center justify-between">
+                          <span>Alterações (Diff)</span>
+                          <Button
+                            onClick={() => generateCommitMessageMutation.mutate(gitDiffData?.diff || '')}
+                            disabled={generateCommitMessageMutation.isPending || !gitDiffData?.diff}
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {generateCommitMessageMutation.isPending ? (
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            ) : (
+                              <Bot className="h-3 w-3 mr-1" />
+                            )}
+                            Gerar Mensagem com IA
+                          </Button>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {gitDiffData?.diff ? (
+                          <pre className="text-xs font-mono bg-muted p-4 rounded max-h-[300px] overflow-auto whitespace-pre-wrap">
+                            {gitDiffData.diff}
+                          </pre>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Nenhuma alteração para commit</p>
+                        )}
+                      </CardContent>
+                    </Card>
 
-                    <Separator />
-
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Fingerprint
-                      </label>
-                      <code className="bg-muted px-3 py-2 rounded text-sm block break-all">
-                        {project.sshKeyFingerprint}
-                      </code>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Chave Pública
-                      </label>
-                      <div className="relative">
-                        <textarea
-                          value={project.sshPublicKey}
-                          readOnly
-                          rows={6}
-                          className="w-full bg-muted px-3 py-2 rounded text-xs font-mono resize-none"
+                    {/* Commit Message */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm">Mensagem do Commit</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Textarea
+                          value={commitMessage}
+                          onChange={(e) => setCommitMessage(e.target.value)}
+                          placeholder="Digite a mensagem do commit..."
+                          className="min-h-[100px] font-mono text-sm"
                         />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => gitCommitMutation.mutate(commitMessage)}
+                            disabled={gitCommitMutation.isPending || !commitMessage.trim()}
+                            className="flex items-center gap-2"
+                          >
+                            {gitCommitMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                            Commit
+                          </Button>
+                          <Button
+                            onClick={() => gitPushMutation.mutate()}
+                            disabled={gitPushMutation.isPending}
+                            variant="outline"
+                            className="flex items-center gap-2"
+                          >
+                            {gitPushMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4" />
+                            )}
+                            Push
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Git Configuration Tab */}
+            {activeGitTab === 'config' && (
+              <div className="flex-1 overflow-y-auto space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <GitBranch className="h-4 w-4" />
+                      Repositório Git
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                        URL do Repositório
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="text"
+                          value={repositoryUrl}
+                          onChange={(e) => setRepositoryUrl(e.target.value)}
+                          placeholder="git@github.com:usuario/repositorio.git"
+                          className="flex-1 text-xs"
+                        />
+                        {project.repository && !project.cloned && (
+                          <Button
+                            onClick={() => cloneRepositoryMutation.mutate()}
+                            disabled={cloneRepositoryMutation.isPending}
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            {cloneRepositoryMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Clonando...
+                              </>
+                            ) : (
+                              <>
+                                <GitPullRequest className="h-3 w-3" />
+                                Clonar
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                      {project.cloned && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-green-600">
+                          <Badge variant="default" className="bg-green-600 text-xs">
+                            Clonado
+                          </Badge>
+                          <span>Repositório clonado em /home/{project.alias}/code</span>
+                        </div>
+                      )}
+                      {!project.repository && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Nenhum repositório configurado para este projeto
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Key className="h-4 w-4" />
+                      Chaves SSH
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {!project.hasSshKey ? (
+                      <div className="space-y-3">
+                        <p className="text-xs text-muted-foreground">
+                          Nenhuma chave SSH configurada para este projeto. Gere uma chave SSH para usar com repositórios Git.
+                        </p>
                         <Button
-                          onClick={handleCopyPublicKey}
+                          onClick={() => generateSshKeyMutation.mutate()}
+                          disabled={generateSshKeyMutation.isPending}
                           size="sm"
-                          variant="secondary"
-                          className="absolute top-2 right-2 flex items-center gap-1"
+                          className="flex items-center gap-2"
                         >
-                          {copiedKey ? (
+                          {generateSshKeyMutation.isPending ? (
                             <>
-                              <Check className="h-3 w-3" />
-                              Copiado
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Gerando...
                             </>
                           ) : (
                             <>
-                              <Copy className="h-3 w-3" />
-                              Copiar
+                              <Key className="h-3 w-3" />
+                              Gerar Chave SSH
                             </>
                           )}
                         </Button>
                       </div>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Adicione esta chave pública nas configurações SSH do seu repositório Git (GitHub, GitLab, etc.)
-                      </p>
-                    </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-xs text-green-600">
+                          <Badge variant="default" className="bg-green-600 text-xs">
+                            Configurado
+                          </Badge>
+                          <span>Chaves armazenadas em /home/{project.alias}/.ssh/</span>
+                        </div>
 
-                    <Separator />
+                        <Separator />
 
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">
-                        Chave privada: <code className="bg-muted px-2 py-1 rounded text-xs">/home/{project.alias}/.ssh/id_rsa</code>
-                      </p>
-                    </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                            Fingerprint
+                          </label>
+                          <code className="bg-muted px-3 py-2 rounded text-xs block break-all">
+                            {project.sshKeyFingerprint}
+                          </code>
+                        </div>
 
-                    <Button
-                      onClick={() => {
-                        if (confirm('Tem certeza que deseja deletar as chaves SSH deste projeto?')) {
-                          deleteSshKeyMutation.mutate()
-                        }
-                      }}
-                      disabled={deleteSshKeyMutation.isPending}
-                      variant="destructive"
-                      className="flex items-center gap-2"
-                    >
-                      {deleteSshKeyMutation.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Deletando...
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="h-4 w-4" />
-                          Deletar Chaves SSH
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                            Chave Pública
+                          </label>
+                          <div className="relative">
+                            <textarea
+                              value={project.sshPublicKey}
+                              readOnly
+                              rows={6}
+                              className="w-full bg-muted px-3 py-2 rounded text-xs font-mono resize-none"
+                            />
+                            <Button
+                              onClick={handleCopyPublicKey}
+                              size="sm"
+                              variant="secondary"
+                              className="absolute top-2 right-2 flex items-center gap-1 text-xs h-6"
+                            >
+                              {copiedKey ? (
+                                <>
+                                  <Check className="h-3 w-3" />
+                                  Copiado
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3 w-3" />
+                                  Copiar
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            Adicione esta chave pública nas configurações SSH do seu repositório Git (GitHub, GitLab, etc.)
+                          </p>
+                        </div>
+
+                        <Separator />
+
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-muted-foreground">
+                            Chave privada: <code className="bg-muted px-2 py-1 rounded text-xs">/home/{project.alias}/.ssh/id_rsa</code>
+                          </p>
+                        </div>
+
+                        <Button
+                          onClick={() => {
+                            if (confirm('Tem certeza que deseja deletar as chaves SSH deste projeto?')) {
+                              deleteSshKeyMutation.mutate()
+                            }
+                          }}
+                          disabled={deleteSshKeyMutation.isPending}
+                          variant="destructive"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          {deleteSshKeyMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Deletando...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="h-3 w-3" />
+                              Deletar Chaves SSH
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         )}
 
@@ -1008,6 +1641,29 @@ export default function ProjectDetailsPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Imagem */}
+      {imageModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={closeImageModal}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]">
+            <button
+              onClick={closeImageModal}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl font-bold"
+            >
+              ✕
+            </button>
+            <img
+              src={imageModalSrc}
+              alt="Imagem ampliada"
+              className="max-w-full max-h-[90vh] object-contain rounded"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </MainLayout>
   )
 }

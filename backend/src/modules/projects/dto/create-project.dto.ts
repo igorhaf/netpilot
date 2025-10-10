@@ -49,11 +49,6 @@ export class CreateProjectDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  stackIds?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
   presetIds?: string[];
 
   @IsOptional()

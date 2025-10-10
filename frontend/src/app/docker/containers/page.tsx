@@ -359,19 +359,11 @@ export default function ContainersPage() {
                         </Link>
 
                         {container.state === 'running' && (
-                          <>
-                            <Link href={`/docker/containers/${container.id}/terminal`}>
-                              <Button size="sm" variant="outline">
-                                <Terminal className="h-4 w-4" />
-                              </Button>
-                            </Link>
-
-                            <Link href={`/docker/containers/${container.id}/stats`}>
-                              <Button size="sm" variant="outline">
-                                <Activity className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                          </>
+                          <Link href={`/docker/containers/${container.id}/terminal`}>
+                            <Button size="sm" variant="outline">
+                              <Terminal className="h-4 w-4" />
+                            </Button>
+                          </Link>
                         )}
 
                         <Button

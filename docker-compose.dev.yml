@@ -1,0 +1,69 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: netpilot-backend
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://netpilot:netpilot123@db:5432/netpilot
+      - MYSQL_URL=mysql://netpilot:netpilot123@mysql:3306/netpilot
+      - JWT_SECRET=netpilot_jwt_secret_key_2024
+      - ACME_EMAIL=admin@meadadigital.com
+      - SSH_HOST=38.242.135.31
+      - SSH_PORT=22
+      - SSH_USER=windsurf
+      - SSH_PRIVATE_KEY_PATH=./id_ed25519
+      - SYSTEM_OPS_URL=http://172.18.0.1:8001
+      - DOCKER_SOCKET_PATH=/var/run/docker.sock
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SSH_DEFAULT_HOST=localhost
+      - SSH_DEFAULT_PORT=22
+      - SSH_DEFAULT_USER=root
+      - SSH_DEFAULT_AUTH_TYPE=password
+      - SSH_DEFAULT_PASSWORD=netpilot123
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      - ./backend/nest-cli.json:/app/nest-cli.json
+      - ./configs:/app/configs
+      - ./scripts:/app/scripts
+      - ./ssh:/app/ssh
+      - ./data/docker-backups:/app/data/docker-backups
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home:/host/home:rw
+    ports:
+      - "3001:3001"
+    networks:
+      - netpilot-network
+    depends_on:
+      - db
+      - redis
+    command: npm run start:dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: netpilot-frontend
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=https://netpilot.meadadigital.com
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/next.config.mjs:/app/next.config.mjs
+      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+    ports:
+      - "3000:3000"
+    networks:
+      - netpilot-network
+    depends_on:
+      - backend
+    command: npm run dev
+
+networks:
+  netpilot-network:
+    external: true

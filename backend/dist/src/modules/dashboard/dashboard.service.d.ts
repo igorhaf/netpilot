@@ -1,14 +1,20 @@
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Domain } from '../../entities/domain.entity';
 import { SslCertificate } from '../../entities/ssl-certificate.entity';
 import { Log } from '../../entities/log.entity';
 import { ProxyRule } from '../../entities/proxy-rule.entity';
+import { Queue } from 'bull';
+import { WebSocketService } from '../websocket/services/websocket.service';
 export declare class DashboardService {
     private domainRepository;
     private sslCertificateRepository;
     private logRepository;
     private proxyRuleRepository;
-    constructor(domainRepository: Repository<Domain>, sslCertificateRepository: Repository<SslCertificate>, logRepository: Repository<Log>, proxyRuleRepository: Repository<ProxyRule>);
+    private jobProcessorQueue;
+    private dataSource;
+    private webSocketService;
+    constructor(domainRepository: Repository<Domain>, sslCertificateRepository: Repository<SslCertificate>, logRepository: Repository<Log>, proxyRuleRepository: Repository<ProxyRule>, jobProcessorQueue: Queue, dataSource: DataSource, webSocketService: WebSocketService);
+    private getDockerContainerStatus;
     getDashboardStats(): Promise<{
         domains: {
             total: number;
@@ -41,7 +47,19 @@ export declare class DashboardService {
                 status: string;
                 uptime: string;
             };
-            database: {
+            postgresql: {
+                status: string;
+                uptime: string;
+            };
+            mysql: {
+                status: string;
+                uptime: string;
+            };
+            redis: {
+                status: string;
+                uptime: string;
+            };
+            websocket: {
                 status: string;
                 uptime: string;
             };

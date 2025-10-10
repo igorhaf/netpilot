@@ -11,4 +11,7 @@ export declare class PresetsController {
     findOne(id: string): Promise<import("../../entities/preset.entity").Preset>;
     update(id: string, updatePresetDto: UpdatePresetDto): Promise<import("../../entities/preset.entity").Preset>;
     remove(id: string): Promise<void>;
+    getTags(): Promise<string[]>;
+    addTag(tag: string): Promise<string[]>;
+    removeTag(tag: string): Promise<string[]>;
 }

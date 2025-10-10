@@ -118,6 +118,7 @@ from routes.websocket_routes import router as websocket_router
 from routes.monitoring_routes import router as monitoring_router
 from routes.config_routes import router as config_router
 from routes.claude_routes import router as claude_router
+from routes.git_routes import router as git_router
 
 app.include_router(nginx_router, prefix="/nginx", tags=["Nginx Operations"])
 app.include_router(ssl_router, prefix="/ssl", tags=["SSL Operations"])
@@ -131,6 +132,7 @@ app.include_router(websocket_router, prefix="/ws", tags=["WebSocket Streaming"])
 app.include_router(monitoring_router, prefix="/monitoring", tags=["Advanced Monitoring"])
 app.include_router(config_router, tags=["Configuration Generation"])
 app.include_router(claude_router, tags=["Claude Code AI"])
+app.include_router(git_router, tags=["Git Operations"])
 
 @app.get("/", response_model=dict)
 async def root():

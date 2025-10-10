@@ -20,7 +20,6 @@ const child_process_1 = require("child_process");
 const util_1 = require("util");
 const fs = require("fs/promises");
 const project_entity_1 = require("../../entities/project.entity");
-const stack_entity_1 = require("../../entities/stack.entity");
 const preset_entity_1 = require("../../entities/preset.entity");
 const job_queue_entity_1 = require("../../entities/job-queue.entity");
 const job_execution_entity_1 = require("../../entities/job-execution.entity");
@@ -31,9 +30,8 @@ const chat_message_entity_1 = require("../../entities/chat-message.entity");
 const job_execution_entity_2 = require("../../entities/job-execution.entity");
 const execAsync = (0, util_1.promisify)(child_process_1.exec);
 let ProjectsService = class ProjectsService {
-    constructor(projectRepository, stackRepository, presetRepository, jobQueueRepository, jobExecutionRepository, logsService, chatService) {
+    constructor(projectRepository, presetRepository, jobQueueRepository, jobExecutionRepository, logsService, chatService) {
         this.projectRepository = projectRepository;
-        this.stackRepository = stackRepository;
         this.presetRepository = presetRepository;
         this.jobQueueRepository = jobQueueRepository;
         this.jobExecutionRepository = jobExecutionRepository;
@@ -73,12 +71,8 @@ let ProjectsService = class ProjectsService {
                 await execAsync(`sudo usermod -a -G projects ${username} 2>&1 || true`);
                 console.log(`ℹ️ Usuário ${username} já existe, adicionado ao grupo projects`);
             }
-            const { stackIds, presetIds, ...projectData } = createProjectDto;
+            const { presetIds, ...projectData } = createProjectDto;
             const project = this.projectRepository.create(projectData);
-            if (stackIds && stackIds.length > 0) {
-                const stacks = await this.stackRepository.findBy({ id: (0, typeorm_2.In)(stackIds) });
-                project.stacks = stacks;
-            }
             if (presetIds && presetIds.length > 0) {
                 const presets = await this.presetRepository.findBy({ id: (0, typeorm_2.In)(presetIds) });
                 project.presets = presets;
@@ -98,10 +92,18 @@ let ProjectsService = class ProjectsService {
                 if (createProjectDto.repository && createProjectDto.repository.trim()) {
                     console.log(`🔄 Clonando repositório: ${createProjectDto.repository}`);
                     try {
-                        await execAsync(`sudo -u ${username} git clone "${createProjectDto.repository}" "${codePath}/repo"`, { timeout: 180000 });
+                        const systemOpsUrl = process.env.SYSTEM_OPS_URL || 'http://172.18.0.1:8001';
+                        const axios = require('axios');
+                        const response = await axios.post(`${systemOpsUrl}/git/clone`, {
+                            repository: createProjectDto.repository,
+                            targetPath: codePath,
+                            username: username
+                        }, {
+                            timeout: 300000
+                        });
+                        console.log(`✅ ${response.data.message}`);
                         savedProject.cloned = true;
                         await this.projectRepository.save(savedProject);
-                        console.log(`✅ Repositório clonado em: ${codePath}/repo`);
                     }
                     catch (cloneError) {
                         console.error(`❌ Erro ao clonar repositório: ${cloneError.message}`);
@@ -295,7 +297,16 @@ echo "🎉 Limpeza concluída para ${projectName}"
             const codePath = `${projectPath}/code`;
             console.log(`🔄 Clonando repositório: ${project.repository}`);
             try {
-                await execAsync(`sudo -u ${username} git clone "${project.repository}" "${codePath}"`, { timeout: 180000 });
+                const systemOpsUrl = process.env.SYSTEM_OPS_URL || 'http://172.18.0.1:8001';
+                const axios = require('axios');
+                const response = await axios.post(`${systemOpsUrl}/git/clone`, {
+                    repository: project.repository,
+                    targetPath: codePath,
+                    username: username
+                }, {
+                    timeout: 300000
+                });
+                console.log(`✅ ${response.data.message}`);
                 project.cloned = true;
                 const savedProject = await this.projectRepository.save(project);
                 console.log(`✅ Repositório clonado em: ${codePath}`);
@@ -442,19 +453,8 @@ echo "🎉 Limpeza concluída para ${projectName}"
             console.log(`  📁 Criado: ${subdir}/`);
         }
         let totalPresets = 0;
-        if (project.stacks && project.stacks.length > 0) {
-            for (const stack of project.stacks) {
-                console.log(`  🔴 Stack: ${stack.name}`);
-                if (stack.presets && stack.presets.length > 0) {
-                    for (const preset of stack.presets) {
-                        await this.writePresetFile(contextsPath, preset, username);
-                        totalPresets++;
-                    }
-                }
-            }
-        }
         if (project.presets && project.presets.length > 0) {
-            console.log(`  📎 Presets soltos: ${project.presets.length}`);
+            console.log(`  📎 Aplicando ${project.presets.length} presets`);
             for (const preset of project.presets) {
                 await this.writePresetFile(contextsPath, preset, username);
                 totalPresets++;
@@ -833,17 +833,319 @@ echo "🎉 Limpeza concluída para ${projectName}"
         }
         return result;
     }
+    async getProjectPresets(id) {
+        const project = await this.projectRepository.findOne({
+            where: { id },
+            relations: ['presets'],
+        });
+        if (!project) {
+            throw new common_1.NotFoundException(`Project with ID ${id} not found`);
+        }
+        const categorized = {
+            tecnologias: [],
+            personas: [],
+            templates: [],
+            configs: [],
+            docker: [],
+            scripts: [],
+        };
+        project.presets?.forEach((preset) => {
+            const item = {
+                id: preset.id,
+                name: preset.name,
+                type: preset.type,
+                description: preset.description,
+                language: preset.language,
+                tags: preset.tags,
+            };
+            if (preset.type === 'persona') {
+                categorized.personas.push(item);
+            }
+            else if (preset.type === 'template') {
+                categorized.templates.push(item);
+            }
+            else if (preset.type === 'config') {
+                categorized.configs.push(item);
+            }
+            else if (preset.type === 'docker') {
+                categorized.docker.push(item);
+            }
+            else if (preset.type === 'script') {
+                categorized.scripts.push(item);
+            }
+            if (preset.tags?.includes('tecnologia')) {
+                categorized.tecnologias.push(item);
+            }
+        });
+        return {
+            presets: project.presets,
+            categorized,
+        };
+    }
+    async updateProjectPresets(id, presetIds) {
+        const project = await this.projectRepository.findOne({
+            where: { id },
+            relations: ['presets'],
+        });
+        if (!project) {
+            throw new common_1.NotFoundException(`Project with ID ${id} not found`);
+        }
+        const presets = await this.presetRepository.findBy({
+            id: (0, typeorm_2.In)(presetIds)
+        });
+        project.presets = presets;
+        await this.projectRepository.save(project);
+        const username = project.alias;
+        const contextsPath = `/home/${username}/contexts`;
+        try {
+            const fsSync = require('fs');
+            const isDocker = fsSync.existsSync('/host/home');
+            if (isDocker) {
+                await execAsync(`rm -rf /host${contextsPath}/*`);
+            }
+            else {
+                await execAsync(`sudo rm -rf ${contextsPath}/*`);
+            }
+            await this.applyPresetsToProject(project, contextsPath, username);
+            console.log(`✅ Presets atualizados para o projeto ${project.name}`);
+        }
+        catch (error) {
+            console.error('Erro ao re-aplicar presets:', error);
+        }
+        return this.getProjectPresets(id);
+    }
+    async getGitStatus(id) {
+        const project = await this.findOne(id);
+        if (!project.cloned) {
+            throw new common_1.ConflictException('Repositório não foi clonado ainda');
+        }
+        const username = project.alias;
+        const codePath = `/home/${username}/code`;
+        try {
+            const fsSync = require('fs');
+            const isDocker = fsSync.existsSync('/host/home');
+            let gitStatusCmd;
+            let gitBranchCmd;
+            if (isDocker) {
+                gitStatusCmd = `cd ${codePath} && git status --porcelain`;
+                gitBranchCmd = `cd ${codePath} && git branch --show-current`;
+            }
+            else {
+                gitStatusCmd = `sudo -u ${username} git -C ${codePath} status --porcelain`;
+                gitBranchCmd = `sudo -u ${username} git -C ${codePath} branch --show-current`;
+            }
+            const { stdout: statusOutput } = await execAsync(gitStatusCmd);
+            const { stdout: branchOutput } = await execAsync(gitBranchCmd);
+            const files = statusOutput
+                .split('\n')
+                .filter(line => line.trim())
+                .map(line => {
+                const status = line.substring(0, 2);
+                const filepath = line.substring(3);
+                let type = 'modified';
+                if (status.includes('?'))
+                    type = 'untracked';
+                else if (status.includes('D'))
+                    type = 'deleted';
+                else if (status.includes('A'))
+                    type = 'added';
+                else if (status.includes('M'))
+                    type = 'modified';
+                return { filepath, status: status.trim(), type };
+            });
+            return {
+                branch: branchOutput.trim(),
+                files,
+                isClean: files.length === 0,
+            };
+        }
+        catch (error) {
+            console.error('❌ Erro ao obter status do git:', error);
+            throw new common_1.ConflictException(`Erro ao obter status: ${error.message}`);
+        }
+    }
+    async gitPull(id) {
+        const log = await this.logsService.createLog(log_entity_1.LogType.PROJECT, 'Git Pull', `Executando git pull no projeto ${id}`);
+        try {
+            const project = await this.findOne(id);
+            if (!project.cloned) {
+                await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, 'Repositório não foi clonado ainda');
+                throw new common_1.ConflictException('Repositório não foi clonado ainda');
+            }
+            const username = project.alias;
+            const codePath = `/home/${username}/code`;
+            console.log(`🔄 Executando git pull em: ${codePath}`);
+            const fsSync = require('fs');
+            const isDocker = fsSync.existsSync('/host/home');
+            let pullCmd;
+            if (isDocker) {
+                pullCmd = `cd ${codePath} && git pull`;
+            }
+            else {
+                pullCmd = `sudo -u ${username} git -C ${codePath} pull`;
+            }
+            const { stdout, stderr } = await execAsync(pullCmd, { timeout: 60000 });
+            const output = stdout + (stderr ? `\n${stderr}` : '');
+            console.log(`✅ Git pull executado com sucesso`);
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Git pull executado com sucesso`, output);
+            return { success: true, output };
+        }
+        catch (error) {
+            console.error(`❌ Erro ao executar git pull: ${error.message}`);
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, `Erro ao executar git pull: ${error.message}`, error.stack);
+            throw new common_1.ConflictException(`Erro ao executar git pull: ${error.message}`);
+        }
+    }
+    async gitCommit(id, message) {
+        const log = await this.logsService.createLog(log_entity_1.LogType.PROJECT, 'Git Commit', `Executando git commit no projeto ${id}`);
+        try {
+            const project = await this.findOne(id);
+            if (!project.cloned) {
+                await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, 'Repositório não foi clonado ainda');
+                throw new common_1.ConflictException('Repositório não foi clonado ainda');
+            }
+            const username = project.alias;
+            const codePath = `/home/${username}/code`;
+            console.log(`📝 Executando git commit em: ${codePath}`);
+            const fsSync = require('fs');
+            const isDocker = fsSync.existsSync('/host/home');
+            let addCmd;
+            let commitCmd;
+            if (isDocker) {
+                addCmd = `cd ${codePath} && git add -A`;
+                commitCmd = `cd ${codePath} && git commit -m "${message.replace(/"/g, '\\"')}"`;
+            }
+            else {
+                addCmd = `sudo -u ${username} git -C ${codePath} add -A`;
+                commitCmd = `sudo -u ${username} git -C ${codePath} commit -m "${message.replace(/"/g, '\\"')}"`;
+            }
+            await execAsync(addCmd);
+            const { stdout, stderr } = await execAsync(commitCmd, { timeout: 30000 });
+            const output = stdout + (stderr ? `\n${stderr}` : '');
+            console.log(`✅ Git commit executado com sucesso`);
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Git commit executado com sucesso`, output);
+            return { success: true, output };
+        }
+        catch (error) {
+            console.error(`❌ Erro ao executar git commit: ${error.message}`);
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, `Erro ao executar git commit: ${error.message}`, error.stack);
+            throw new common_1.ConflictException(`Erro ao executar git commit: ${error.message}`);
+        }
+    }
+    async gitPush(id) {
+        const log = await this.logsService.createLog(log_entity_1.LogType.PROJECT, 'Git Push', `Executando git push no projeto ${id}`);
+        try {
+            const project = await this.findOne(id);
+            if (!project.cloned) {
+                await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, 'Repositório não foi clonado ainda');
+                throw new common_1.ConflictException('Repositório não foi clonado ainda');
+            }
+            const username = project.alias;
+            const codePath = `/home/${username}/code`;
+            console.log(`⬆️ Executando git push em: ${codePath}`);
+            const fsSync = require('fs');
+            const isDocker = fsSync.existsSync('/host/home');
+            let pushCmd;
+            if (isDocker) {
+                pushCmd = `cd ${codePath} && git push`;
+            }
+            else {
+                pushCmd = `sudo -u ${username} git -C ${codePath} push`;
+            }
+            const { stdout, stderr } = await execAsync(pushCmd, { timeout: 60000 });
+            const output = stdout + (stderr ? `\n${stderr}` : '');
+            console.log(`✅ Git push executado com sucesso`);
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.SUCCESS, `Git push executado com sucesso`, output);
+            return { success: true, output };
+        }
+        catch (error) {
+            console.error(`❌ Erro ao executar git push: ${error.message}`);
+            await this.logsService.updateLogStatus(log.id, log_entity_1.LogStatus.FAILED, `Erro ao executar git push: ${error.message}`, error.stack);
+            throw new common_1.ConflictException(`Erro ao executar git push: ${error.message}`);
+        }
+    }
+    async getGitDiff(id) {
+        const project = await this.findOne(id);
+        if (!project.cloned) {
+            throw new common_1.ConflictException('Repositório não foi clonado ainda');
+        }
+        const username = project.alias;
+        const codePath = `/home/${username}/code`;
+        try {
+            const fsSync = require('fs');
+            const isDocker = fsSync.existsSync('/host/home');
+            let diffCmd;
+            if (isDocker) {
+                diffCmd = `cd ${codePath} && git diff`;
+            }
+            else {
+                diffCmd = `sudo -u ${username} git -C ${codePath} diff`;
+            }
+            const { stdout } = await execAsync(diffCmd);
+            return { diff: stdout };
+        }
+        catch (error) {
+            console.error('❌ Erro ao obter diff do git:', error);
+            throw new common_1.ConflictException(`Erro ao obter diff: ${error.message}`);
+        }
+    }
+    async generateCommitMessage(id) {
+        const project = await this.findOne(id);
+        if (!project.cloned) {
+            throw new common_1.ConflictException('Repositório não foi clonado ainda');
+        }
+        try {
+            const { diff } = await this.getGitDiff(id);
+            if (!diff || diff.trim() === '') {
+                return { message: 'Nenhuma alteração detectada' };
+            }
+            const prompt = `Analise as seguintes alterações git diff e gere uma mensagem de commit clara, concisa e em português seguindo as convenções do Conventional Commits.
+
+Use prefixos como:
+- feat: para novas funcionalidades
+- fix: para correções de bugs
+- refactor: para refatorações
+- docs: para documentação
+- style: para formatação
+- test: para testes
+- chore: para manutenção
+
+A mensagem deve ter no máximo 2 linhas: um título curto e opcionalmente uma descrição breve.
+
+Diff:
+\`\`\`diff
+${diff.substring(0, 4000)}
+\`\`\`
+
+Responda APENAS com a mensagem de commit, sem explicações adicionais.`;
+            const result = await this.executePromptRealtime(id, prompt);
+            if (result.success && result.output) {
+                let message = result.output
+                    .replace(/```[\s\S]*?```/g, '')
+                    .replace(/^.*?:/, (match) => match)
+                    .trim();
+                const lines = message.split('\n').filter(l => l.trim());
+                if (lines.length > 2) {
+                    message = lines.slice(0, 2).join('\n');
+                }
+                return { message };
+            }
+            return { message: 'Erro ao gerar mensagem de commit' };
+        }
+        catch (error) {
+            console.error('❌ Erro ao gerar mensagem de commit:', error);
+            throw new common_1.ConflictException(`Erro ao gerar mensagem: ${error.message}`);
+        }
+    }
 };
 exports.ProjectsService = ProjectsService;
 exports.ProjectsService = ProjectsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(project_entity_1.Project)),
-    __param(1, (0, typeorm_1.InjectRepository)(stack_entity_1.Stack)),
-    __param(2, (0, typeorm_1.InjectRepository)(preset_entity_1.Preset)),
-    __param(3, (0, typeorm_1.InjectRepository)(job_queue_entity_1.JobQueue)),
-    __param(4, (0, typeorm_1.InjectRepository)(job_execution_entity_1.JobExecution)),
+    __param(1, (0, typeorm_1.InjectRepository)(preset_entity_1.Preset)),
+    __param(2, (0, typeorm_1.InjectRepository)(job_queue_entity_1.JobQueue)),
+    __param(3, (0, typeorm_1.InjectRepository)(job_execution_entity_1.JobExecution)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

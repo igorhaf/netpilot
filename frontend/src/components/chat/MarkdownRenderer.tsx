@@ -1,11 +1,56 @@
 'use client'
 
+import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { Copy, Check } from 'lucide-react'
 
 interface MarkdownRendererProps {
   content: string
+}
+
+function CodeBlock({ language, children }: { language: string, children: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(children)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="relative group border border-gray-600 rounded-lg">
+      <button
+        onClick={handleCopy}
+        className="absolute top-2 right-2 p-1.5 rounded bg-gray-700/90 hover:bg-gray-600 opacity-70 hover:opacity-100 transition-all z-50 shadow-lg"
+        title="Copiar código"
+      >
+        {copied ? (
+          <Check className="h-3.5 w-3.5 text-green-400" />
+        ) : (
+          <Copy className="h-3.5 w-3.5 text-gray-200" />
+        )}
+      </button>
+      <SyntaxHighlighter
+        style={vscDarkPlus}
+        language={language}
+        PreTag="div"
+        className="rounded-lg !mt-0 !mb-0"
+        customStyle={{
+          margin: 0,
+          borderRadius: '0.375rem',
+          fontSize: '0.75rem',
+          padding: '0.5rem',
+          paddingTop: '0.75rem',
+          paddingRight: '2.5rem',
+          border: 'none',
+        }}
+      >
+        {children}
+      </SyntaxHighlighter>
+    </div>
+  )
 }
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
@@ -19,21 +64,9 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           const language = match ? match[1] : ''
 
           return !inline && language ? (
-            <SyntaxHighlighter
-              style={vscDarkPlus}
-              language={language}
-              PreTag="div"
-              className="rounded-lg !mt-1 !mb-1"
-              customStyle={{
-                margin: 0,
-                borderRadius: '0.375rem',
-                fontSize: '0.75rem',
-                padding: '0.5rem',
-              }}
-              {...rest}
-            >
+            <CodeBlock language={language}>
               {String(children).replace(/\n$/, '')}
-            </SyntaxHighlighter>
+            </CodeBlock>
           ) : (
             <code
               className="bg-muted px-1 py-0.5 rounded text-xs font-mono"

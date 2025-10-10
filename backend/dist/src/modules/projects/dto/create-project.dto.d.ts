@@ -10,7 +10,6 @@ export declare class CreateProjectDto {
     mainDomain?: string;
     defaultPromptTemplate?: string;
     executionMode?: 'realtime' | 'queue';
-    stackIds?: string[];
     presetIds?: string[];
     metadata?: Record<string, any>;
 }

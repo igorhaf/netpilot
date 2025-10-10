@@ -109,7 +109,7 @@ export default function PresetSelector({
   return (
     <div className="space-y-4">
       <div className="text-sm text-muted-foreground mb-2">
-        Selecione presets individuais (opcionais)
+        Selecione os presets de tecnologia e personas que deseja usar neste projeto
       </div>
 
       {/* Search and Filter */}
@@ -252,7 +252,7 @@ export default function PresetSelector({
             {selectedPresetIds.length > 1 ? 's' : ''}
           </p>
           <p className="text-xs text-green-700 mt-1">
-            Estes presets serão aplicados ao projeto além dos presets das stacks
+            Estes presets serão aplicados ao projeto como contexto para a IA
           </p>
         </div>
       )}
