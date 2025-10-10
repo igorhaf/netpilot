@@ -74,7 +74,7 @@ const selectedAgent = agents[Math.floor(Math.random() * agents.length)];
 ```bash
 POST http://172.18.0.1:8001/claude/execute
 {
-  "projectPath": "/home/deit/code",
+  "projectPath": "/home/projects/netpilot",
   "prompt": "crie um arquivo README.md",
   "agent": "marvin",
   "timeoutSeconds": 300
@@ -83,7 +83,7 @@ POST http://172.18.0.1:8001/claude/execute
 
 ### 4. FastAPI executa no HOST
 ```bash
-su -s /bin/bash marvin -c 'cd "/home/deit/code" && claude --continue "crie um arquivo README.md"'
+su -s /bin/bash marvin -c 'cd "/home/projects/netpilot" && claude --continue "crie um arquivo README.md"'
 ```
 
 ### 5. Saída retorna para o chat
@@ -194,10 +194,10 @@ sudo chmod -R 755 /home/bender/.claude
 ### Teste Manual via CLI
 ```bash
 # Test bender
-su -s /bin/bash bender -c 'cd /home/deit/code && claude --continue "liste os arquivos"'
+su -s /bin/bash bender -c 'cd /home/projects/netpilot && claude --continue "liste os arquivos"'
 
 # Test marvin
-su -s /bin/bash marvin -c 'cd /home/deit/code && claude --continue "liste os arquivos"'
+su -s /bin/bash marvin -c 'cd /home/projects/netpilot && claude --continue "liste os arquivos"'
 ```
 
 ### Teste via API
@@ -205,7 +205,7 @@ su -s /bin/bash marvin -c 'cd /home/deit/code && claude --continue "liste os arq
 curl -X POST http://172.18.0.1:8001/claude/execute \
   -H "Content-Type: application/json" \
   -d '{
-    "projectPath": "/home/deit/code",
+    "projectPath": "/home/projects/netpilot",
     "prompt": "crie um arquivo teste.txt com conteudo Hello World",
     "agent": "bender",
     "timeoutSeconds": 60

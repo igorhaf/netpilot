@@ -49,15 +49,6 @@ http:
 
     # Regular domain routing
 
-    # HTTPS redirect for deit.meadadigital.com
-    deit-meadadigital-com-redirect:
-      rule: "Host(`deit.meadadigital.com`)"
-      middlewares:
-        - deit-meadadigital-com-redirect-https
-      entryPoints:
-        - web
-
-
   services:
 
     # NetPilot services
@@ -82,10 +73,6 @@ http:
         scheme: https
         permanent: true
     api-netpilot-com-redirect-https:
-      redirectScheme:
-        scheme: https
-        permanent: true
-    deit-meadadigital-com-redirect-https:
       redirectScheme:
         scheme: https
         permanent: true

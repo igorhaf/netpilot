@@ -1,108 +1,61 @@
+# Traefik Dynamic Configuration
+# Generated at: 2025-10-10T18:04:08.226450
+# NetPilot System Operations
 
-  http:
-    routers:
-      netpilot-meadadigital-com-socketio:
-        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/socket.io`)
-        service: netpilot-meadadigital-com-api-service
-        middlewares: []
-        priority: 15
-        entryPoints: [
-          websecure
-        ]
-        tls:
-          certResolver: letsencrypt
+http:
+  routers:
+
+    # NetPilot Domain - Special routing for API + Frontend
+    netpilot-meadadigital-com-api:
+      rule: "Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)"
+      service: netpilot-meadadigital-com-api-service
+      middlewares: []
+      priority: 10
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    netpilot-meadadigital-com:
+      rule: "Host(`netpilot.meadadigital.com`)"
+      service: netpilot-meadadigital-com-service
+      middlewares: []
+      priority: 1
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
 
 
-      netpilot-meadadigital-com-api:
-        rule: Host(`netpilot.meadadigital.com`) && PathPrefix(`/api`)
-        service: netpilot-meadadigital-com-api-service
-        middlewares: []
-        priority: 10
-        entryPoints: [
-          websecure
-        ]
-        tls:
-          certResolver: letsencrypt
-        
-      
-      netpilot-meadadigital-com: 
-        rule: Host(`netpilot.meadadigital.com`)
-        service: netpilot-meadadigital-com-service
-        middlewares: []
-        priority: 1
-        entryPoints: [
-          websecure
-        ]
-        tls: 
-          certResolver: letsencrypt
-        
-      
-      netpilot-meadadigital-com-redirect: 
-        rule: Host(`netpilot.meadadigital.com`)
-        middlewares: [
-          netpilot-meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
-      api-netpilot-com-redirect: 
-        rule: Host(`api.netpilot.com`)
-        middlewares: [
-          api-netpilot-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
-      deit-meadadigital-com-redirect: 
-        rule: Host(`deit.meadadigital.com`)
-        middlewares: [
-          deit-meadadigital-com-redirect-https
-        ]
-        entryPoints: [
-          web
-        ]
-      
-    
-    services: 
-      netpilot-meadadigital-com-api-service:
-        loadBalancer:
-          servers: [
+    # HTTPS redirect for netpilot.meadadigital.com
+    netpilot-meadadigital-com-redirect:
+      rule: "Host(`netpilot.meadadigital.com`)"
+      middlewares:
+        - netpilot-meadadigital-com-redirect-https
+      entryPoints:
+        - web
 
-              url: http://netpilot-backend:3001
 
-          ]
-        
-      
-      netpilot-meadadigital-com-service:
-        loadBalancer:
-          servers: [
+    # Regular domain routing
 
-              url: http://netpilot-frontend:3000
+  services:
 
-          ]
-        
-      
-    
-    middlewares: 
-      netpilot-meadadigital-com-redirect-https: 
-        redirectScheme: 
-          scheme: https
-          permanent: true
-        
-      
-      api-netpilot-com-redirect-https: 
-        redirectScheme: 
-          scheme: https
-          permanent: true
-        
-      
-      deit-meadadigital-com-redirect-https: 
-        redirectScheme: 
-          scheme: https
-          permanent: true
-        
-      
-    
-  
+    # NetPilot services
+    netpilot-meadadigital-com-api-service:
+      loadBalancer:
+        servers:
+          - url: http://backend:3001
+
+    netpilot-meadadigital-com-service:
+      loadBalancer:
+        servers:
+          - url: http://frontend:3000
+
+
+    # Regular domain services
+
+  middlewares:
+    netpilot-meadadigital-com-redirect-https:
+      redirectScheme:
+        scheme: https
+        permanent: true

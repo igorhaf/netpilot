@@ -86,7 +86,7 @@ Quando você envia um prompt no modo **IA** (azul):
 1. **Backend escolhe aleatoriamente** entre `bender` ou `marvin`
 2. **Executa o comando** como o usuário escolhido:
    ```bash
-   su - bender -c 'cd /home/deit/code && claude --continue "seu prompt aqui"'
+   su - bender -c 'cd /home/projects/netpilot && claude --continue "seu prompt aqui"'
    ```
 3. **Compartilha contexto** via symlinks - ambos veem o mesmo histórico
 4. **Saída capturada** e gravada no banco de dados
@@ -131,7 +131,6 @@ No modo **Terminal** (verde), os comandos são executados diretamente no diretó
 │   │   └── file-history/  →  /home/bender/.claude/file-history/ (symlink)
 │   └── ...
 │
-└── deit/  (e outros projetos)
     └── code/  # Diretório onde Claude Code executa
 ```
 
@@ -184,7 +183,7 @@ Para ver qual agente está sendo usado:
 🤖 Claude Code - BENDER
 📁 Projeto: Deit
 👤 Agente: bender
-📂 Diretório: /home/deit/code
+📂 Diretório: /home/projects/netpilot
 ```
 
 ou
@@ -193,5 +192,5 @@ ou
 🤖 Claude Code - MARVIN
 📁 Projeto: Deit
 👤 Agente: marvin
-📂 Diretório: /home/deit/code
+📂 Diretório: /home/projects/netpilot
 ```

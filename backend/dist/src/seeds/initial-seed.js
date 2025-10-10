@@ -79,33 +79,6 @@ let InitialSeedService = class InitialSeedService {
             savedProject = existingProject;
             console.log('ℹ️  Sample project already exists');
         }
-        const existingDeitProject = await this.projectRepository.findOne({
-            where: { name: 'Deit' },
-        });
-        let savedDeitProject;
-        if (!existingDeitProject) {
-            const deitProject = this.projectRepository.create({
-                name: 'Deit',
-                alias: 'deit',
-                description: 'Sistema Deit - Plataforma de gestão e automação empresarial',
-                isActive: true,
-                technologies: ['Laravel', 'Vue.js', 'PHP', 'MySQL', 'Docker', 'Redis'],
-                repository: 'https://github.com/meadadigital/deit',
-                documentation: 'https://docs.deit.meadadigital.com',
-                mainDomain: 'deit.meadadigital.com',
-                metadata: {
-                    version: '2.1.0',
-                    environment: 'production',
-                    type: 'business-platform'
-                }
-            });
-            savedDeitProject = await this.projectRepository.save(deitProject);
-            console.log('✅ Deit project created');
-        }
-        else {
-            savedDeitProject = existingDeitProject;
-            console.log('ℹ️  Deit project already exists');
-        }
         const existingDomain = await this.domainRepository.findOne({
             where: { name: 'netpilot.meadadigital.com' },
         });
@@ -157,27 +130,6 @@ let InitialSeedService = class InitialSeedService {
         }
         else {
             console.log('ℹ️  Sample domain already exists');
-        }
-        const existingDeitDomain = await this.domainRepository.findOne({
-            where: { name: 'deit.meadadigital.com' },
-        });
-        if (!existingDeitDomain) {
-            const deitDomain = this.domainRepository.create({
-                name: 'deit.meadadigital.com',
-                description: 'Domínio principal do sistema Deit',
-                isActive: true,
-                autoTls: true,
-                forceHttps: true,
-                blockExternalAccess: false,
-                enableWwwRedirect: true,
-                bindIp: '127.0.0.1',
-                projectId: savedDeitProject.id,
-            });
-            await this.domainRepository.save(deitDomain);
-            console.log('✅ Deit domain created');
-        }
-        else {
-            console.log('ℹ️  Deit domain already exists');
         }
         console.log('ℹ️  Sample logs creation disabled - showing only real logs');
         console.log('🌱 Database seeding completed successfully!');
